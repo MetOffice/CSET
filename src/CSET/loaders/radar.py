@@ -159,9 +159,13 @@ def load(conf: Config):
             aggregation=False,
         )
 
-    # Histogram sequence using common domain between
-    # model rainfall and radar observations.
-    if conf.HISTOGRAM_SURFACE_FIELD and conf.NIMROD_RADAR_OBS:
+    # Histogram sequence rainfall using common domain between
+    # model and Nimrod radar observations.
+    if (
+        conf.HISTOGRAM_SURFACE_FIELD
+        and conf.NIMROD_RADAR_OBS
+        and conf.PROCESS_RADAR_HISTOGRAMS
+    ):
         # Select the radar source to use.
         radar_source = select_radar_source([source["id"] for source in accum_radars])
         radar_obs_ids = [radar_source]
@@ -171,15 +175,15 @@ def load(conf: Config):
         combined_names = model_names_list + radar_obs_ids + radar_wts_ids
         combined_ids = model_ids_list + radar_obs_ids + radar_wts_ids
         yield RawRecipe(
-            recipe="radar_common_domain_histogram_sequence.yaml",
+            recipe="radar_common_domain_histogram.yaml",
             variables={
-                "VARNAME": "surface_microphysical_rainfall_rate",
+                "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
+                "RADAR_VARNAME": "Hourly rain accumulation",
+                "RADAR_WTS_VARNAME": "Hourly wts accumulation",
                 "ALL_LABEL": combined_names,
-                "MODEL_LABEL": model_names_list,
-                "NIMROD_LABEL": radar_source,
                 "SEQUENCE": "time",
                 "OUTPUTS": "all",
-                "METHOD": "SEQ",
+                "TITLE_STRING": "sequence plots",
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
                 "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
@@ -188,10 +192,13 @@ def load(conf: Config):
             aggregation=False,
         )
 
-    # Histogram domain mean using common domain between
-    # model rainfall and radar observations.
-    if conf.HISTOGRAM_SURFACE_FIELD and conf.NIMROD_RADAR_OBS:
-        # if False:
+    # Histogram case study rainfall using common domain between
+    # model and Nimrod radar observations.
+    if (
+        conf.HISTOGRAM_SURFACE_FIELD
+        and conf.NIMROD_RADAR_OBS
+        and conf.PROCESS_RADAR_HISTOGRAMS
+    ):
         # Select the radar source to use.
         radar_source = select_radar_source([source["id"] for source in accum_radars])
         radar_obs_ids = [radar_source]
@@ -201,18 +208,15 @@ def load(conf: Config):
         combined_names = model_names_list + radar_obs_ids + radar_wts_ids
         combined_ids = model_ids_list + radar_obs_ids + radar_wts_ids
         yield RawRecipe(
-            recipe="radar_common_domain_histogram_domain_mean.yaml",
+            recipe="radar_common_domain_histogram.yaml",
             variables={
-                "VARNAME": "surface_microphysical_rainfall_rate",
+                "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
+                "RADAR_VARNAME": "Hourly rain accumulation",
+                "RADAR_WTS_VARNAME": "Hourly wts accumulation",
                 "ALL_LABEL": combined_names,
-                "MODEL_LABEL": model_names_list,
-                "NIMROD_LABEL": radar_source,
-                "SEQUENCE": "time"
-                if conf.HISTOGRAM_SURFACE_FIELD_SEQUENCE
-                else "realization",
+                "SEQUENCE": "realization",
                 "OUTPUTS": "all",
-                #                "METHOD": "SEQ",
-                "METHOD": "MEAN",
+                "TITLE_STRING": "case study",
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
                 "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
