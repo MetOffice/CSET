@@ -986,7 +986,7 @@ def _plot_and_save_line_series(
 
     # Check match-up across sequence coords gives consistent sizes
     # validate_cubes_coords(cubes, coords)
-    line_plot = []
+    line_plot_list = []
     for cube, coord in zip(cubes, coords, strict=True):
         label = None
         color = "black"
@@ -995,7 +995,8 @@ def _plot_and_save_line_series(
             color = model_colors_map.get(label)
         if not ensemble_coord:
             # No ensemble coordinate — plot the cube directly as a single line.
-            line_plot.append(iplt.plot(coord, cube, color=color, marker="o", ls="-", lw=3, label=label))
+            line_plot = iplt.plot(coord, cube, color=color, marker="o", ls="-", lw=3, label=label)
+            line_plot_list.append(line_plot)
         else:
             for cube_slice in cube.slices_over(ensemble_coord):
                 # Label with (control) if part of an ensemble or not otherwise.
@@ -1049,7 +1050,7 @@ def _plot_and_save_line_series(
     if stdev is not None:
         for i,std in enumerate(stdev):
             plt.fill_between(
-                line_plot[i].get_xdata(),
+                line_plot_list[i][0].get_xdata(),
                 cube.data - std.data,
                 cube.data + std.data,
                 color=color,
