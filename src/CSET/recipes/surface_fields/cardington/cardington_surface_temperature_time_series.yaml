@@ -1,18 +1,11 @@
 category: Time series of surface temperature at Cardington single point
 title: "Time series of surface temperature at Cardington [52.10438N, -0.42286E]"
 description: "Plots a time series of surface temperature at gridpoint nearest to Cardington"
-steps:
-  # ------------------------------------------------------------
-  # 1. Read data
-  #    IMPORTANT:
-  #    - Constrain the UM *at read time* so Iris only ever loads
-  #      a single surface_temperature cube.
-  # ------------------------------------------------------------
 
+steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names:
-      - Cardington 05min
       - Cardington 30min
       - $MODEL_NAME
     constraint: ['$OBS_VARNAME', '$VARNAME']

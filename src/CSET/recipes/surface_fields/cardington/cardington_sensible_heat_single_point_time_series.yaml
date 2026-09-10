@@ -10,8 +10,8 @@ steps:
 
   - operator: misc.mask_fill_values
 
-  - operator: fluxes.sensible_heat_flux_from_covariance
-    CARDINGTON_VARNAMES: $WT_VARNAMES
+  - operator: misc.sensible_heat_from_cardington_cubes
+    CARDINGTON_VARNAMES: $CARDINGTON_VARNAMES
 
   - operator: filters.filter_multiple_cubes
     Cardington:

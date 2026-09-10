@@ -19,6 +19,7 @@ import logging
 from collections.abc import Iterable
 from functools import reduce
 
+import fluxes
 import iris
 import iris.analysis.calculus
 import numpy as np
@@ -914,3 +915,53 @@ def mask_fill_values(
         cleaned.append(_mask_fill_cube(cube, ulp_factor=ulp_factor))
 
     return cleaned
+
+
+def sensible_heat_from_cardington_cubes(cubes, **kwargs):
+    """
+    Adapt a Cardington CubeList for sensible heat flux calculation.
+
+    Extracts the turbulent temperature covariance, air temperature,
+    and pressure cubes specified by the comma-separated
+    ``CARDINGTON_VARNAMES`` argument and passes them to
+    ``fluxes.sensible_heat_flux_from_covariance``.
+
+    Parameters
+    ----------
+    cubes : iris.cube.CubeList or iris.cube.Cube
+        Input cubes containing the required Cardington variables.
+
+    CARDINGTON_VARNAMES : str
+        Comma-separated list of variable names in the order:
+        covariance, air temperature, pressure.
+        For example:
+        ``"wt_covariance_25m,air_temperature_rtd_25m,pressure_barometric"``.
+
+    Returns
+    -------
+    iris.cube.Cube or iris.cube.CubeList
+        Sensible heat flux cube(s) returned by
+        ``fluxes.sensible_heat_flux_from_covariance``.
+
+    Raises
+    ------
+    KeyError
+        If any of the requested variables cannot be found in the
+        input CubeList.
+    """
+    if "CARDINGTON_VARNAMES" not in kwargs:
+        raise ValueError(
+            "sensible_heat_from_cardington_cubes requires CARDINGTON_VARNAMES"
+        )
+    selected = {c.var_name: c for c in cubes}
+    wanted = kwargs["CARDINGTON_VARNAMES"].split(",")
+
+    wt_flux = selected[wanted[0]]
+    air_temperature = selected[wanted[1]]
+    pressure = selected[wanted[2]]
+
+    return fluxes.sensible_heat_flux_from_covariance(
+        wt_flux,
+        air_temperature,
+        pressure,
+    )
