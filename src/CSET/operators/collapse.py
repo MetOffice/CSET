@@ -112,7 +112,7 @@ def collapse(
         if len(cubes) == 0:
             raise ValueError("No overlapping times detected in input cubes.")
 
-    print("bmcline92 collapse.collapse after common time points section")
+    # print("bmcline92 collapse.collapse after common time points section")
 
     collapsed_cubes = iris.cube.CubeList([])
     with warnings.catch_warnings():
