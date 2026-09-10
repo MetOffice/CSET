@@ -995,7 +995,9 @@ def _plot_and_save_line_series(
             color = model_colors_map.get(label)
         if not ensemble_coord:
             # No ensemble coordinate — plot the cube directly as a single line.
-            line_plot = iplt.plot(coord, cube, color=color, marker="o", ls="-", lw=3, label=label)
+            line_plot = iplt.plot(
+                coord, cube, color=color, marker="o", ls="-", lw=3, label=label
+            )
             line_plot_list.append(line_plot)
         else:
             for cube_slice in cube.slices_over(ensemble_coord):
@@ -1048,7 +1050,7 @@ def _plot_and_save_line_series(
             y_levels.append(max(levels))
 
     if stdev is not None:
-        for i,std in enumerate(stdev):
+        for i, std in enumerate(stdev):
             plt.fill_between(
                 line_plot_list[i][0].get_xdata(),
                 cube.data - std.data,
@@ -4091,9 +4093,7 @@ def plot_dfss_line_series_sequence(
         else:
             raise ValueError(f"Unknown dFSS method: {method!r}")
 
-        plot_filename_with_sequence_coord = (
-            f"{dfss_cube.name()}_{sequence_coordinate}_point_{i!s}_{method_tag}_{plot_filename}"
-        )
+        plot_filename_with_sequence_coord = f"{dfss_cube.name()}_{sequence_coordinate}_point_{i!s}_{method_tag}_{plot_filename}"
         plot_title_with_time = (
             f"{dfss_cube.name()} vs {series_coordinate} "
             f"({sequence_coordinate}: {sequence_point}) \n {method_label}"
