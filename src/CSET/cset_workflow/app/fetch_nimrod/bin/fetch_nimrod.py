@@ -5,7 +5,7 @@
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import iris
@@ -99,10 +99,6 @@ def retrieve_nimrod():
     with open(nimrod_met_office, "rt") as fp:  # pragma: no cover
         nimrod_dict = json.load(fp)
 
-    # Form the Nimrod start and end dates.
-    date_start = v["data_time"]
-    date_end = v["data_time"] + v["forecast_length"]
-
     # Loop over the required Nimrod fields, i.e. 1km 2km or xkm rainfall
     # accumulation composites or the 5 minute rainfall rate composites.
     for nimrod_field in v["field"]:
@@ -122,9 +118,21 @@ def retrieve_nimrod():
                 os.makedirs(nimrod_dir_wei, exist_ok=True)
                 logging.info("Cylc-run Nimrod weights directory: %s", nimrod_dir_wei)
 
+            # Put +1 hour offset for accumulation radar files as
+            # the time stamps for these files mark the end of the
+            # accumulation period rather than the beginning.
+            radar_offset = timedelta(hours=0.0)
+            if nimrod_field == "Nimrod_comp_xkm":
+                radar_offset = timedelta(hours=1.0)
+            if nimrod_field == "Nimrod_comp_1km":
+                radar_offset = timedelta(hours=1.0)
+            if nimrod_field == "Nimrod_comp_2km":
+                radar_offset = timedelta(hours=1.0)
+            date_start_offset = v["data_time"] + radar_offset
+
             # Process Nimrod data between the start and end dates.
-            date_use = date_start
-            while date_use <= date_end:
+            date_use = date_start_offset
+            while date_use <= date_start_offset + v["forecast_length"]:
                 # Load the Nimrod data into an Iris cube.
                 nimrod_obs_exist = "False"
                 nimrod_obs = (
