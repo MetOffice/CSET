@@ -59,11 +59,6 @@ def vapour_pressure(
     will be the saturation vapour pressure. On the other hand, if the dewpoint
     temperature is used the vapour pressure will be calculated.
 
-    References
-    ----------
-    .. [Buck81] Buck, A.L. (1981) "New Equations for Computing Vapor Pressure
-       and Enhancement Factor". J. App. Meteor. Clim. 20: 1527-1532.
-
     Examples
     --------
     >>> vapour_pressure = pressure.vapour_pressure(temperature)
@@ -169,11 +164,6 @@ def exner_pressure(
     A value below one implies the pressure is higher than the reference pressure;
     values above one implies the pressure is lower than the reference pressure; a
     value of one implies the pressure is equal to the reference pressure.
-
-    References
-    ----------
-    .. [Holton13] Holton, J.R. and Hakim G.J. (2013) "An Introduction to Dynamic
-       Meteorology." 5th Edition, Burlington, MA, Elsevier Academic Press, 532 pp.
 
     Examples
     --------

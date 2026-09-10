@@ -98,10 +98,40 @@ usage see :doc:`/getting-started/run_full_cylc_workflow`.
 
 .. code-block:: text
 
-    usage: cset extract-workflow [-h] location
+    usage: cset extract-workflow [-h] [--restricted]
+                                 [--restricted-url RESTRICTED_URL]
+                                 location
 
     positional arguments:
-      location    directory to save workflow into
+      location              directory to save workflow into
 
     options:
-      -h, --help  show this help message and exit
+      -h, --help            show this help message and exit
+      --restricted          install restricted site-specific files during
+                            extraction
+      --restricted-url RESTRICTED_URL
+                            Alternative Git URL to fetch the restricted files
+                            from. If omitted, defaults to trying to clone first
+                            from 'localmirrors:', then from GitHub via SSH and
+                            HTTPS.
+
+cset install-restricted-files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Download and install restricted site-specific files into the CSET workflow.
+
+.. code-block:: text
+
+    usage: cset install-restricted-files [-h] [--restricted-url RESTRICTED_URL]
+                                         location
+
+    positional arguments:
+      location              directory containing workflow
+
+    options:
+      -h, --help            show this help message and exit
+      --restricted-url RESTRICTED_URL
+                            Alternative Git URL to fetch the restricted files
+                            from. If omitted, defaults to trying to clone first
+                            from 'localmirrors:', then from GitHub via SSH and
+                            HTTPS.

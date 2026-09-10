@@ -86,7 +86,10 @@ def unpack_recipe(recipe_dir: Path, recipe_name: str) -> None:
         logger.debug("%s already exists in target directory, skipping.", recipe_name)
         return
     logger.info("Unpacking %s to %s", recipe_name, output_file)
-    file = _get_recipe_file(next(_recipe_files_in_tree(recipe_name)))
+    try:
+        file = _get_recipe_file(next(_recipe_files_in_tree(recipe_name)))
+    except StopIteration as err:
+        raise FileNotFoundError("Recipe not found.") from err
     output_file.write_bytes(file.read_bytes())
 
 
@@ -168,7 +171,7 @@ class RawRecipe:
         plural = "s" if len(self.model_ids) > 1 else ""
         ids = " ".join(str(m) for m in self.model_ids)
         aggregation = ", Aggregation" if self.aggregation else ""
-        pad = max([0] + [len(k) for k in self.variables.keys()])
+        pad = max([0] + [len(k) for k in self.variables])
         variables = "".join(f"\n\t{k:<{pad}} {v}" for k, v in self.variables.items())
         return f"{recipe} (model{plural} {ids}{aggregation}){variables}"
 

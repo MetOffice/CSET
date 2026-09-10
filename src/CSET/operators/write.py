@@ -25,7 +25,7 @@ from CSET._common import get_recipe_metadata, slugify
 
 def write_cube_to_nc(
     cube: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
     overwrite: bool = False,
     **kwargs,
 ) -> str:

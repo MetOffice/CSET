@@ -129,8 +129,8 @@ add your site file.
 If you would prefer to keep your site-specific configuration non-public, and are
 a Momentum Partnership member, we have a designated `CSET site-specific config
 repository`_ that contains these configurations for various Momentum Partners.
-It is this repository that is installed via the ``install_restricted_files.sh``
-script. Even when your file remains restricted like this you should still
+It is this repository that is installed via ``cset install-restricted-files``.
+Even when your file remains restricted like this you should still
 contribute your rose metadata changes to the `main CSET GitHub repository`_ so
 your site shows up as an option to users.
 

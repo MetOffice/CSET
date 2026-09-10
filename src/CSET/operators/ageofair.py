@@ -43,6 +43,8 @@ from scipy.ndimage import gaussian_filter
 
 from CSET.operators._utils import get_cube_yxcoordname
 
+logger = logging.getLogger(__name__)
+
 
 def _calc_dist(coord_1, coord_2):
     """Calculate distance between two coordinate tuples.
@@ -134,13 +136,13 @@ def _aoa_core(
     """
     # Initialise empty array to store age of air for this latitude strip.
     ageofair_local = np.zeros((x_arr.shape[0], x_arr.shape[2]))
-    logging.debug("Working on %s", lon_pnt)
+    logger.debug("Working on %s", lon_pnt)
 
     # Ignore leadtime 0 as this is trivial.
     for leadtime in range(1, x_arr.shape[0]):
         # Initialise leadtime slice with current leadtime.
         ageofair_local[leadtime, :] = leadtime * dt
-        for lat_pnt in range(0, x_arr.shape[2]):
+        for lat_pnt in range(x_arr.shape[2]):
             # Gridpoint initialised as within LAM by construction.
             outside_lam = False
 
@@ -165,7 +167,7 @@ def _aoa_core(
                 )
 
             # Go through past timeslices
-            for n in range(0, leadtime):
+            for n in range(leadtime):
                 # First step back, so we use i,j coords to find out parcel location
                 # in terms of array point
                 if n == 0:
@@ -280,19 +282,10 @@ def compute_ageofair(
     the impact of new data assimilation techniques. A further paper is currently in review ([Warneretal2024]_)
     which applies the diagnostic more widely to the Australian ACCESS convection-permitting models.
 
-    References
-    ----------
-    .. [Warneretal2023] Warner, J.L., Petch, J., Short, C., Bain, C., 2023. Assessing the impact of an NWP warm-start
-        system on model spin-up over tropical Africa. QJ, 149( 751), pp.621-636. doi:10.1002/qj.4429
-    .. [Warneretal2024] Diagnosing lateral boundary spin-up in regional models using an age of air diagnostic
-        James L. Warner, Charmaine N. Franklin, Belinda Roux, Shaun Cooper, Susan Rennie, Vinod
-        Kumar.
-        Submitted for Quarterly Journal of the Royal Meteorological Society.
-
     """
     # Set up temporary directory to store intermediate age of air slices.
     tmpdir = tempfile.TemporaryDirectory(dir=os.getenv("CYLC_TASK_WORK_DIR"))
-    logging.info("Made tmpdir %s", tmpdir.name)
+    logger.info("Made tmpdir %s", tmpdir.name)
 
     # Check that all cubes are of same size (will catch different dimension orders too).
     if not XWIND.shape == YWIND.shape == WWIND.shape == GEOPOT.shape:
@@ -305,7 +298,7 @@ def compute_ageofair(
         raise NotImplementedError("Unsupported time base")
 
     # Make data non-lazy to speed up code.
-    logging.info("Making data non-lazy...")
+    logger.info("Making data non-lazy...")
     x_arr = XWIND.data
     y_arr = YWIND.data
     z_arr = WWIND.data
@@ -351,7 +344,7 @@ def compute_ageofair(
             )
 
     # Smooth vertical velocity to 2sigma (standard for 0.5 degree).
-    logging.info("Smoothing vertical velocity...")
+    logger.info("Smoothing vertical velocity...")
     if ensemble_mode:
         z_arr = gaussian_filter(z_arr, 2, mode="nearest", axes=(3, 4))
     else:
@@ -406,13 +399,13 @@ def compute_ageofair(
         mp_context = multiprocessing.get_context("spawn")
         pool = mp_context.Pool(num_usable_cores)
 
-    logging.info("STARTING AOA DIAG...")
+    logger.info("STARTING AOA DIAG...")
     start = datetime.datetime.now()
 
     # Main call for calculating age of air diagnostic
     if ensemble_mode:
-        for e in range(0, len(XWIND.coord("realization").points)):
-            logging.info(f"Working on member {e}")
+        for e in range(len(XWIND.coord("realization").points)):
+            logger.info(f"Working on member {e}")
 
             # Multiprocessing on each longitude slice
             func = partial(
@@ -430,12 +423,12 @@ def compute_ageofair(
                 tmpdir.name,
             )
             if multicore:
-                pool.map(func, range(0, XWIND.shape[4]))
+                pool.map(func, range(XWIND.shape[4]))
             else:
                 # Convert to list to ensure everything is processed.
-                list(map(func, range(0, XWIND.shape[4])))
+                list(map(func, range(XWIND.shape[4])))
 
-            for i in range(0, XWIND.shape[4]):
+            for i in range(XWIND.shape[4]):
                 file = f"{tmpdir.name}/aoa_frag_{i:04}.npy"
                 ageofair_cube.data[e, :, :, i] = np.load(file)
 
@@ -456,12 +449,12 @@ def compute_ageofair(
             tmpdir.name,
         )
         if multicore:
-            pool.map(func, range(0, XWIND.shape[3]))
+            pool.map(func, range(XWIND.shape[3]))
         else:
             # Convert to list to ensure everything is processed.
-            list(map(func, range(0, XWIND.shape[3])))
+            list(map(func, range(XWIND.shape[3])))
 
-        for i in range(0, XWIND.shape[3]):
+        for i in range(XWIND.shape[3]):
             file = f"{tmpdir.name}/aoa_frag_{i:04}.npy"
             ageofair_cube.data[:, :, i] = np.load(file)
 
@@ -471,7 +464,7 @@ def compute_ageofair(
         pool.join()
 
     # Verbose for time taken to run, and collate tmp ndarrays into final cube, and return
-    logging.info(
+    logger.info(
         "AOA DIAG DONE, took %s s",
         (datetime.datetime.now() - start).total_seconds(),
     )

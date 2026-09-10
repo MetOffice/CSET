@@ -85,3 +85,100 @@ def load(conf: Config):
                 model_ids=["OBS", model["id"]],
                 aggregation=False,
             )
+
+    # Create a list of plot sequence types.
+    TSERIES_TYPES = ["", "_bias", "_points"]
+
+    # Timeseries plot comparing models and obs.
+    for ttype, field in itertools.product(TSERIES_TYPES, conf.POINT_OBS_FIELDS):
+        index = TSERIES_TYPES.index(ttype)
+        tseries = conf.POINT_OBS_MODEL_TIMESERIES
+        # Loop over supported timeseries plot types and test if option set True.
+        if len(tseries) > index and tseries[index]:
+            yield RawRecipe(
+                recipe=f"generic_model_obs_timeseries{ttype}.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else None,
+                },
+                model_ids=["OBS"] + [model["id"] for model in models],
+                aggregation=False,
+            )
+
+    # Create a list of plot sequence types.
+    SEQ_TYPES = ["realization", "station"]
+
+    # Histogram plot comparing models and obs.
+    for stype, field in itertools.product(SEQ_TYPES, conf.POINT_OBS_FIELDS):
+        index = SEQ_TYPES.index(stype)
+        sequences = conf.POINT_OBS_MODEL_HISTOGRAM
+        # Loop over supported histogram plot types and test if option set True.
+        if len(sequences) > index and sequences[index]:
+            yield RawRecipe(
+                recipe="generic_model_obs_histogram.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+                    "SEQUENCE": stype,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else None,
+                },
+                model_ids=["OBS"] + [model["id"] for model in models],
+                aggregation=False,
+            )
+
+    # Scatter plot comparing models and obs, comparing all models on same plot
+    for stype, field in itertools.product(SEQ_TYPES, conf.POINT_OBS_FIELDS):
+        index = SEQ_TYPES.index(stype)
+        sequences = conf.POINT_OBS_MODEL_SCATTER
+        # Loop over supported scatter plot types and test if option set True.
+        if len(sequences) > index and sequences[index]:
+            yield RawRecipe(
+                recipe="generic_model_obs_scatter.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+                    "SEQUENCE": stype,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else None,
+                    "HEXBIN": False,
+                },
+                model_ids=["OBS"] + [model["id"] for model in models],
+                aggregation=False,
+            )
+
+    # Hexbin plot comparing models and obs, looping over all models to generate separate outputs
+    for model, stype, field in itertools.product(
+        models, SEQ_TYPES, conf.POINT_OBS_FIELDS
+    ):
+        index = SEQ_TYPES.index(stype)
+        sequences = conf.POINT_OBS_MODEL_HEXBIN
+        # Loop over supported hexin plot types and test if option set True.
+        if len(sequences) > index and sequences[index]:
+            yield RawRecipe(
+                recipe="generic_model_obs_scatter.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": ["OBS", model["name"]],
+                    "SEQUENCE": stype,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else None,
+                    "HEXBIN": True,
+                },
+                model_ids=["OBS", model["id"]],
+                aggregation=False,
+            )

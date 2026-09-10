@@ -439,8 +439,8 @@ def test_convert_units_cubelist(cube):
     cube_list = iris.cube.CubeList([cube, cube])
     new_cubelist = misc.convert_units(cube_list, "Celsius")
     expected_cubelist = iris.cube.CubeList([])
-    for cube in cube_list:
-        cube_a = cube.copy()
+    for original_cube in cube_list:
+        cube_a = original_cube.copy()
         cube_a -= 273.15
         cube_a.units = "Celsius"
         expected_cubelist.append(cube_a)

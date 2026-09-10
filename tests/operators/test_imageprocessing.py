@@ -204,8 +204,8 @@ def test_MSSIM_hour_coordinates(cube: iris.cube.Cube):
     del other_cube.attributes["cset_comparison_base"]
     cubes = iris.cube.CubeList([cube, other_cube])
     cubes = aggregate.add_hour_coordinate(cubes)
-    for cube in cubes:
-        cube.remove_coord("time")
+    for original_cube in cubes:
+        original_cube.remove_coord("time")
     # Find MSSIM.
     MSSIM_cube = imageprocessing.mean_structural_similarity_model_comparisons(
         cubes, sigma=1.5
@@ -223,8 +223,8 @@ def test_SSIM_hour_coordinates(cube: iris.cube.Cube):
     del other_cube.attributes["cset_comparison_base"]
     cubes = iris.cube.CubeList([cube, other_cube])
     cubes = aggregate.add_hour_coordinate(cubes)
-    for cube in cubes:
-        cube.remove_coord("time")
+    for original_cube in cubes:
+        original_cube.remove_coord("time")
     # Find SSIM.
     SSIM_cube = imageprocessing.spatial_structural_similarity_model_comparisons(
         cubes,

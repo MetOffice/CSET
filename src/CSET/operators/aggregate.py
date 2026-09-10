@@ -28,6 +28,8 @@ import numpy as np
 from CSET._common import iter_maybe
 from CSET.operators._utils import is_time_aggregatable
 
+logger = logging.getLogger(__name__)
+
 
 def _add_nref(cube: iris.cube.Cube):
     """Retain information on number of forecast_reference_time inputs.
@@ -166,7 +168,7 @@ def ensure_aggregatable_across_cases(
         b.add(cube)
     buckets = b.get_buckets()
 
-    logging.debug("Buckets:\n%s", "\n---\n".join(str(b) for b in buckets))
+    logger.debug("Buckets:\n%s", "\n---\n".join(str(b) for b in buckets))
 
     # Ensure each bucket is a single aggregatable cube.
     aggregatable_cubes = iris.cube.CubeList()

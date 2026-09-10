@@ -30,12 +30,14 @@ import numpy as np
 from CSET._common import iter_maybe
 from CSET.operators.aggregate import add_hour_coordinate
 
+logger = logging.getLogger(__name__)
+
 
 def collapse(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     coordinate: str | list[str],
     method: str,
-    additional_percent: float = None,
+    additional_percent: float | None = None,
     **kwargs,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Collapse coordinate(s) of a single cube or of every cube in a cube list.
@@ -100,9 +102,7 @@ def collapse(
 
     # Retain only common time points between different models if multiple model inputs.
     if isinstance(cubes, iris.cube.CubeList) and len(cubes) > 1:
-        logging.debug(
-            "Extracting common time points as multiple model inputs detected."
-        )
+        logger.debug("Extracting common time points as multiple model inputs detected.")
         for cube in cubes:
             cube.coord("forecast_reference_time").bounds = None
             cube.coord("forecast_period").bounds = None
@@ -152,7 +152,7 @@ def collapse(
 def collapse_by_hour_of_day(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     method: str,
-    additional_percent: float = None,
+    additional_percent: float | None = None,
     **kwargs,
 ) -> iris.cube.Cube:
     """Collapse a cube by hour of the day.
@@ -201,9 +201,7 @@ def collapse_by_hour_of_day(
 
     # Retain only common time points between different models if multiple model inputs.
     if isinstance(cubes, iris.cube.CubeList) and len(cubes) > 1:
-        logging.debug(
-            "Extracting common time points as multiple model inputs detected."
-        )
+        logger.debug("Extracting common time points as multiple model inputs detected.")
         for cube in cubes:
             cube.coord("forecast_reference_time").bounds = None
             cube.coord("forecast_period").bounds = None
@@ -278,7 +276,7 @@ def collapse_by_hour_of_day(
 def collapse_by_validity_time(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     method: str,
-    additional_percent: float = None,
+    additional_percent: float | None = None,
     **kwargs,
 ) -> iris.cube.Cube:
     """Collapse a cube around validity time for multiple cases.
@@ -352,7 +350,7 @@ def collapse_by_validity_time(
 
         # Merge CubeList to create final cube.
         final_cube = merged_list_1.merge_cube()
-        logging.debug("Pre-collapse validity time cube:\n%s", final_cube)
+        logger.debug("Pre-collapse validity time cube:\n%s", final_cube)
 
         # Apply a mask to check for invalid data, this will allow NaNs to
         # be ignored.
@@ -421,9 +419,7 @@ def proportion(
     method = "PROPORTION"
     # Retain only common time points between different models if multiple model inputs.
     if isinstance(cubes, iris.cube.CubeList) and len(cubes) > 1:
-        logging.debug(
-            "Extracting common time points as multiple model inputs detected."
-        )
+        logger.debug("Extracting common time points as multiple model inputs detected.")
         for cube in cubes:
             cube.coord("forecast_reference_time").bounds = None
             cube.coord("forecast_period").bounds = None

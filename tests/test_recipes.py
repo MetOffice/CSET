@@ -179,7 +179,7 @@ def test_RawRecipe_eq():
     r1 = recipes.RawRecipe(recipe="", model_ids=1, variables={}, aggregation=False)
     r2 = recipes.RawRecipe(recipe="", model_ids=1, variables={}, aggregation=False)
     r3 = recipes.RawRecipe(recipe="", model_ids=1, variables={}, aggregation=True)
-    assert r1 == r1
+    assert r1 == r1  # noqa: PLR0124, testing implementation of __eq__.
     assert r1 == r2
     assert r1 != r3
     # NotImplemented returned for non-matching types, allowing int __eq__ to

@@ -686,3 +686,30 @@ def test_check_if_cylc_workflow_no_dir(monkeypatch, tmp_path):
 def test_check_if_cylc_workflow_false(monkeypatch, tmp_path):
     """Test no ROSE_DATAC present."""
     assert operator_utils.check_if_cylc_workflow() is None
+
+
+def test_calc_array_stats():
+    """Array stats are calculated for a normal array."""
+    array = np.array((1.0, 2.0, 3.0))
+    array_min, array_max, array_mean = operator_utils.calc_array_stats(array)
+    assert array_min == 1.0
+    assert array_max == 3.0
+    assert array_mean == 2.0
+
+
+def test_calc_array_stats_nans():
+    """Array stats are calculated for an array containing NaNs."""
+    array = np.array((1.0, np.nan, 3.0))
+    array_min, array_max, array_mean = operator_utils.calc_array_stats(array)
+    assert array_min == 1.0
+    assert array_max == 3.0
+    assert array_mean == 2.0
+
+
+def test_calc_array_stats_masked_array():
+    """Array stats are calculated for a masked array."""
+    array = np.ma.MaskedArray((1.0, -9999, 3.0), mask=(False, True, False))
+    array_min, array_max, array_mean = operator_utils.calc_array_stats(array)
+    assert array_min == 1.0
+    assert array_max == 3.0
+    assert array_mean == 2.0

@@ -5,7 +5,7 @@ Internal BOM systems use PrepBom as a base class and fill in the internal
 patterns.
 """
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from metomi.isodatetime.data import TimePoint
 from pandas import DataFrame

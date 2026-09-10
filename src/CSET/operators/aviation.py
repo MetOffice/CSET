@@ -22,6 +22,8 @@ import numpy as np
 
 from CSET._common import iter_maybe
 
+logger = logging.getLogger(__name__)
+
 
 def aviation_colour_state(
     aviation_state_visibility: iris.cube.Cube | iris.cube.CubeList,
@@ -191,7 +193,7 @@ def aviation_colour_state_visibility(
 
 def aviation_colour_state_cloud_base(
     cloud_base: iris.cube.Cube | iris.cube.CubeList,
-    orography: iris.cube.CubeList | iris.cube.CubeList = None,
+    orography: iris.cube.Cube | iris.cube.CubeList | None = None,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Aviation colour state due to cloud base.
 
@@ -270,18 +272,18 @@ def aviation_colour_state_cloud_base(
         # Convert the cloud base to above ground level using the orography cube.
         # Check dimensions for Orography cube and replace with 2D array if not 2D.
         if orography is None:
-            logging.warning(
+            logger.warning(
                 "An orography cube should be provided if cloud base altitude is above sea level. Please check your cloud base altitude definition and adjust if required."
             )
         else:
-            logging.info("Cloud base given above ground level using orography.")
+            logger.info("Cloud base given above ground level using orography.")
             # Process orography cube.
             if orog.ndim == 3:
                 orog = orog.slices_over("realization").next()
-                logging.warning("Orography assumed not to vary with ensemble member")
+                logger.warning("Orography assumed not to vary with ensemble member")
             elif orog.ndim == 4:
                 orog = orog.slices_over(("time", "realization")).next()
-                logging.warning(
+                logger.warning(
                     "Orography assumed not to vary with time or ensemble member. "
                 )
             # Subtract orography from cloud base altitude after converting to same units.
