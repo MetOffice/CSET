@@ -466,6 +466,12 @@ def match_varname_and_units(cubes: iris.cube.Cube | iris.cube.CubeList):
     print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     for cube in cubes[1:]:
         print("@@@@@@@@@@@@@@@ raw @@@@@@@@@@@@@@@@@@")
+        print("cube.name          : ", cube.name)
+        print("cube.standard_name : ", cube.standard_name)
+        print("cube.long_name     : ", cube.long_name)
+        print("cube.var_name      : ", cube.var_name)
+        print("cube.coords(time)  : ", cube.coord("time"))
+        print("cube.coords(forecast_period) : ", cube.coord("forecast_period"))
         print(cube)
         print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
         new_cube = cube.copy()
