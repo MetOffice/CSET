@@ -1,0 +1,61 @@
+category: Surface Spatial Plot
+title: "bmc2f $MODEL_LABEL $MODEL_VARNAME\n common domain $MODEL_LABEL and $RADAR_LABEL"
+description: |
+  Creates a 2-d surface plot of the model rainfall field over the
+  domain common to both the model and the radar observation network.
+  To achieve this, the model field is regridded onto the radar grid,
+  before being masked by the common domain.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: [$MODEL_LABEL, $RADAR_LABEL, $MASK_LABEL]
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+    constraint: [$MODEL_VARNAME, "Hourly rain accumulation", "Hourly wts accumulation"]
+
+  - operator: radar_filter.radar_mask
+    model_field:
+      operator: filters.filter_multiple_cubes
+      constraint:
+        operator: constraints.combine_constraints
+        varname_constraint:
+          operator: constraints.generate_var_constraint
+          varname: $MODEL_VARNAME
+        cell_methods_constraint:
+          operator: constraints.generate_cell_methods_constraint
+          cell_methods: []
+          varname: $MODEL_VARNAME
+        pressure_level_constraint:
+          operator: constraints.generate_level_constraint
+          coordinate: "pressure"
+          levels: []
+
+    nimrod_field:
+      operator: filters.filter_multiple_cubes
+      constraint:
+        operator: constraints.generate_var_constraint
+        varname: "Hourly rain accumulation"
+
+    nimrod_mask:
+      operator: filters.generate_mask
+      mask_field:
+        operator: filters.filter_multiple_cubes
+        constraint:
+          operator: constraints.generate_var_constraint
+          varname: "Hourly wts accumulation"
+      condition: 'ge'
+      value: 11
+
+    boundary_margin: 16
+    outputs: "model"
+
+  - operator: collapse.collapse
+    coordinate: [time]
+    method: $METHOD
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: time
