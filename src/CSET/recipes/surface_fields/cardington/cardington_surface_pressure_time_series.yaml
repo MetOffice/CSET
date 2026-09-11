@@ -1,15 +1,15 @@
-category: Time series of pressure at Cardington single point
-title: "Time series of $PLOT_VARNAME at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint."
-description: "Plots a time series of $PLOT_VARNAME at a selected Cardington gridpoint."
+category: Time series of pressure at single point
+title: "Time series of surface pressure at Cardington [52.10438N, -0.42286E]."
+description: "Plots a time series of surface pressure at gridpoint nearest to Cardington."
 
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names:
-      - Cardington 05min
-      - Cardington 30min
+      - Obs (05min)
+      - Obs (30min)
       - $MODEL_NAME
-    constraint: ['$VARNAME', '$UM_VARNAME']
+    constraint: ['$OBS_VARNAME', '$VARNAME']
 
   - operator: filters.filter_multiple_cubes
 
@@ -17,22 +17,22 @@ steps:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: $VARNAME
+        varname: $OBS_VARNAME
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-        varname: $VARNAME
+        varname: $OBS_VARNAME
 
 
     $MODEL_NAME:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: $UM_VARNAME
+        varname: $VARNAME
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-        varname: $UM_VARNAME
+        varname: $VARNAME
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         levels: []
