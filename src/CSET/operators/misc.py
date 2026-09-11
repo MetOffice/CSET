@@ -838,24 +838,33 @@ def _mask_fill_cube(
     # Defensive fallback: other NumPy masked-array default fill values.
     fill_values.extend([999999, -999999])
 
-    data = da.asarray(da.ma.getdata(x), dtype=np.float32)
-    m0 = da.asarray(da.ma.getmaskarray(x), dtype=bool)
+    if np.ma.isMaskedArray(x):
+        x_data = np.ma.getdata(x)
+        x_mask = np.ma.getmaskarray(x)
+    else:
+        x_data = x
+        x_mask = None
 
-    # Convert masked elements into NaN immediately
-    data = da.where(m0, np.nan, data)
+    data = da.asarray(x_data, dtype=np.float32)
 
-    # Identify known sentinel values.
+    if x_mask is not None:
+        m0 = da.asarray(x_mask, dtype=bool)
+        # Convert masked elements into NaN immediately
+        data = da.where(m0, np.nan, data)
+    else:
+        m0 = da.zeros(data.shape, dtype=bool, chunks=data.chunks)
+
+    # Build mask
     m_fill = da.zeros(data.shape, dtype=bool, chunks=data.chunks)
-
     for fv in fill_values:
-        fv32 = np.float32(fv)
-        ulp = ulp_factor * abs(np.spacing(fv32))
-        m_fill |= da.isclose(data, fv32, rtol=0, atol=ulp)
+        ulp = ulp_factor * abs(np.spacing(np.float32(fv)))
+        m_fill |= da.isclose(data, np.float32(fv), rtol=0, atol=ulp)
 
     if not da.any(m0 | m_fill).compute():
-        return cube
+        return cube  # nothing to clean
 
-    y = da.where(m0 | m_fill, np.nan, data)
+    masked = da.ma.masked_array(data, mask=(m0 | m_fill))
+    y = da.ma.filled(masked, np.nan)
 
     return cube.copy(data=y)
 
