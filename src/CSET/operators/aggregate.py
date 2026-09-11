@@ -31,28 +31,19 @@ from CSET.operators._utils import is_time_aggregatable
 logger = logging.getLogger(__name__)
 
 
-def _add_nref(cube: iris.cube.Cube):
-    """Retain information on number of forecast_reference_time inputs.
-
-    This preserves information on number of aggregated cases that can
-    otherwise be lost on subsequent calls to collapse functions.
-    """
-    nref = np.size(cube.coord("forecast_reference_time").points)
-    cube.coord("time").attributes["number_reference_times"] = nref
-    return cube
-
-
 def time_aggregate(
-    cube: iris.cube.Cube,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     method: str,
     interval_iso: str,
     **kwargs,
-) -> iris.cube.Cube:
-    """Aggregate cube by its time coordinate.
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Aggregate cube/cubes by its time coordinate.
 
-    Aggregates similar (stash) fields in a cube for the specified coordinate and
-    using the method supplied. The aggregated cube will keep the coordinate and
-    add a further coordinate with the aggregated end time points.
+    Aggregates similar (stash) fields in a cube or cube list for the specified coordinate and
+    using the method supplied. The aggregated cube/cubelist will keep the coordinate and
+    add a coordinate with the aggregated end time points.
+
+    Can also handle multiple forecast reference times.
 
     Examples are: 1. Generating hourly or 6-hourly precipitation accumulations
     given an interval for the new time coordinate.
@@ -66,11 +57,8 @@ def time_aggregate(
 
     Arguments
     ---------
-    cube: iris.cube.Cube
-        Cube to aggregate and iterate over one dimension
-    coordinate: str
-        Coordinate to aggregate over i.e. 'time', 'longitude',
-        'latitude','model_level_number'.
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        Cube or CubeList to aggregate and iterate over one dimension
     method: str
         Type of aggregate i.e. method: 'SUM', getattr creates
         iris.analysis.SUM, etc.
@@ -79,7 +67,7 @@ def time_aggregate(
 
     Returns
     -------
-    cube: iris.cube.Cube
+    resampled_cubes: iris.cube.Cube | iris.cube.CubeList
         Single variable but several methods of aggregation
 
     Raises
@@ -87,22 +75,28 @@ def time_aggregate(
     ValueError
         If the constraint doesn't produce a single cube containing a field.
     """
-    # Duration of ISO timedelta.
-    timedelta = isodate.parse_duration(interval_iso)
+    if interval_iso == "0":
+        return cubes
 
-    # Convert interval format to whole hours.
+    if isinstance(cubes, iris.cube.Cube):
+        cubes = iris.cube.CubeList([cubes])
+
+    resampled_cubes = iris.cube.CubeList()
+
+    timedelta = isodate.parse_duration(interval_iso)
     interval = int(timedelta.total_seconds() / 3600)
 
-    # Add time categorisation overwriting hourly increment via lambda coord.
-    # https://scitools-iris.readthedocs.io/en/latest/_modules/iris/coord_categorisation.html
-    iris.coord_categorisation.add_categorised_coord(
-        cube, "interval", "time", lambda coord, cell: cell // interval * interval
-    )
+    for cube in cubes:
+        # Handle cubes with multiple forecast cycles.
+        if cube.coord("forecast_reference_time").shape[0] > 1:
+            aggregated_cube = _aggregate_multi_frt_cube(cube, method, interval)
+        else:
+            aggregated_cube = _aggregate_by_interval(cube, method, interval)
 
-    # Aggregate cube using supplied method.
-    aggregated_cube = cube.aggregated_by("interval", getattr(iris.analysis, method))
-    aggregated_cube.remove_coord("interval")
-    return aggregated_cube
+        resampled_cubes.append(aggregated_cube)
+    if len(resampled_cubes) == 1:
+        return resampled_cubes[0]
+    return resampled_cubes
 
 
 def ensure_aggregatable_across_cases(
@@ -117,7 +111,7 @@ def ensure_aggregatable_across_cases(
     Arguments
     ---------
     cubes: iris.cube.Cube | iris.cube.CubeList
-        Each cube is checked to determine if it has the the necessary
+        Each cube is checked to determine if it has the necessary
         dimensional coordinates to be aggregatable, being processed if needed.
 
     Returns
@@ -284,3 +278,62 @@ def rolling_window_time_aggregation(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def _add_nref(cube: iris.cube.Cube):
+    """Retain information on number of forecast_reference_time inputs.
+
+    This preserves information on number of aggregated cases that can
+    otherwise be lost on subsequent calls to collapse functions.
+    """
+    nref = np.size(cube.coord("forecast_reference_time").points)
+    cube.coord("time").attributes["number_reference_times"] = nref
+    return cube
+
+
+def _aggregate_multi_frt_cube(
+    cube: iris.cube.Cube, method: str, interval: int
+) -> iris.cube.Cube:
+    """Aggregate a cube with multiple forecast reference times.
+
+    Aggregates each forecast cycle separately, then concatenates the results
+    back into a single cube along forecast_reference_time.
+    """
+    aggregated_cycles = iris.cube.CubeList()
+    for frt_cube in cube.slices_over("forecast_reference_time"):
+        iris.coord_categorisation.add_categorised_coord(
+            frt_cube,
+            "interval",
+            "time",
+            lambda coord, cell: cell // interval * interval,
+        )
+        agg = frt_cube.aggregated_by(
+            "interval",
+            getattr(iris.analysis, method),
+        )
+        agg.remove_coord("interval")
+        agg = iris.util.new_axis(
+            agg,
+            agg.coord("forecast_reference_time"),
+        )
+        aggregated_cycles.append(agg)
+    # 2d auxtime causes issues concatenating. Solution is to nuke it. Do we need it downstream?
+    # as we can construct it if needed.
+    for cb in aggregated_cycles:
+        cb.remove_coord("time")
+    return aggregated_cycles.concatenate_cube()
+
+
+def _aggregate_by_interval(cube: iris.cube.Cube, method: str, interval: int):
+    iris.coord_categorisation.add_categorised_coord(
+        cube,
+        "interval",
+        "time",
+        lambda coord, cell: cell // interval * interval,
+    )
+    aggregated_cube = cube.aggregated_by(
+        "interval",
+        getattr(iris.analysis, method),
+    )
+    aggregated_cube.remove_coord("interval")
+    return aggregated_cube
