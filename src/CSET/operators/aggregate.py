@@ -59,9 +59,6 @@ def time_aggregate(
     ---------
     cubes: iris.cube.Cube | iris.cube.CubeList
         Cube or CubeList to aggregate and iterate over one dimension
-    coordinate: str
-        Coordinate to aggregate over i.e. 'time', 'longitude',
-        'latitude','model_level_number'.
     method: str
         Type of aggregate i.e. method: 'SUM', getattr creates
         iris.analysis.SUM, etc.
@@ -70,7 +67,7 @@ def time_aggregate(
 
     Returns
     -------
-    resambpled_cubes: iris.cube.Cube | iris.cube.CubeList
+    resampled_cubes: iris.cube.Cube | iris.cube.CubeList
         Single variable but several methods of aggregation
 
     Raises
@@ -114,7 +111,7 @@ def ensure_aggregatable_across_cases(
     Arguments
     ---------
     cubes: iris.cube.Cube | iris.cube.CubeList
-        Each cube is checked to determine if it has the the necessary
+        Each cube is checked to determine if it has the necessary
         dimensional coordinates to be aggregatable, being processed if needed.
 
     Returns
