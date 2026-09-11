@@ -1,6 +1,6 @@
 category: Time series of surface temperature single point
 title: "Time series of surface temperature at Cardington [52.10438N, -0.42286E]"
-description: "Plots a time series of surface temoperature at gridpoint nearest to Cardington."
+description: "Plots a time series of surface temperature at gridpoint nearest to Cardington."
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
