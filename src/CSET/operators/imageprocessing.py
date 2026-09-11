@@ -23,7 +23,7 @@ from skimage.metrics import structural_similarity
 
 from CSET._common import is_increasing
 from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
-from CSET.operators.misc import _extract_common_time_points
+from CSET.operators.time_utils import _extract_common_time_points
 from CSET.operators.regrid import regrid_onto_cube
 
 logger = logging.getLogger(__name__)
