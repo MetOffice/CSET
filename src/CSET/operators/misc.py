@@ -22,6 +22,7 @@ from functools import reduce
 import iris
 import iris.analysis.calculus
 import numpy as np
+from cf_units import Unit
 from iris.cube import Cube, CubeList
 
 from CSET._common import is_increasing, iter_maybe
@@ -703,3 +704,213 @@ def differentiate(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def latent_heat_units(
+    cubes: Cube | CubeList,
+    **kwargs,
+) -> Cube | CubeList:
+    """
+    Convert w'q' covariance (e.g. from Cardington surface site netCDF files) to latent heat flux (W m-2).
+
+    Note
+    ----
+    Using fixed value of latent heat of vapourisation for now; varies by about 5% between -20 and +40degC.
+    Possible future improvement.
+    """
+    REQUIRED_UNITS = Unit("kg m-2 s-1")
+    OUTPUT_UNITS = Unit("W m-2")
+
+    Lc = 2.45e6  # J kg-1
+
+    out = iris.cube.CubeList()
+    for cube in iter_maybe(cubes):
+        # ACT ON MASS FLUXES
+        if cube.units is None or cube.units.is_unknown():
+            out.append(cube)
+            continue
+        if not cube.units.is_convertible(REQUIRED_UNITS):
+            # e.g. if UM LE or some other diagnostic — leave untouched
+            out.append(cube)
+            continue
+
+        cube_a = cube.copy()
+        cube_a = cube_a * Lc
+        cube_a.units = OUTPUT_UNITS
+        out.append(cube_a)
+
+    return out[0] if len(out) == 1 else out
+
+
+def convert_visibility_to_km(cubes, **kwargs):
+    """Ensure visibility is expressed in kilometres.
+
+    Arguments
+    ---------
+    cubes : iris.cube.Cube | iris.cube.CubeList
+        A Cube or CubeList containing visibility data. Each cube must
+        have units that are either already in kilometres or convertible
+        to kilometres (e.g. metres).
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The input cube(s) with visibility expressed in kilometres.
+        If the input is a single Cube, a Cube is returned. If the input
+        is an iterable of cubes, a CubeList is returned.
+
+    Notes
+    -----
+    - If a cube has units of metres ("m"), it is converted to kilometres
+      using ``cube.convert_units("km")``.
+    - If a cube is already in kilometres, it is left unchanged.
+    - Any units that are convertible to kilometres will be converted
+      using Iris unit handling.
+    - This operator applies the conversion in-place on each cube.
+
+    Examples
+    --------
+    >>> vis_km = convert_visibility_to_km(visibility_cube)
+
+    >>> vis_list_km = convert_visibility_to_km([cube1, cube2])
+    """
+    if isinstance(cubes, iris.cube.Cube):
+        cubes = iris.cube.CubeList([cubes])
+    else:
+        cubes = iris.cube.CubeList(cubes)
+
+    for cube in cubes:
+        if cube.units.is_convertible("km") and str(cube.units) != "km":
+            cube.convert_units("km")
+
+    return cubes if len(cubes) > 1 else cubes[0]
+
+
+def _mask_fill_cube(
+    cube: iris.cube.Cube,
+    ulp_factor: int = 10,
+) -> iris.cube.Cube:
+    """
+    Replace masked and fill-value data with NaNs.
+
+    Parameters
+    ----------
+    cube : iris.cube.Cube
+        Input cube to clean.
+
+    ulp_factor : int, optional
+        Number of floating-point ULPs (units in the last place) used when
+        comparing values against known fill values. Larger values are more
+        tolerant of floating-point rounding differences. Default is 10.
+
+    Returns
+    -------
+    iris.cube.Cube
+        Cube with masked and fill-value points replaced by ``NaN``.
+
+    Notes
+    -----
+     The returned cube preserves metadata and coordinates.
+     Data are processed lazily using Dask where possible.
+     If no masked or fill values are detected, the original cube is
+      returned unchanged.
+     Genuine NetCDF ``_FillValue`` handling is normally performed by Iris
+      during file loading, but this routine additionally converts masked
+      points to NaNs and handles known sentinel values.
+    """
+    import dask.array as da
+
+    x = cube.lazy_data()
+    fill_values = []
+    # NetCDF-style fill value (if present)
+    try:
+        fv = getattr(x._meta, "fill_value", None)
+        if fv is not None:
+            fill_values.append(fv)
+    except AttributeError:
+        pass  # x has no _meta (plain ndarray)
+
+    # Known fill values
+    # - 1e10 observed as NetCDF _FillValue in some archived variables.
+    # - 1e11 documented as the data value for missing/bad core data flags.
+    fill_values.extend([1e10, 1e11])
+
+    # Defensive fallback: other NumPy masked-array default fill values.
+    fill_values.extend([999999, -999999])
+
+    if np.ma.isMaskedArray(x):
+        x_data = np.ma.getdata(x)
+        x_mask = np.ma.getmaskarray(x)
+    else:
+        x_data = x
+        x_mask = None
+
+    data = da.asarray(x_data, dtype=np.float32)
+
+    if x_mask is not None:
+        m0 = da.asarray(x_mask, dtype=bool)
+        # Convert masked elements into NaN immediately
+        data = da.where(m0, np.nan, data)
+    else:
+        m0 = da.zeros(data.shape, dtype=bool, chunks=data.chunks)
+
+    # Build mask
+    m_fill = da.zeros(data.shape, dtype=bool, chunks=data.chunks)
+    for fv in fill_values:
+        ulp = ulp_factor * abs(np.spacing(np.float32(fv)))
+        m_fill |= da.isclose(data, np.float32(fv), rtol=0, atol=ulp)
+
+    if not da.any(m0 | m_fill).compute():
+        return cube  # nothing to clean
+
+    masked = da.ma.masked_array(data, mask=(m0 | m_fill))
+    y = da.ma.filled(masked, np.nan)
+
+    return cube.copy(data=y)
+
+
+def mask_fill_values(
+    cubes: iris.cube.Cube | CubeList,
+    ulp_factor: int = 10,
+) -> CubeList:
+    """
+    Replace masked and fill-value data with NaNs in one or more cubes.
+
+    Applies :func:`_mask_fill_cube` to every cube in the supplied
+    CubeList. This is primarily intended for observational
+    datasets where a combination of NetCDF ``_FillValue`` masking and
+    dataset-specific sentinel values are used to represent missing or
+    unusable data.
+
+    Parameters
+    ----------
+    cubes : iris.cube.Cube or iris.cube.CubeList
+        Cube or CubeList to clean.
+
+    ulp_factor : int, optional
+        Number of floating-point ULPs used when comparing values against
+        known fill values. Passed directly to
+        :func:`_mask_fill_cube`. Default is 10.
+
+    Returns
+    -------
+    iris.cube.CubeList
+        CubeList containing cleaned cubes.
+
+    Notes
+    -----
+    This operator should generally be applied after reading observational
+    data and before plotting.
+
+    It may also be useful after operators that recreate or transform data,
+    where masked values could otherwise propagate into derived diagnostics
+    and appear as spurious spikes or extrema in plots.
+    """
+    if not isinstance(cubes, CubeList):
+        cubes = CubeList([cubes])
+
+    cleaned = CubeList()
+    for cube in cubes:
+        cleaned.append(_mask_fill_cube(cube, ulp_factor=ulp_factor))
+
+    return cleaned

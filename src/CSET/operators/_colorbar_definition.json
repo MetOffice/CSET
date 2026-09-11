@@ -295,7 +295,7 @@
     "max": 250.0,
     "min": -250.0,
     "ymax": 250.0,
-    "ymin": -50.0
+    "ymin": "auto"
   },
   "grid_surface_upward_sensible_heat_flux_difference": {
     "cmap": "PuOr",

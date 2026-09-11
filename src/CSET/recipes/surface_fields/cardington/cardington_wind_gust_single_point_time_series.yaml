@@ -1,6 +1,6 @@
 category: Time series of variables at Cardington single point
-title: "Time series of $PLOT_VARNAME at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint."
-description: "Plots a time series of $PLOT_VARNAME at a selected Cardington gridpoint."
+title: "Time series of wind gust at Cardington [52.10438N, -0.42286E]"
+description: "Plots a time series of wind gust at girdpoint nearest to Cardington"
 
 steps:
   - operator: read.read_cubes
@@ -9,7 +9,7 @@ steps:
       - Cardington 05min
       - Cardington 30min
       - $MODEL_NAME
-    constraint: ['$VARNAME', '$UM_VARNAME']
+    constraint: ['$OBS_VARNAME', '$VARNAME']
 
   - operator: filters.filter_multiple_cubes
 
@@ -17,11 +17,11 @@ steps:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: $VARNAME
+        varname: $OBS_VARNAME
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-        varname: $VARNAME
+        varname: $OBS_VARNAME
       height_constraint:
         operator: constraints.generate_attribute_constraint
         attribute: 'height'
@@ -31,7 +31,7 @@ steps:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: $UM_VARNAME
+        varname: $VARNAME
       stash_constraint:
         operator: constraints.generate_attribute_constraint
         attribute: STASH

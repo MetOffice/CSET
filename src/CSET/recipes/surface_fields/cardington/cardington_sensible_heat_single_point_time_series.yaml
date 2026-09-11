@@ -7,17 +7,22 @@ steps:
     model_names:
       - Obs (30min)
       - $MODEL_NAME
+    constraint: [$CARDINGTON_VARNAMES, $VARNAME]
 
   - operator: misc.mask_fill_values
+#  - operator: filters.apply_mask
+#    mask:
+#       operator: filters.generate_mask
+#       condition: 'lt'
+#       value: 1.0e+10
 
-  - operator: fluxes.sensible_heat_flux_from_covariance
-    HEIGHT: $HEIGHT
-    CARDINGTON_VARNAMES: $WT_VARNAMES
+  - operator: fluxes.sensible_heat_from_cardington_cubes
+    CARDINGTON_VARNAMES: $CARDINGTON_VARNAMES
 
   - operator: filters.filter_multiple_cubes
     Cardington:
       operator: constraints.generate_var_constraint
-      varname: surface_upward_sensible_heat_flux
+      varname: surface_upward_sensible_heat_flux_cardington
 
     $MODEL_NAME:
       operator: constraints.generate_var_constraint

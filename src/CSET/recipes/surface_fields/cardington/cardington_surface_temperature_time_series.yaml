@@ -1,4 +1,4 @@
-category: Time series of surface temperature single point
+category: Time series of surface temperature at single point
 title: "Time series of surface temperature at Cardington [52.10438N, -0.42286E]"
 description: "Plots a time series of surface temperature at gridpoint nearest to Cardington."
 steps:
@@ -32,7 +32,7 @@ steps:
   - operator: filters.filter_multiple_cubes
     temperature:
       operator: constraints.generate_var_constraint
-      varname: $VARNAME
+      varname: $OBS_VARNAME
 
   - operator: misc.remove_attribute
     attribute:
