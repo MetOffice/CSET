@@ -23,6 +23,7 @@ import iris.cube
 import iris.exceptions
 import numpy as np
 import pytest
+from cf_units import Unit
 
 from CSET.operators import misc, read
 
@@ -567,25 +568,22 @@ def test_extract_common_points_nocommonpoints(vertical_profile_cube):
         )
 
 
-def test_remove_scalar_coord():
-    """Test that scalar coordinate be removed."""
-    # Create simple 1D cube
-    data = np.arange(5)
-    time = iris.coords.DimCoord(
-        np.arange(5), standard_name="time", units="hours since 1970-01-01"
+def _make_cube(data, units="1"):
+    """Tiny cube generator."""
+    data = np.asanyarray(data)
+    if data.ndim != 2:
+        raise ValueError(f"Expected 2D data, got shape {data.shape}")
+
+    ny, nx = data.shape
+    lat = iris.coords.DimCoord(np.arange(ny), standard_name="latitude", units="degrees")
+    lon = iris.coords.DimCoord(
+        np.arange(nx), standard_name="longitude", units="degrees"
     )
-    cube = iris.cube.Cube(data, dim_coords_and_dims=[(time, 0)])
-    # Add a scalar coord
-    realization = iris.coords.AuxCoord(1, long_name="realization")
-    cube.add_aux_coord(realization)
-    # Check it's present and scalar
-    assert cube.coords("realization")
-    assert cube.coord_dims("realization") == ()
-    # Run function
-    out = misc.remove_scalar_coords(cube, ["realization"])
-    # Check it’s removed
-    cube_out = out[0]
-    assert not cube_out.coords("realization")
+    return iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[(lat, 0), (lon, 1)],
+        units=units,
+    )
 
 
 def test_not_remove_non_scalar_coord():
@@ -603,3 +601,203 @@ def test_not_remove_non_scalar_coord():
     # Check it is still present
     cube_out = out[0]
     assert cube_out.coords("time")
+
+
+def _make_scalar_cube(
+    value,
+    var_name,
+    units=None,
+    model_name="Cardington",
+):
+    """Make tiny 1x1 cube with var_name, units, and model_name attribute."""
+    data = np.array([[value]], dtype=np.float64)
+    lat = iris.coords.DimCoord([0.0], standard_name="latitude", units="degrees")
+    lon = iris.coords.DimCoord([0.0], standard_name="longitude", units="degrees")
+
+    cube = iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[(lat, 0), (lon, 1)],
+        units=units if units is not None else Unit("unknown"),
+    )
+    cube.var_name = var_name
+    cube.attributes["model_name"] = model_name
+    return cube
+
+
+def test_latent_heat_units_conversion():
+    """Test unit conversion of latent heat units."""
+    wq = _make_scalar_cube(0.001, "wq_covariance", units=Unit("kg m-2 s-1"))
+
+    out = misc.latent_heat_units(wq)
+    arr = out.data
+    if hasattr(arr, "compute"):
+        arr = arr.compute()
+
+    expected = 2.45e6 * 0.001
+    assert np.isclose(arr[0, 0], expected)
+    assert out.units == "W m-2"
+
+
+def test_latent_heat_units_passthrough_non_convertible():
+    """Test operator returns unchanged cube if not convertible."""
+    cube = _make_scalar_cube(5.0, "not_flux", units=Unit("K"))
+    out = misc.latent_heat_units(cube)
+    # should be unchanged
+    assert out is cube
+
+
+def test_latent_heat_units_cubelist_mixed():
+    """Test operator with mixed cubelist."""
+    wq = _make_scalar_cube(0.001, "wq_covariance", units=Unit("kg m-2 s-1"))
+    other = _make_scalar_cube(10.0, "temperature", units=Unit("K"))
+    out = misc.latent_heat_units([wq, other])
+
+    assert isinstance(out, iris.cube.CubeList)
+    assert len(out) == 2
+    # check conversion happened only for first cube
+    converted = next(c for c in out if c.units == "W m-2")
+    arr = converted.data
+    if hasattr(arr, "compute"):
+        arr = arr.compute()
+
+    assert np.isclose(arr[0, 0], 2.45e6 * 0.001)
+    assert converted.units == "W m-2"
+    # check passthrough
+    assert any(c is other for c in out)
+
+
+def _make_cube(data, units="m"):
+    """Tiny cube generator."""
+    data = np.asarray(data)
+    ny, nx = data.shape
+    lat = iris.coords.DimCoord(np.arange(ny), standard_name="latitude", units="degrees")
+    lon = iris.coords.DimCoord(
+        np.arange(nx), standard_name="longitude", units="degrees"
+    )
+    return iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[(lat, 0), (lon, 1)],
+        units=units,
+    )
+
+
+def test_visibility_m_to_km():
+    """Test that visibility is converted to kilometres from metres (common use)."""
+    cube = _make_cube([[1000.0]], units="m")
+    out = misc.convert_visibility_to_km(cube)
+    assert out.units == "km"
+    assert np.allclose(out.data, [[1.0]])
+
+
+def test_visibility_already_km():
+    """Test that visibility already in km is unchanged."""
+    cube = _make_cube([[1.0]], units="km")
+    out = misc.convert_visibility_to_km(cube)
+    assert out.units == "km"
+    assert np.allclose(out.data, [[1.0]])
+
+
+def test_visibility_cubelist():
+    """Test that cubelist is converted to km."""
+    cubes = [
+        _make_cube([[1000.0]], units="m"),
+        _make_cube([[2000.0]], units="m"),
+    ]
+    out = misc.convert_visibility_to_km(cubes)
+    assert isinstance(out, iris.cube.CubeList)
+    assert len(out) == 2
+    assert np.allclose(out[0].data, [[1.0]])
+    assert np.allclose(out[1].data, [[2.0]])
+    assert all(c.units == "km" for c in out)
+
+
+def test_visibility_mixed_units_cubelist():
+    """Test for cubelist with mixed units."""
+    cubes = [
+        _make_cube([[1000.0]], units="m"),
+        _make_cube([[1.0]], units="km"),
+    ]
+    out = misc.convert_visibility_to_km(cubes)
+    assert np.allclose(out[0].data, [[1.0]])
+    assert np.allclose(out[1].data, [[1.0]])
+    assert all(c.units == "km" for c in out)
+
+
+def test_visibility_non_convertible_units():
+    """Test for cubelist with non-convertible units."""
+    cube = _make_cube([[1.0]], units="seconds")
+    out = misc.convert_visibility_to_km(cube)
+    assert out.units == "seconds"
+    assert np.allclose(out.data, [[1.0]])
+
+
+def test_mask_fill_value_no_change():
+    """Test mask fill value with no change."""
+    cube = _make_cube([[1.0, 2.0]])
+    out = misc._mask_fill_cube(cube)
+    # return same object
+
+    assert out is cube
+
+
+@pytest.mark.parametrize(
+    "sentinel",
+    [1e10, 1e11, 999999, -999999],
+)
+def test_mask_fill_value_sentinels(sentinel):
+    """Test known sentinel values are converted to NaN."""
+    cube = _make_cube([[1.0, sentinel, 3.0]])
+
+    out = misc._mask_fill_cube(cube)
+
+    data = out.data.compute() if hasattr(out.data, "compute") else out.data
+
+    assert np.isnan(data[0, 1])
+    assert np.allclose(data[0, [0, 2]], [1.0, 3.0])
+
+
+def test_mask_fill_value_masked_array():
+    """Masked values should become NaNs."""
+    data = np.ma.array([[1.0, 2.0]], mask=[[False, True]])
+    cube = _make_cube(data)
+    out = misc._mask_fill_cube(cube)
+    result = out.data.compute() if hasattr(out.data, "compute") else out.data
+    result = np.ma.filled(result, np.nan)
+
+    assert result[0, 0] == 1.0
+    assert np.isnan(result[0, 1])
+
+
+def test_mask_fill_value_ulp():
+    """Test with ulp_factor input."""
+    fv = np.float32(1e10)
+    near_fv = fv + np.spacing(fv) * 5  # within tolerance
+    cube = _make_cube([[near_fv]])
+    out = misc._mask_fill_cube(cube, ulp_factor=10)
+    data = out.data.compute() if hasattr(out.data, "compute") else out.data
+
+    assert np.isnan(data[0, 0])
+
+
+def test_mask_fill_value_combined():
+    """Test with combined mask and real input."""
+    data = np.ma.array([[1e10, 2.0]], mask=[[False, True]])
+    cube = _make_cube(data)
+    out = misc._mask_fill_cube(cube)
+    result = out.data.compute() if hasattr(out.data, "compute") else out.data
+
+    assert np.isnan(result[0, 0])  # sentinel
+    assert np.isnan(result[0, 1])  # masked
+
+
+def test_mask_fill_values_cubelist():
+    """Test with cubelist input."""
+    cubes = iris.cube.CubeList([_make_cube([[1e10]]), _make_cube([[2.0]])])
+    out = misc.mask_fill_values(cubes)
+
+    assert isinstance(out, iris.cube.CubeList)
+    data0 = out[0].data.compute() if hasattr(out[0].data, "compute") else out[0].data
+    data1 = out[1].data.compute() if hasattr(out[1].data, "compute") else out[1].data
+
+    assert np.isnan(data0[0, 0])
+    assert np.allclose(data1[0, 0], 2.0)

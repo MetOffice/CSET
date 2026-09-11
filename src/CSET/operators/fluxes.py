@@ -23,6 +23,30 @@ from CSET._common import iter_maybe
 from CSET.operators._atmospheric_constants import CPD, LV, RD
 
 
+def sensible_heat_from_cardington_cubes(cubes, **kwargs):
+    """
+    Adaptor specific to Cardington inputs.
+
+    Extract 3 cubes of covariance,
+    temperature and pressure and call 'fluxes.sensible_heat_flux_from_covariance'.
+    """
+    selected = {
+        c.var_name: c for c in cubes if c.attributes.get("model_name") == "Obs (30min)"
+    }
+    wanted = kwargs["CARDINGTON_VARNAMES"].split(",")
+    shf = sensible_heat_flux_from_covariance(
+        selected[wanted[0]],
+        selected[wanted[1]],
+        selected[wanted[2]],
+    )
+    shf.rename("surface_upward_sensible_heat_flux_cardington")
+    shf.var_name = "surface_upward_sensible_heat_flux_cardington"
+
+    out = iris.cube.CubeList(c for c in cubes if c.var_name not in wanted)
+    out.append(shf)
+    return out if len(out) > 1 else out[0]
+
+
 def sensible_heat_flux_from_covariance(
     wt_flux: iris.cube.Cube | iris.cube.CubeList,
     air_temperature: iris.cube.Cube | iris.cube.CubeList,

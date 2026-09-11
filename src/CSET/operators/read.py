@@ -226,6 +226,7 @@ def read_cubes(
                 # Instantaneous time coordinate
                 continue
             # Iris can't guess the bounds of a scalar coordinate.
+            # Iris can't guess the bounds of a scalarload_mo coordinate.
             if not dim_coord.has_bounds() and dim_coord.shape[0] > 1:
                 dim_coord.guess_bounds()
 

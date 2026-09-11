@@ -1,0 +1,50 @@
+category: Time series at Cardington
+title: "Time series of sensible heat flux at Cardington [52.10438N, -0.42286E]"
+description: "Plots a time series of sensible heat flux at gridpoint nearest to Cardington."
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names:
+      - Obs (30min)
+      - $MODEL_NAME
+    constraint: [$CARDINGTON_VARNAMES, $VARNAME]
+
+  - operator: misc.mask_fill_values
+#  - operator: filters.apply_mask
+#    mask:
+#       operator: filters.generate_mask
+#       condition: 'lt'
+#       value: 1.0e+10
+
+  - operator: fluxes.sensible_heat_from_cardington_cubes
+    CARDINGTON_VARNAMES: $CARDINGTON_VARNAMES
+
+  - operator: filters.filter_multiple_cubes
+    Cardington:
+      operator: constraints.generate_var_constraint
+      varname: surface_upward_sensible_heat_flux_cardington
+
+    $MODEL_NAME:
+      operator: constraints.generate_var_constraint
+      varname: surface_upward_sensible_heat_flux
+
+  - operator: misc.remove_attribute
+    attribute:
+      - time_coverage_end
+      - time_coverage_start
+      - valid_min
+      - valid_max
+      - date
+      - date_created
+
+  - operator: regrid.regrid_to_single_point
+    lat_pt: 52.10438
+    lon_pt: -0.42286
+    latlon_in_type: "realworld"
+    method: "Nearest"
+    boundary_margin: 0
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.plot_line_series
