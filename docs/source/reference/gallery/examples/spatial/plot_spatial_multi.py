@@ -52,6 +52,7 @@ Configuring the *cset_workflow*
 * Set required configuration options on ``Diagnostics / Multi-variable plots`` panel
 * A list of different variables can be specified as python lists to generate multiple different output plot combinations using the same workflow run.
 * If all variables are set, 3-layer plots are generated. If either ``OVERLAY`` or ``CONTOUR`` variables are not set, the relevant 2-layer outputs are generated.
+
 ::
 
     SPATIAL_MULTI_VARIABLE = True
