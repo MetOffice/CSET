@@ -50,6 +50,7 @@ from CSET.operators._colormaps import (
     colorbar_map_levels,
     get_model_colors_map,
 )
+from CSET.operators._time_utils import _extract_common_time_points
 from CSET.operators._utils import (
     calc_array_stats,
     check_sequence_coordinate,
@@ -64,7 +65,6 @@ from CSET.operators._utils import (
     validate_cubes_coords,
 )
 from CSET.operators.collapse import collapse
-from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.regrid import regrid_onto_cube
 
 logger = logging.getLogger(__name__)
