@@ -1,0 +1,138 @@
+{
+  "eastward current_northward current_magnitude": {
+    "cmap": "GnBu_r",
+    "max": 0.5,
+    "min": 0.0
+  },
+  "air_density": {
+    "cmap": "RdYlBu_r",
+    "max": 1.5,
+    "min": 0.0
+  },
+  "charnock_coefficient_for_surface_roughness_length_for_momentum_in_air": {
+    "cmap": "RdYlBu_r",
+    "max": 0.03,
+    "min": 0.001
+  },
+  "depth": {
+    "cmap": "ocean_r",
+    "max": 1500.0,
+    "min": 0.0
+  },
+  "eastward friction velocity": {
+    "cmap": "RdYlBu_r",
+    "max": 0.5,
+    "min": -0.5
+  },
+  "eastward wave supported wind stress": {
+    "cmap": "RdBu_r",
+    "max": 0.0005,
+    "min": -0.0005
+  },
+  "eastward wave to ocean stress": {
+    "cmap": "RdBu_r",
+    "max": 0.0005,
+    "min": -0.0005
+  },
+  "eastward_sea_water_velocity": {
+    "cmap": "RdBu_r",
+    "max": 1.1,
+    "min": -1.1
+  },
+  "eastward_wind": {
+    "cmap": "RdBu_r",
+    "max": 20.0,
+    "min": -20.0
+  },
+  "expected maximum wave height (linear, 1st order)": {
+    "cmap": "RdYlBu_r",
+    "max": 10.0,
+    "min": 0.0
+  },
+  "northward friction velocity": {
+    "cmap": "RdYlBu_r",
+    "max": 0.5,
+    "min": -0.5
+  },
+  "northward wave supported wind stress": {
+    "cmap": "RdBu_r",
+    "max": 0.0005,
+    "min": -0.0005
+  },
+  "northward wave to ocean stress": {
+    "cmap": "RdBu_r",
+    "max": 0.0005,
+    "min": -0.0005
+  },
+  "northward_sea_water_velocity": {
+    "cmap": "RdBu_r",
+    "max": 1.1,
+    "min": -1.1
+  },
+  "northward_wind": {
+    "cmap": "RdBu_r",
+    "max": 20.0,
+    "min": -20.0
+  },
+  "sea_surface_height_above_mean_sea_level": {
+    "cmap": "RdBu_r",
+    "max": 1.6,
+    "min": -1.6
+  },
+  "sea_surface_wave_from_direction": {
+    "cmap": "rainbow",
+    "max": 360.0,
+    "min": 0.0
+  },
+  "sea_surface_wave_significant_height": {
+    "cmap": "CMRmap_r",
+    "max": 7.5,
+    "min": 0
+  },
+  "sea_surface_wave_stokes_drift_eastward_velocity": {
+    "cmap": "RdBu_r",
+    "max": 0.25,
+    "min": -0.25
+  },
+  "sea_surface_wave_stokes_drift_northward_velocity": {
+    "cmap": "RdBu_r",
+    "max": 0.25,
+    "min": -0.25
+  },
+  "sea_surface_wind_wave_mean_period_from_variance_spectral_density_first_frequency_moment":  {
+    "cmap": "RdYlBu_r",
+    "max": 15.0,
+    "min": 0.0
+  },
+  "sea_surface_wind_wave_mean_period_from_variance_spectral_density_second_frequency_moment":  {
+    "cmap": "RdYlBu_r",
+    "max": 15.0,
+    "min": 0.0
+  },
+  "surface_downward_eastward_stress": {
+    "cmap": "RdBu_r",
+    "max": 1.5,
+    "min": -1.5
+  },
+  "surface_downward_northward_stress": {
+    "cmap": "RdBu_r",
+    "max": 3.0,
+    "min": -3.0
+  },
+  "wave peak frequency": {
+    "cmap": "RdYlBu_r",
+    "max": 1.0,
+    "min": 0.0
+  },
+  "wave peak period": {
+    "cmap": "RdYlBu_r",
+    "max": 20.0,
+    "min": 0.0
+  },
+  "wave to ocean energy flux": {
+    "cmap": "YlOrRd",
+    "max": 5.0,
+    "min": 0.0
+  }
+
+}
