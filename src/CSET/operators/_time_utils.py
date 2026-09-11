@@ -47,37 +47,18 @@ def _extract_common_time_points_multiple_cubes_with_frt(cubes: CubeList) -> Cube
             )
 
     # Start from the first cube's forecast periods.
-    shared_periods = set(cubes[0].coord("forecast_period").points)
+    time_constraint = _make_shared_period_constraint(cubes[0], cubes[1:])
 
-    # Find intersection across all cubes.
-    for cube in cubes[1:]:
-        shared_periods &= set(cube.coord("forecast_period").points)
-
-    if not shared_periods:
-        raise ValueError("No common forecast periods found.")
-
-    logger.debug(
-        "Common forecast periods: %s",
-        sorted(shared_periods),
-    )
-
-    constraint = iris.Constraint(
-        forecast_period=lambda cell, shared_periods=shared_periods: (
-            cell.point in shared_periods
-        )
-    )
-
-    output = CubeList()
-
+    common_time_cubelist = CubeList()
     for cube in cubes:
-        extracted = cube.extract(constraint)
+        extracted = cube.extract(time_constraint)
 
         if extracted is None:
             raise ValueError(f"No common forecast periods remain for {cube.name()}")
 
-        output.append(extracted)
+        common_time_cubelist.append(extracted)
 
-    return output
+    return common_time_cubelist
 
 
 def _extract_common_time_points_multiple_cubes_no_frt(cubes: CubeList) -> CubeList:
@@ -177,10 +158,10 @@ def _extract_common_time_points_with_frt(base: Cube, other: Cube) -> tuple[Cube,
     if not np.array_equal(reference_frts, cube_frts):
         raise ValueError("Cubes do not share the same forecast_reference_time values.")
 
-    constraint = _make_shared_period_constraint(base, other)
+    time_constraint = _make_shared_period_constraint(base, other)
 
-    base = base.extract(constraint)
-    other = other.extract(constraint)
+    base = base.extract(time_constraint)
+    other = other.extract(time_constraint)
 
     return base, other
 
@@ -190,19 +171,38 @@ def _make_shared_period_constraint(base, other) -> iris.Constraint:
     shared_periods = set(base.coord("forecast_period").points)
 
     # Find intersection across all cubes.
+    if isinstance(other, Cube):
+        shared_periods &= set(other.coord("forecast_period").points)
 
-    shared_periods &= set(other.coord("forecast_period").points)
+        if not shared_periods:
+            raise ValueError("No common forecast periods found.")
 
-    if not shared_periods:
-        raise ValueError("No common forecast periods found.")
-
-    logger.debug(
-        "Common forecast periods: %s",
-        sorted(shared_periods),
-    )
-
-    return iris.Constraint(
-        forecast_period=lambda cell, shared_periods=shared_periods: (
-            cell.point in shared_periods
+        logger.debug(
+            "Common forecast periods: %s",
+            sorted(shared_periods),
         )
-    )
+
+        return iris.Constraint(
+            forecast_period=lambda cell, shared_periods=shared_periods: (
+                cell.point in shared_periods
+            )
+        )
+
+    elif isinstance(other, CubeList):
+        # Find intersection across all cubes.
+        for cube in other:
+            shared_periods &= set(cube.coord("forecast_period").points)
+
+        if not shared_periods:
+            raise ValueError("No common forecast periods found.")
+
+        logger.debug(
+            "Common forecast periods: %s",
+            sorted(shared_periods),
+        )
+
+        return iris.Constraint(
+            forecast_period=lambda cell, shared_periods=shared_periods: (
+                cell.point in shared_periods
+            )
+        )
