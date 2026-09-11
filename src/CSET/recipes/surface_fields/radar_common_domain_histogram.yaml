@@ -1,0 +1,61 @@
+category: Surface Spatial Plot
+title: "Histogram $MODEL_VARNAME\n $TITLE_STRING common domain model and Nimrod radar"
+description: |
+  Creates histograms of the model rainfall rate and
+  the observed radar rainfall rate. The model field is regridded onto
+  the radar grid. Both regridded model and radar grids are then masked
+  so that only data within a domain common to both are used.
+  If $SEQUENCE is set to "time" then time sequence plots are produced.
+  If $SEQUENCE is set to "realization" then a single case-study mean plot is produced.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $ALL_LABEL
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+    constraint: [$MODEL_VARNAME, $RADAR_VARNAME, $RADAR_WTS_VARNAME]
+
+  - operator: radar_filter.radar_mask_loop
+    model_field:
+      operator: filters.filter_multiple_cubes
+      constraint:
+        operator: constraints.combine_constraints
+        varname_constraint:
+          operator: constraints.generate_var_constraint
+          varname: $MODEL_VARNAME
+        cell_methods_constraint:
+          operator: constraints.generate_cell_methods_constraint
+          cell_methods: []
+          varname: $MODEL_VARNAME
+        pressure_level_constraint:
+          operator: constraints.generate_level_constraint
+          coordinate: "pressure"
+          levels: []
+
+    nimrod_field:
+      operator: filters.filter_multiple_cubes
+      constraint:
+        operator: constraints.generate_var_constraint
+        varname: $RADAR_VARNAME
+
+    nimrod_mask:
+      operator: filters.generate_mask
+      mask_field:
+        operator: filters.filter_multiple_cubes
+        constraint:
+          operator: constraints.generate_var_constraint
+          varname: $RADAR_WTS_VARNAME
+      condition: 'ge'
+      value: 11
+
+    boundary_margin: 16
+    outputs: $OUTPUTS
+
+  - operator: radar_filter.match_varname_and_units
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.plot_histogram_series
+    sequence_coordinate: $SEQUENCE

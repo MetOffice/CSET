@@ -752,7 +752,7 @@ def _plot_and_save_spatial_plot(
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     cube_min, cube_max, cube_mean = calc_array_stats(cube.data)
     axes.annotate(
-        f"Min: {cube_min:.3g} Max: {cube_max:.3g} Mean: {cube_mean:.3g}",
+        f"Min: {np.nanmin(cube.data):.3g} Max: {np.nanmax(cube.data):.3g} Mean: {np.nanmean(cube.data):.3g}",
         xy=(0.025, yinfopad),
         xycoords="axes fraction",
         xytext=(-5, 5),
