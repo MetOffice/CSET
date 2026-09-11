@@ -35,7 +35,7 @@ from CSET.operators.constraints import (
     generate_realization_constraint,
     generate_remove_single_ensemble_member_constraint,
 )
-from CSET.operators.misc import _extract_common_time_points
+from CSET.operators.time_utils import _extract_common_time_points
 from CSET.operators.read import _realization_callback
 from CSET.operators.regrid import regrid_onto_cube
 
