@@ -299,6 +299,10 @@ def cell_stats(
         times = cube.coord("time").points
         time_units = cube.coord("time").units
         times_dt = [time_units.num2pydate(t) for t in times]
+        # If elements of time_dt are arrays (e.g. if the cube has been aggregated across multiple cases), flatten the list
+        if isinstance(times_dt[0], np.ndarray):
+            times_dt = [t for sublist in times_dt for t in sublist]
+
         cube_dict = {
             time: cube_slice.data
             for time, cube_slice in zip(times_dt, cube.slices_over("time"), strict=True)
@@ -564,7 +568,30 @@ def _add_cell_stats_data_to_cubes(
     cubelist = iris.cube.CubeList()
 
     # Construct coordinates for new cubes
-    time_coord = template_cube.coord("time").copy()
+    if isinstance(template_cube.coord("time"), iris.coords.DimCoord):
+        time_coord = template_cube.coord("time").copy()
+    else:
+        # Make a new time DimCoord. This is artificial though, it just needs to be
+        # the same size as the first dimension of the data
+        time_point_sizes = [
+            data_and_metadata_dict[cb]["data"].shape[0] for cb in data_and_metadata_dict
+        ]
+
+        # Check all points are equal size
+        if not all(
+            time_point_sizes[0] == time_point for time_point in time_point_sizes
+        ):
+            raise ValueError(
+                "All data arrays must have the same number of time points. "
+                f"Found sizes: {time_point_sizes}"
+            )
+        time_coord = iris.coords.DimCoord(
+            np.arange(time_point_sizes[0]),
+            long_name="time",
+            var_name="time",
+            units="1",
+        )
+
     # To construct feature coordinate, look at the size of dimension 1 for each data
     arr_size = max(
         [data_and_metadata_dict[cb]["data"].shape[1] for cb in data_and_metadata_dict]
@@ -612,7 +639,10 @@ def _add_cell_stats_data_to_cubes(
             # Check if this coord represents a dimension of data
             dims = template_cube.coord_dims(coord)
             if len(dims) > 0:
-                cell_stats_cube.add_aux_coord(coord, dims)
+                try:
+                    cell_stats_cube.add_aux_coord(coord, dims)
+                except iris.exceptions.CannotAddError:
+                    logger.warning(f"Could not add {coord_name} to cube")
             else:
                 cell_stats_cube.add_aux_coord(coord)
 
