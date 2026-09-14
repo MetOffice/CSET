@@ -134,7 +134,7 @@ def retrieve_nimrod():
 
             # Process Nimrod data between the start and end dates.
             date_use = date_start_offset
-            while date_use <= date_start_offset + v["forecast_length"]:
+            while date_use < date_start_offset + v["forecast_length"]:
                 # Load the Nimrod data into an Iris cube.
                 nimrod_obs_exist = "False"
                 nimrod_obs = (
