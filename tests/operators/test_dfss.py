@@ -185,13 +185,13 @@ def test_parallel_calculate_dfss(dfss_ensemble_cube):
 def test_dfss_on_slice(dfss_ensemble_cube):
     """Test dfss_on_slice."""
     for time_slice in dfss_ensemble_cube.slices_over("time"):
-        dfss_cube, dfss_stdev_cube = dfss._dfss_on_slice(
+        dfss_cube, dfss_stdev_cube = dfss._dfss_on_time_slice(
             time_slice, [3], "centile", 95, None
         )
         assert type(dfss_cube) is iris.cube.Cube
         assert type(dfss_stdev_cube) is iris.cube.Cube
     for time_slice in dfss_ensemble_cube.slices_over("time"):
-        dfss_cube, dfss_stdev_cube = dfss._dfss_on_slice(
+        dfss_cube, dfss_stdev_cube = dfss._dfss_on_time_slice(
             time_slice, [3], "threshold", None, 2
         )
         assert type(dfss_cube) is iris.cube.Cube

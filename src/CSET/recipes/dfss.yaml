@@ -1,5 +1,5 @@
 category: Ensemble
-title: dFSS
+title: dFSS of $VARNAME using $CENTILE_OR_THRESHOLD method with value of $CENTILE$THRESHOLD
 description: |
   runs the dFSS calculation then creates:
   1) line plots with dfss vs neighbourhoods for each time coordinate
@@ -12,6 +12,7 @@ description: |
 steps:
   - operator: read.read_cube
     file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAMES
     constraint:
       operator: constraints.combine_constraints
       varname_constraint:
@@ -41,7 +42,6 @@ steps:
     sequence_coordinate: "neighbourhoods"
 
   - operator: plot.plot_dfss_contour
-    variable: "dfss"
 
   - operator: write.write_cube_to_nc
     overwrite: True
