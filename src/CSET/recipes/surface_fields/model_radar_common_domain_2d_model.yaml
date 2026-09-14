@@ -1,5 +1,5 @@
 category: Surface Spatial Plot
-title: "bmc2f $MODEL_LABEL $MODEL_VARNAME\n common domain $MODEL_LABEL and $RADAR_LABEL"
+title: "$MODEL_LABEL $MODEL_VARNAME\n common domain $MODEL_LABEL and $RADAR_LABEL"
 description: |
   Creates a 2-d surface plot of the model rainfall field over the
   domain common to both the model and the radar observation network.
@@ -58,4 +58,5 @@ steps:
     overwrite: True
 
   - operator: plot.spatial_pcolormesh_plot
+    strict_title: True
     sequence_coordinate: time
