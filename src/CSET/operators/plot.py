@@ -312,7 +312,7 @@ def _get_start_end_strings(seq_coord: iris.coords.Coord, use_bounds: bool):
     start = seq_coord.units.title(vals[0])
     end = seq_coord.units.title(vals[-1])
 
-    if seq_coord.name() is not "time":
+    if seq_coord.name() != "time":
         seq_coord_name = seq_coord.name()
     else:
         seq_coord_name = ""
@@ -3765,9 +3765,10 @@ def plot_dfss_line_series_sequence(
     nplots = np.size(seq_coord.points)
     series_coord = cubes[0].coord(series_coordinate)
 
-
     dfss_cubes = cubes.extract_cube(iris.AttributeConstraint(dfss_cube_type="dfss"))
-    dfss_stdev_cubes = cubes.extract_cube(iris.AttributeConstraint(dfss_cube_type="dfss_stdev"))
+    dfss_stdev_cubes = cubes.extract_cube(
+        iris.AttributeConstraint(dfss_cube_type="dfss_stdev")
+    )
 
     for i, (dfss_cube, dfss_stdev_cube) in enumerate(
         zip(
@@ -3776,9 +3777,12 @@ def plot_dfss_line_series_sequence(
             strict=True,
         )
     ):
-
         plot_title, plot_filename = _set_title_and_filename(
-            dfss_cube.coord(sequence_coordinate),nplots, recipe_title, filename,model_name=dfss_cube.attributes.locals["model_name"]
+            dfss_cube.coord(sequence_coordinate),
+            nplots,
+            recipe_title,
+            filename,
+            model_name=dfss_cube.attributes.locals["model_name"],
         )
 
         seq_coord_i = dfss_cube.coord(sequence_coordinate)
@@ -3787,7 +3791,6 @@ def plot_dfss_line_series_sequence(
             if seq_coord_i.units == "unknown"
             else seq_coord_i.units.title(seq_coord_i.points[0])
         )
-
 
         method = dfss_cube.attributes.locals["method"]
         if method == "centile":
@@ -3800,8 +3803,10 @@ def plot_dfss_line_series_sequence(
             raise ValueError(f"Unknown dFSS method: {method!r}")
 
         plot_filename_split = plot_filename.split(".")
-        plot_filename_with_sequence_coord = f"{plot_filename_split[0]}_{sequence_coordinate}_point_{i!s}.png"
-        #plot_title_final = f"{plot_title}\n{sequence_coordinate}: {sequence_point}"
+        plot_filename_with_sequence_coord = (
+            f"{plot_filename_split[0]}_{sequence_coordinate}_point_{i!s}.png"
+        )
+        # plot_title_final = f"{plot_title}\n{sequence_coordinate}: {sequence_point}"
 
         _plot_and_save_line_series(
             iter_maybe(dfss_cube),
