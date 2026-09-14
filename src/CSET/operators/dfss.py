@@ -17,17 +17,16 @@
 import multiprocessing as mp
 import os
 from functools import partial
-from typing import List
 
 import cartopy.crs as ccrs
 import iris
 import iris.cube
 import numpy as np
-import numpy.ma as ma
 from improver.nbhood import NeighbourhoodProcessing
 from iris import coord_systems
 from iris.coords import DimCoord
 from iris.cube import Cube, CubeList
+from numpy import ma
 
 
 def init_worker():
@@ -39,7 +38,7 @@ def init_worker():
 
 def _dfss_on_time_slice(
     slice,
-    neighbourhood_lengths: List[int],
+    neighbourhood_lengths: list[int],
     centile_or_threshold: str,
     centile: float,
     threshold: float,
@@ -59,7 +58,7 @@ def _dfss_on_time_slice(
 
 def _parallel_calculate_dfss(
     cube_xy: Cube,
-    neighbourhood_lengths: List[int],
+    neighbourhood_lengths: list[int],
     centile_or_threshold: str = "centile",
     centile: float = None,
     threshold: float = None,
@@ -98,7 +97,7 @@ def _parallel_calculate_dfss(
 
 def _serial_calculate_dfss(
     cube_xy: Cube,
-    neighbourhood_lengths: List[int],
+    neighbourhood_lengths: list[int],
     centile_or_threshold: str = "centile",
     centile: float = None,
     threshold: float = None,
@@ -137,7 +136,7 @@ def _serial_calculate_dfss(
 
 def calculate_dfss(
     cube_xy: Cube,
-    neighbourhood_lengths: List[int],
+    neighbourhood_lengths: list[int],
     centile_or_threshold: str = "centile",
     centile: float = None,
     threshold: float = None,
@@ -202,7 +201,7 @@ def calculate_dfss(
 
 def _calc_dfss(
     cube_xy: Cube,
-    neighbourhood_lengths: List[int],
+    neighbourhood_lengths: list[int],
     time_point,
     centile_or_threshold: str = "centile",
     centile: float = None,
