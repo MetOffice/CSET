@@ -312,11 +312,17 @@ def _get_start_end_strings(seq_coord: iris.coords.Coord, use_bounds: bool):
     start = seq_coord.units.title(vals[0])
     end = seq_coord.units.title(vals[-1])
 
+    if seq_coord.name() is not "time":
+        seq_coord_name = seq_coord.name()
+    else:
+        seq_coord_name = ""
+
+    breakpoint()
     if start == end:
-        sequence_title = f"\n [{start}]"
+        sequence_title = f"\n{seq_coord_name} [{start}]"
         sequence_fname = f"_{filename_slugify(start)}"
     else:
-        sequence_title = f"\n [{start} to {end}]"
+        sequence_title = f"\n{seq_coord_name} [{start} to {end}]"
         sequence_fname = f"_{filename_slugify(start)}_{filename_slugify(end)}"
 
     # Do not include time if coord set to zero.
@@ -3928,8 +3934,7 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
 
 
 def plot_dfss_contour(
-    cube: iris.cube.Cube | iris.cube.CubeList,
-    variable: str = None,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Create a contour plot between two variables.
@@ -3938,7 +3943,7 @@ def plot_dfss_contour(
 
     Parameters
     ----------
-    cube: Cube | CubeList
+    cubes: Cube | CubeList
         1 dimensional Cube of the data to plot on y-axis.
     filename: str, optional
         Filename of the plot to write.
@@ -3957,16 +3962,8 @@ def plot_dfss_contour(
 
     Adds a contour line at the 0.5 contour.
     """
-    cube_copy = cube
-    if type(cube) is iris.cube.CubeList:
-        if not variable:
-            logging.warning(
-                "CubeList given, but variable not specified.  Defaulting to first cube."
-            )
-            cube = cube[0]
-
-        else:
-            cube = cube.extract(variable)[0]
+    cubes_copy = cubes.copy()
+    cube = cubes.extract_cube(iris.AttributeConstraint(dfss_cube_type="dfss"))
 
     recipe_title = get_recipe_metadata().get("title", "Untitled")
     nplot = 1
@@ -4032,7 +4029,7 @@ def plot_dfss_contour(
     # Make a page to display the plots.
     _make_plot_html_page(plot_index)
 
-    return cube_copy
+    return cubes_copy
 
 
 def plot_dfss_line_series_sequence(
@@ -4059,13 +4056,12 @@ def plot_dfss_line_series_sequence(
             )
 
     seq_coord = cubes[0].coord(sequence_coordinate)
+    nplots = np.size(seq_coord.points)
     series_coord = cubes[0].coord(series_coordinate)
-    plot_title, plot_filename = _set_title_and_filename(
-        seq_coord, 1, recipe_title, filename
-    )
 
-    dfss_cubes = cubes.extract_cube(iris.Constraint(name="dfss"))
-    dfss_stdev_cubes = cubes.extract_cube(iris.Constraint(name="dfss_stdev"))
+
+    dfss_cubes = cubes.extract_cube(iris.AttributeConstraint(dfss_cube_type="dfss"))
+    dfss_stdev_cubes = cubes.extract_cube(iris.AttributeConstraint(dfss_cube_type="dfss_stdev"))
 
     for i, (dfss_cube, dfss_stdev_cube) in enumerate(
         zip(
@@ -4074,6 +4070,11 @@ def plot_dfss_line_series_sequence(
             strict=True,
         )
     ):
+
+        plot_title, plot_filename = _set_title_and_filename(
+            dfss_cube.coord(sequence_coordinate),nplots, recipe_title, filename,model_name=dfss_cube.attributes.locals["model_name"]
+        )
+
         seq_coord_i = dfss_cube.coord(sequence_coordinate)
         sequence_point = (
             seq_coord_i.points[0]
@@ -4081,29 +4082,26 @@ def plot_dfss_line_series_sequence(
             else seq_coord_i.units.title(seq_coord_i.points[0])
         )
 
+
         method = dfss_cube.attributes.locals["method"]
         if method == "centile":
             centile = dfss_cube.attributes.locals["centile"]
             method_tag = f"centile_{str(centile).replace('.', 'p')}"
-            method_label = f"method: Centile | centile: {centile}"
         elif method == "threshold":
             threshold = dfss_cube.attributes.locals["threshold"]
             method_tag = f"threshold_{str(threshold).replace('.', 'p')}"
-            method_label = f"method: Threshold | threshold: {threshold}"
         else:
             raise ValueError(f"Unknown dFSS method: {method!r}")
 
-        plot_filename_with_sequence_coord = f"{dfss_cube.name()}_{sequence_coordinate}_point_{i!s}_{method_tag}_{plot_filename}"
-        plot_title_with_time = (
-            f"{dfss_cube.name()} vs {series_coordinate} "
-            f"({sequence_coordinate}: {sequence_point}) \n {method_label}"
-        )
+        plot_filename_split = plot_filename.split(".")
+        plot_filename_with_sequence_coord = f"{plot_filename_split[0]}_{sequence_coordinate}_point_{i!s}.png"
+        #plot_title_final = f"{plot_title}\n{sequence_coordinate}: {sequence_point}"
 
         _plot_and_save_line_series(
             iter_maybe(dfss_cube),
             iter_maybe(series_coord),
             plot_filename_with_sequence_coord,
-            plot_title_with_time,
+            plot_title,
             sequence_coord=sequence_coordinate,
             stdev=iter_maybe(dfss_stdev_cube),
         )

@@ -37,7 +37,7 @@ def init_worker():
     os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
 
-def _dfss_on_slice(
+def _dfss_on_time_slice(
     slice,
     neighbourhood_lengths: List[int],
     centile_or_threshold: str,
@@ -69,7 +69,7 @@ def _parallel_calculate_dfss(
 
     with mp.Pool(initializer=init_worker) as pool:
         worker = partial(
-            _dfss_on_slice,
+            _dfss_on_time_slice,
             neighbourhood_lengths=neighbourhood_lengths,
             centile_or_threshold=centile_or_threshold,
             centile=centile,
@@ -180,22 +180,24 @@ def calculate_dfss(
         run_parallel = False
 
     if run_parallel:
-        out_cube_list = _parallel_calculate_dfss(
+        dfss_cube_list = _parallel_calculate_dfss(
             cube_xy, neighbourhood_lengths, centile_or_threshold, centile, threshold
         )
     else:
-        out_cube_list = _serial_calculate_dfss(
+        dfss_cube_list = _serial_calculate_dfss(
             cube_xy, neighbourhood_lengths, centile_or_threshold, centile, threshold
         )
 
-    for cubes in out_cube_list:
-        cubes.attributes["method"] = centile_or_threshold
+    for dfss_cubes in dfss_cube_list:
+        dfss_cubes.attributes["method"] = centile_or_threshold
+        dfss_cubes.attributes["model_name"] = cube_xy.attributes["model_name"]
+        dfss_cubes.long_name = f"{dfss_cubes.long_name}_{cube_xy.long_name}"
         if centile_or_threshold == "centile":
-            cubes.attributes["centile"] = centile
+            dfss_cubes.attributes["centile"] = centile
         if centile_or_threshold == "threshold":
-            cubes.attributes["threshold"] = threshold
+            dfss_cubes.attributes["threshold"] = threshold
 
-    return out_cube_list
+    return dfss_cube_list
 
 
 def _calc_dfss(
@@ -250,6 +252,7 @@ def _calc_dfss(
     dfss_cube = Cube(
         dfss, long_name="dfss", dim_coords_and_dims=[(neighbourhood_coord, 0)]
     )
+    dfss_cube.attributes["dfss_cube_type"] = "dfss"
     dfss_cube.add_aux_coord(time_point)
     dfss_stdev_cube = Cube(
         dfss_stdev,
@@ -257,6 +260,7 @@ def _calc_dfss(
         dim_coords_and_dims=[(neighbourhood_coord, 0)],
     )
     dfss_stdev_cube.add_aux_coord(time_point)
+    dfss_stdev_cube.attributes["dfss_cube_type"] = "dfss_stdev"
     return dfss_cube, dfss_stdev_cube
 
 
