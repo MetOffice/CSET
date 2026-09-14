@@ -66,6 +66,7 @@ from CSET.operators._utils import (
 )
 from CSET.operators.collapse import collapse
 from CSET.operators.misc import _extract_common_time_points
+from CSET.operators.read import _realization_callback
 from CSET.operators.regrid import regrid_onto_cube
 
 logger = logging.getLogger(__name__)
@@ -128,7 +129,6 @@ def _make_plot_html_page(plots: list):
 
     # Render template.
     html = render_file(template_file, **variables)
-
     # Save completed HTML.
     with open("index.html", "wt", encoding="UTF-8") as fp:
         fp.write(html)
@@ -317,7 +317,7 @@ def _get_start_end_strings(seq_coord: iris.coords.Coord, use_bounds: bool):
     else:
         seq_coord_name = ""
 
-    breakpoint()
+
     if start == end:
         sequence_title = f"\n{seq_coord_name} [{start}]"
         sequence_fname = f"_{filename_slugify(start)}"
@@ -2411,7 +2411,6 @@ def plot_line_series(
         # sequence values. Passing a CubeList into the internal plotting function
         # for similar values of the sequence coordinate. cube_slice can be an
         # iris.cube.Cube or an iris.cube.CubeList.
-
         for cube_slice in cube_iterables:
             # Normalize cube_slice to a list of cubes
             if isinstance(cube_slice, iris.cube.CubeList):
@@ -2475,9 +2474,13 @@ def plot_line_series(
 
         else:
             # Do the actual plotting for all other series coordinate options.
-            _plot_and_save_line_series(
-                cubes, coords, stamp_coordinate, plot_filename, plot_title
-            )
+            if sequence_coordinate:
+                _plot_and_save_line_series(
+                cubes, coords, plot_filename, plot_title, ensemble_coord=stamp_coordinate, sequence_coordinate=sequence_coordinate)
+            else:
+                _plot_and_save_line_series(
+                    cubes, coords, plot_filename, plot_title, ensemble_coord=stamp_coordinate)
+
 
         plot_index.append(plot_filename)
 
@@ -4032,7 +4035,7 @@ def plot_dfss_contour(
     return cubes_copy
 
 
-def plot_dfss_line_series_sequence(
+def plot_dfss_line_series_sequence1(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     series_coordinate: str = "time",
@@ -4079,39 +4082,31 @@ def plot_dfss_line_series_sequence(
             model_name=dfss_cube.attributes.locals["model_name"],
         )
 
-        seq_coord_i = dfss_cube.coord(sequence_coordinate)
-        sequence_point = (
-            seq_coord_i.points[0]
-            if seq_coord_i.units == "unknown"
-            else seq_coord_i.units.title(seq_coord_i.points[0])
-        )
-
-        method = dfss_cube.attributes.locals["method"]
-        if method == "centile":
-            centile = dfss_cube.attributes.locals["centile"]
-            method_tag = f"centile_{str(centile).replace('.', 'p')}"
-        elif method == "threshold":
-            threshold = dfss_cube.attributes.locals["threshold"]
-            method_tag = f"threshold_{str(threshold).replace('.', 'p')}"
-        else:
-            raise ValueError(f"Unknown dFSS method: {method!r}")
-
-        plot_filename_split = plot_filename.split(".")
-        plot_filename_with_sequence_coord = (
-            f"{plot_filename_split[0]}_{sequence_coordinate}_point_{i!s}.png"
-        )
-        # plot_title_final = f"{plot_title}\n{sequence_coordinate}: {sequence_point}"
-
         _plot_and_save_line_series(
-            iter_maybe(dfss_cube),
-            iter_maybe(series_coord),
-            plot_filename_with_sequence_coord,
+            [dfss_cube],
+            [series_coord],
+            plot_filename,
             plot_title,
             sequence_coord=sequence_coordinate,
-            stdev=iter_maybe(dfss_stdev_cube),
+            stdev=[dfss_stdev_cube],
         )
 
-        plot_index = _append_to_plot_index([plot_filename_with_sequence_coord])
+        plot_index = _append_to_plot_index([plot_filename])
         _make_plot_html_page(plot_index)
 
     return cubes
+
+
+def plot_dfss_line_series_sequence(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    filename: str = None,
+    series_coordinate: str = "time",
+    sequence_coordinate: str = "neighbourhoods",
+    **kwargs,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    dfss_cubes = cubes.extract_cube(iris.AttributeConstraint(dfss_cube_type="dfss"))
+    _realization_callback(dfss_cubes)
+    dfss_stdev_cubes = cubes.extract_cube(
+        iris.AttributeConstraint(dfss_cube_type="dfss_stdev")
+    )
+    return plot_line_series(dfss_cubes,filename,series_coordinate= "neighbourhoods",sequence_coordinate = "time")
