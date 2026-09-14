@@ -1871,6 +1871,7 @@ def _spatial_plot(
     filename: str | None,
     sequence_coordinate: str,
     stamp_coordinate: str,
+    strict_title: bool = False,
     overlay_cube: iris.cube.Cube | None = None,
     contour_cube: iris.cube.Cube | None = None,
     point_cube: iris.cube.Cube | None = None,
@@ -1966,6 +1967,8 @@ def _spatial_plot(
             model_name = cube.attributes["model_name"]
         else:
             model_name = None
+        if strict_title:
+            model_name = None
 
         plot_title, plot_filename = _set_title_and_filename(
             seq_coord, nplot, recipe_title, filename, model_name=model_name
@@ -2054,6 +2057,7 @@ def spatial_pcolormesh_plot(
     filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
+    strict_title: bool = False,
     **kwargs,
 ) -> iris.cube.Cube:
     """Plot a spatial variable onto a map from a 2D, 3D, or 4D cube.
@@ -2100,6 +2104,7 @@ def spatial_pcolormesh_plot(
                 filename,
                 sequence_coordinate,
                 stamp_coordinate,
+                strict_title,
                 **kwargs,
             )
     elif isinstance(cubes, iris.cube.Cube):
@@ -2109,6 +2114,7 @@ def spatial_pcolormesh_plot(
             filename,
             sequence_coordinate,
             stamp_coordinate,
+            strict_title,
             **kwargs,
         )
     return cubes
