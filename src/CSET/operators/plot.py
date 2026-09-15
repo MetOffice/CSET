@@ -1905,6 +1905,9 @@ def _spatial_plot(
     stamp_coordinate: str
         Coordinate about which to plot postage stamp plots. Defaults to
         ``"realization"``.
+    strict_title: bool, optional
+        Logical switch that if set to True will ensure that the MODEL_NAME
+        string is not prepended to the plot title. The default is False.
     overlay_cube: Cube | None, optional
         Optional 2 dimensional (lat and lon) Cube of data to overplot on top of base cube
     contour_cube: Cube | None, optional
@@ -2085,6 +2088,9 @@ def spatial_pcolormesh_plot(
     stamp_coordinate: str, optional
         Coordinate about which to plot postage stamp plots. Defaults to
         ``"realization"``.
+    strict_title: bool, optional
+        Logical switch that if set to True will ensure that the MODEL_NAME
+        string is not prepended to the plot title. The default is False.
 
     Returns
     -------
