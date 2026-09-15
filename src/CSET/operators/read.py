@@ -928,8 +928,24 @@ def _compute_winds(
 
     if constraint is None:
         return cubes
+    if isinstance(constraint, iris._constraints.ConstraintCombination):
+        constraint_lhs = constraint.lhs
+        constraint_rhs = constraint.rhs
+        while isinstance(constraint_lhs, iris._constraints.ConstraintCombination):
+            filter_windspeed_lhs = getattr(constraint_lhs, "varname", None)
+            filter_windspeed_rhs = getattr(constraint_rhs, "varname", None)
+            if filter_windspeed_lhs is not None:
+                filter_windspeed = filter_windspeed_lhs
+                break
+            elif filter_windspeed_rhs is not None:
+                filter_windspeed = filter_windspeed_rhs
+                break
+            constraint_lhs = constraint_lhs.lhs
+            constraint_rhs = constraint_lhs.rhs
+    else:
+        filter_windspeed = getattr(constraint, "varname", None)
 
-    filter_windspeed = getattr(constraint, "varname", None)
+    print("filter_windspeed", filter_windspeed)
 
     u_constr = iris.Constraint("eastward_wind_at_10m")
     v_constr = iris.Constraint("northward_wind_at_10m")
