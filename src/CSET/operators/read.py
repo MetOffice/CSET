@@ -204,9 +204,17 @@ def read_cubes(
     # Unify time units so different case studies can merge.
     iris.util.unify_time_units(cubes)
 
+    # Save model_name values
+    model_names = [cube.attributes.get("model_name") for cube in cubes]
+
     # Equalise file attributes so different file inputs can merge.
     if cubes:
         iris.util.equalise_attributes(cubes)
+
+    # Restore model_name
+    for cube, model_name in zip(cubes, model_names):
+        if model_name is not None:
+            cube.attributes["model_name"] = model_name
 
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
