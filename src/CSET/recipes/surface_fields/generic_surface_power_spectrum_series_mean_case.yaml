@@ -44,11 +44,13 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
+  - operator: aggregate.ensure_aggregatable_across_cases
+
   - operator: power_spectrum.calculate_power_spectrum
 
   - operator: collapse.collapse
+    coordinate: "forecast_period"
     method: MEAN
-    coordinate: "time"
 
   - operator: plot.plot_line_series
     series_coordinate: "physical_wavenumber"
