@@ -187,8 +187,8 @@ def test_cell_stats_operator(feature_cube, tmp_working_dir):
     size_data = np.squeeze(cubelist.extract_cube("feature_size").data)
     mean_data = np.squeeze(cubelist.extract_cube("feature_mean").data)
     max_data = np.squeeze(cubelist.extract_cube("feature_max").data)
-    effective_radius_data = np.squeeze(
-        cubelist.extract_cube("feature_effective_radius").data
+    effective_diameter_data = np.squeeze(
+        cubelist.extract_cube("feature_effective_diameter").data
     )
 
     # Expected values based on the feature_cube data
@@ -197,14 +197,16 @@ def test_cell_stats_operator(feature_cube, tmp_working_dir):
     expected_max_data = np.array([5.0, 10.0, 20.0])  # Max values of each feature
 
     grid_spacing = 10  # Assuming grid spacing is 10 meters from test setup
-    expected_radius_data = np.sqrt(expected_size_data * grid_spacing**2 / np.pi)
+    expected_diameter_data = np.sqrt(expected_size_data * grid_spacing**2 / np.pi) * 2
     # Convert to km
-    expected_radius_data = expected_radius_data / 1000
+    expected_diameter_data = expected_diameter_data / 1000
 
     np.testing.assert_array_equal(size_data, expected_size_data)
     np.testing.assert_array_equal(mean_data, expected_mean_data)
     np.testing.assert_array_equal(max_data, expected_max_data)
-    np.testing.assert_array_almost_equal(effective_radius_data, expected_radius_data)
+    np.testing.assert_array_almost_equal(
+        effective_diameter_data, expected_diameter_data
+    )
     output_directory = tmp_working_dir / "None/cell-stats_data"
     expected_file = output_directory / "lifetime_20100101_0000.field"
     assert expected_file.is_file()
@@ -281,27 +283,29 @@ def test_get_cell_stats_arrays_from_timeline(cell_stats_timeline):
     np.testing.assert_array_equal(max_array, expected_max_array)
 
 
-def test_get_effective_radius_from_feature_size(feature_cube):
-    """Test that _get_effective_radius_from_feature_size returns expected values."""
+def test_get_effective_diameter_from_feature_size(feature_cube):
+    """Test that _get_effective_diameter_from_feature_size returns expected values."""
     # Use the same size data from above test
     size_data = np.array([[16], [16], [16]])  # Each feature is a 4x4 square
 
-    effective_radius_data, grid_spacing = (
-        feature._get_effective_radius_from_feature_size(size_data, feature_cube)
+    effective_diameter_data, grid_spacing = (
+        feature._get_effective_diameter_from_feature_size(size_data, feature_cube)
     )
 
     # Expected values based on the feature_cube data
     grid_spacing = 10  # Assuming grid spacing is 10 meters from test setup
-    expected_radius_data = np.sqrt(size_data * grid_spacing**2 / np.pi)
+    expected_diameter_data = np.sqrt(size_data * grid_spacing**2 / np.pi) * 2
     # Convert to km
-    expected_radius_data = expected_radius_data / 1000
+    expected_diameter_data = expected_diameter_data / 1000
 
-    np.testing.assert_array_almost_equal(effective_radius_data, expected_radius_data)
+    np.testing.assert_array_almost_equal(
+        effective_diameter_data, expected_diameter_data
+    )
     assert grid_spacing == 10
 
 
-def test_get_effective_radius_from_feature_size_km_input_cube(feature_cube):
-    """Test that _get_effective_radius_from_feature_size returns expected values for km input cube."""
+def test_get_effective_diameter_from_feature_size_km_input_cube(feature_cube):
+    """Test that _get_effective_diameter_from_feature_size returns expected values for km input cube."""
     # Use the same size data from above test
     size_data = np.array([[16], [16], [16]])  # Each feature is a 4x4 square
 
@@ -310,20 +314,22 @@ def test_get_effective_radius_from_feature_size_km_input_cube(feature_cube):
     feature_cube_km.coord("projection_x_coordinate").convert_units("km")
     feature_cube_km.coord("projection_y_coordinate").convert_units("km")
 
-    effective_radius_data, grid_spacing = (
-        feature._get_effective_radius_from_feature_size(size_data, feature_cube_km)
+    effective_diameter_data, grid_spacing = (
+        feature._get_effective_diameter_from_feature_size(size_data, feature_cube_km)
     )
 
     # Expected values based on the feature_cube data
     grid_spacing = 0.01  # Assuming grid spacing is 10 meters (0.01 km) from test setup
-    expected_radius_data = np.sqrt(size_data * grid_spacing**2 / np.pi)
+    expected_diameter_data = np.sqrt(size_data * grid_spacing**2 / np.pi) * 2
 
-    np.testing.assert_array_almost_equal(effective_radius_data, expected_radius_data)
+    np.testing.assert_array_almost_equal(
+        effective_diameter_data, expected_diameter_data
+    )
     assert grid_spacing == 0.01
 
 
-def test_get_effective_radius_from_feature_size_latlon_cube():
-    """Test that _get_effective_radius_from_feature_size returns expected values for lat/lon cube."""
+def test_get_effective_diameter_from_feature_size_latlon_cube():
+    """Test that _get_effective_diameter_from_feature_size returns expected values for lat/lon cube."""
     # Create a cube with lat/lon coordinates
     data_arr = np.zeros((10, 10))
     lat_points = np.linspace(-1, 1, 10)
@@ -353,18 +359,18 @@ def test_get_effective_radius_from_feature_size_latlon_cube():
     # Use the same size data from above test
     size_data = np.array([[2], [2], [2]])  # Each feature is a 4x4 square
 
-    effective_radius_data, grid_spacing = (
-        feature._get_effective_radius_from_feature_size(size_data, cube)
+    effective_diameter_data, grid_spacing = (
+        feature._get_effective_diameter_from_feature_size(size_data, cube)
     )
 
     # Expected values based on the feature_cube data
     # For lat/lon cube, grid spacing is calculated based on the distance between points
     # Expected grid spacing is 2 degrees (222 km) / 9 intervals = 24.666 km
     expected_grid_spacing = 24.666
-    expected_radius_data = np.sqrt(size_data * expected_grid_spacing**2 / np.pi)
+    expected_diameter_data = np.sqrt(size_data * expected_grid_spacing**2 / np.pi) * 2
 
     np.testing.assert_array_almost_equal(
-        effective_radius_data, expected_radius_data, decimal=3
+        effective_diameter_data, expected_diameter_data, decimal=3
     )
     np.testing.assert_almost_equal(grid_spacing, expected_grid_spacing, decimal=3)
 
@@ -382,8 +388,8 @@ def test_add_cell_stats_data_to_cubes(cell_stats_timeline, feature_cube):
         timeline=cell_stats_timeline, expected_frame_times=expected_frame_times
     )
 
-    # Get effective radius from feature size, using horizontal coordinate of input cube to estimate grid spacing
-    effective_radius_data, __ = feature._get_effective_radius_from_feature_size(
+    # Get effective diameter from feature size, using horizontal coordinate of input cube to estimate grid spacing
+    effective_diameter_data, __ = feature._get_effective_diameter_from_feature_size(
         size_data=size_data, cube_with_hzntl_coord=feature_cube
     )
 
@@ -399,9 +405,9 @@ def test_add_cell_stats_data_to_cubes(cell_stats_timeline, feature_cube):
             "units": 1,
         },
         "feature_max": {"data": max_data, "long_name": "feature_max", "units": 1},
-        "feature_effective_radius": {
-            "data": effective_radius_data,
-            "long_name": "feature_effective_radius",
+        "feature_effective_diameter": {
+            "data": effective_diameter_data,
+            "long_name": "feature_effective_diameter",
             "units": "km",
         },
     }
@@ -413,7 +419,7 @@ def test_add_cell_stats_data_to_cubes(cell_stats_timeline, feature_cube):
         "feature_size",
         "feature_mean",
         "feature_max",
-        "feature_effective_radius",
+        "feature_effective_diameter",
     ]
 
     for cube_name in expected_cube_names:

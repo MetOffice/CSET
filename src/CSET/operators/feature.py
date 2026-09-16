@@ -233,14 +233,14 @@ def cell_stats(
     Returns
     -------
     cell_stats_cubelist: iris.cube.CubeList
-        An iris CubeList containing "feature_size", "feature_effective_radius", "feature_mean",
+        An iris CubeList containing "feature_size", "feature_effective_diameter", "feature_mean",
         and "feature_max" cubes.
 
     Notes
     -----
     This operator uses the Simple-Track package with tracking disabled to identify features
     in each timestep and compile cell statistics. Outputs cubes containing feature size (number
-    of grid points), effective radius (in km), mean value within features, and maximum
+    of grid points), effective diameter (in km), mean value within features, and maximum
     value within features.
 
     Links
@@ -313,9 +313,11 @@ def cell_stats(
             timeline=timeline, expected_frame_times=times_dt
         )
 
-        # Get effective radius from feature size, using horizontal coordinate of input cube to estimate grid spacing
-        effective_radius_data, grid_spacing = _get_effective_radius_from_feature_size(
-            size_data=size_data, cube_with_hzntl_coord=cube
+        # Get effective diameter from feature size, using horizontal coordinate of input cube to estimate grid spacing
+        effective_diameter_data, grid_spacing = (
+            _get_effective_diameter_from_feature_size(
+                size_data=size_data, cube_with_hzntl_coord=cube
+            )
         )
 
         # Add grid_spacing as an attribute to the template_cube, so it is copied to
@@ -335,9 +337,9 @@ def cell_stats(
                 "units": 1,
             },
             "feature_max": {"data": max_data, "long_name": "feature_max", "units": 1},
-            "feature_effective_radius": {
-                "data": effective_radius_data,
-                "long_name": "feature_effective_radius",
+            "feature_effective_diameter": {
+                "data": effective_diameter_data,
+                "long_name": "feature_effective_diameter",
                 "units": "km",
             },
         }
@@ -454,10 +456,10 @@ def _get_cell_stats_arrays_from_timeline(
     return size_data, mean_data, max_data
 
 
-def _get_effective_radius_from_feature_size(
+def _get_effective_diameter_from_feature_size(
     size_data: np.ndarray, cube_with_hzntl_coord: iris.cube.Cube
 ) -> np.ndarray:
-    """Convert feature size in grid points to effective radius in km.
+    """Convert feature size in grid points to effective diameter in km.
 
     Parameters
     ----------
@@ -469,8 +471,8 @@ def _get_effective_radius_from_feature_size(
 
     Returns
     -------
-    effective_radii_data: np.ndarray
-        An array containing "feature_effective_radius" data, in units of km.
+    effective_diameters_data: np.ndarray
+        An array containing "feature_effective_diameter" data, in units of km.
 
     grid_spacing: float
         The estimated grid spacing in m, calculated from the horizontal coordinate of the input cube.
@@ -478,8 +480,8 @@ def _get_effective_radius_from_feature_size(
     Notes
     -----
     This function assumes that the input cube has a horizontal coordinate system that is regular and
-    that the grid spacing can be estimated from the horizontal coordinates. The effective radius is
-    calculated as the radius of a circle with the same area as the feature size in grid points.
+    that the grid spacing can be estimated from the horizontal coordinates. The effective diameter is
+    calculated as the diameter of a circle with the same area as the feature size in grid points.
 
     """
     # Guess coord representing horizontal grid (choose first available)
@@ -493,14 +495,14 @@ def _get_effective_radius_from_feature_size(
         )
     )
 
-    logger.debug(f"Attempting to convert to effective radius using {hzntl_coord}")
+    logger.debug(f"Attempting to convert to effective diameter using {hzntl_coord}")
 
     # Check coordinate is regular, but only warn if not, this is a naive estimate
     # and will be inaccurate for irregular grids
     if not iris.util.is_regular(hzntl_coord):
         logger.warning(
             f"Horizontal coordinate {hzntl_coord} is not regular. "
-            "Effective radius calculation may be inaccurate."
+            "Effective diameter calculation may be inaccurate."
         )
 
     # Get grid spacing in native coord units (degrees, m, km etc)
@@ -535,8 +537,8 @@ def _get_effective_radius_from_feature_size(
             mean_latitude = 0
         grid_spacing = grid_spacing * 111 * np.cos(np.radians(mean_latitude))
 
-    effective_radii_data = np.sqrt(size_data * grid_spacing**2 / np.pi)
-    return effective_radii_data, grid_spacing
+    effective_diameters_data = np.sqrt(size_data * grid_spacing**2 / np.pi) * 2
+    return effective_diameters_data, grid_spacing
 
 
 def _add_cell_stats_data_to_cubes(

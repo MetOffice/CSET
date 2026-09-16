@@ -18,11 +18,14 @@ steps:
     threshold: 3
     save_data: True # save raw tracking data for further analysis
 
-  # Filter tracking cubelist to one of "feature_mean", "feature_max", or "feature_size"
+  # Filter tracking cubelist to one of "feature_mean", "feature_max", "feature_size", or "feature_effective_diameter"
   - operator: filters.filter_multiple_cubes
     constraint:
       operator: constraints.generate_var_constraint
       varname: feature_size
+      # varname: feature_mean
+      # varname: feature_max
+      # varname: feature_effective_diameter
 
   # Flatten data across case study period
   - operator: misc.flatten
