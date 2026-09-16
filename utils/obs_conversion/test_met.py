@@ -2,10 +2,12 @@
 
 import subprocess
 from pathlib import Path
+from shutil import which
 from typing import Any
 
 import numpy
 import pandas as pd
+import pytest
 import xarray as xr
 
 from .met import read_point_nc, to_ascii, to_index_table, to_point_nc
@@ -120,9 +122,12 @@ def test_to_point_nc_save(tmp_path: Path):
     )  # Check if the file can be read by ncdump
 
     # Load the saved file and check its contents
+    point2grid = which("point2grid")
+    if point2grid is None:
+        pytest.skip("MET is not available")
     subprocess.run(
         [
-            "point2grid",
+            point2grid,
             str(output_file),
             "G001",
             str(tmp_path / "gridded.nc"),
@@ -174,8 +179,11 @@ def test_round_trip(tmp_path: Path):
     ascii2nc_file = tmp_path / "ascii_converted.nc"
 
     # Convert the ascii data using ascii2nc
+    ascii2nc = which("ascii2nc")
+    if ascii2nc is None:
+        pytest.skip("MET is not available")
     subprocess.run(
-        ["ascii2nc", str(ascii_file), str(ascii2nc_file), "-format", "met_point"],
+        [ascii2nc, str(ascii_file), str(ascii2nc_file), "-format", "met_point"],
         check=True,
     )
 
