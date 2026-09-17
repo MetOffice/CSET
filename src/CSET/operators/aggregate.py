@@ -63,8 +63,9 @@ def time_aggregate(
         iris.analysis.SUM, etc.
     interval_iso: isodate timedelta ISO 8601 object i.e PT6H (6 hours), PT30M (30 mins)
         Interval to aggregate over.
-interval_iso: str
+    interval_iso: str
     A string containing a datetime timedelta for resampling over in hours, i.e. PT3H, PT24H.
+
     Returns
     -------
     resampled_cubes: iris.cube.Cube | iris.cube.CubeList
@@ -79,8 +80,7 @@ interval_iso: str
     if interval_iso == "0":
         return cubes
 
-    if isinstance(cubes, iris.cube.Cube):
-        cubes = iris.cube.CubeList([cubes])
+    cubes = iter_maybe(cubes)
 
     resampled_cubes = iris.cube.CubeList()
 
@@ -88,11 +88,13 @@ interval_iso: str
     interval = int(timedelta.total_seconds() / 3600)
 
     for cube in cubes:
-        # Handle cubes with multiple forecast cycles.
         if cube.coord("forecast_reference_time").shape[0] > 1:
-            aggregated_cube = _aggregate_multi_frt_cube(cube, method, interval)
+            # Handle cubes with multiple forecast cycles.
+            aggregated_cube = _aggregate_in_time_multiple_frt_cube(
+                cube, method, interval
+            )
         else:
-            aggregated_cube = _aggregate_by_interval(cube, method, interval)
+            aggregated_cube = _aggregate_in_time_single_frt(cube, method, interval)
 
         resampled_cubes.append(aggregated_cube)
     if len(resampled_cubes) == 1:
@@ -292,7 +294,7 @@ def _add_nref(cube: iris.cube.Cube):
     return cube
 
 
-def _aggregate_multi_frt_cube(
+def _aggregate_in_time_multiple_frt_cube(
     cube: iris.cube.Cube, method: str, interval: int
 ) -> iris.cube.Cube:
     """Aggregate a cube with multiple forecast reference times.
@@ -326,7 +328,9 @@ def _aggregate_multi_frt_cube(
     return aggregated_cycles.concatenate_cube()
 
 
-def _aggregate_by_interval(cube: iris.cube.Cube, method: str, interval: int):
+def _aggregate_in_time_single_frt(cube: iris.cube.Cube, method: str, interval: int):
+    # Aggregate a cube with one forecast reference time.
+
     iris.coord_categorisation.add_categorised_coord(
         cube,
         "interval",
