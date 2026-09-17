@@ -68,7 +68,7 @@ interval_iso: str
     Returns
     -------
     resampled_cubes: iris.cube.Cube | iris.cube.CubeList
-        Single variable but several methods of aggregation
+        Cube or CubeList containing aggregated cubes.
 
     Raises
     ------
