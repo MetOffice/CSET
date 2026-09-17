@@ -335,15 +335,39 @@ def radar_mask_loop(
     boundary_margin: int = 8,
     outputs: str = "radar",
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Find common domains between a list of models and radar observations."""
+    """Find common domains between a list of models and radar sources.
+
+    Parameters
+    ----------
+    model_field: iris.cube.Cube | iris.cube.CubeList
+        The model field(s) to be masked.
+    nimrod_field: iris.cube.Cube | iris.cube.CubeList
+        The Nimrod field(s) to be masked.
+    nimrod_mask: iris.cube.Cube | iris.cube.CubeList
+        The Nimrod mask(s) to use. These are normally Nimrod wts fields.
+    boundary_margin: int, optional
+        Number of grid points from the domain boundary considered "unreliable".
+        Defaults to 8.
+    outputs: str, optional
+        Specifies which outputs are required:
+           "radar" outputs masked Nimrod rainfall field(s)
+           "model" outputs masked model field(s)
+           "all" outputs both masked model and masked Nimrod field(s).
+
+    Returns
+    -------
+    masked_field: iris.cube.Cube | iris.cube.CubeList
+        A cube or CubeList of the masked field(s).
+
+    Examples
+    --------
+    To mask both model and Nimrod fields using the Nimrod weights in nimrod_wts:
+    >>> masked_fields = radar_mask_loop( model_fields, nimrod_fields, nimrod_wts, outputs="all")
+
+    """
     # Create an empty cubelist to hold the filtered fields.
     filtered_cubes = iris.cube.CubeList([])
 
-    # if len(nimrod_field) > 1:
-    # use_nimrod_field = nimrod_field[0]
-    # use_nimrod_mask = nimrod_mask[0]
-    # else:
-    print("-----> len(nimrod_field) ", len(nimrod_field))
     use_nimrod_field = nimrod_field
     use_nimrod_mask = nimrod_mask
 
@@ -359,8 +383,7 @@ def radar_mask_loop(
         )
         filtered_cubes.append(filtered_model)
 
-    # Grab the filtered radar observations.
-    print("-----> len(model_field) ", len(model_field))
+    # Filter the radar observations.
     if len(model_field) == 1:
         filtered_radar = radar_mask(
             model_field[0],
@@ -377,10 +400,8 @@ def radar_mask_loop(
             boundary_margin=boundary_margin,
             outputs="radar",
         )
-
     filtered_cubes.append(filtered_radar)
 
-    print("-----------------> returning from radar_mask_loop")
     return filtered_cubes
 
 
