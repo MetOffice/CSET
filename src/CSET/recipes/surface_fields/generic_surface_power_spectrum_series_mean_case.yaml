@@ -44,17 +44,15 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-  - operator: aggregate.ensure_aggregatable_across_cases
-
   - operator: power_spectrum.calculate_power_spectrum
 
   - operator: collapse.collapse
-    coordinate: "forecast_period"
+    coordinate: "time"
     method: MEAN
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
 
   - operator: plot.plot_line_series
     series_coordinate: "physical_wavenumber"
     single_plot: $SPECTRUM_SURFACE_FIELD_SEQUENCE
-
-  - operator: write.write_cube_to_nc
-    overwrite: True
