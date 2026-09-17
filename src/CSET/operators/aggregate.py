@@ -319,7 +319,8 @@ def _aggregate_multi_frt_cube(
             agg.coord("forecast_reference_time"),
         )
         aggregated_cycles.append(agg)
-    # 2d auxtime causes issues concatenating. Solution is to nuke it. Do we need it downstream?
+    # Current approach is to remove time 2d auxcoord as it causes issues concatenating into a single cube.
+    # Time can be reconstructed from forecast_reference_time and forecast_period later on.
     # as we can construct it if needed.
     for cb in aggregated_cycles:
         cb.remove_coord("time")
