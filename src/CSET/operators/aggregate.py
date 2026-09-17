@@ -46,7 +46,6 @@ def time_aggregate(
     Can also handle multiple forecast reference times.
 
     Examples include generating hourly or 6-hourly precipitation accumulations for precipitation, or maximum screen level temperature every 3 hours.
-    given an interval for the new time coordinate.
 
     We use the isodate class to convert ISO 8601 durations into time intervals
     for creating a new time coordinate for aggregation.
