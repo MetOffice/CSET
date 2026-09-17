@@ -52,7 +52,6 @@ def load(conf: Config):
             conf.PRESSURE_LEVEL_FIELDS,
             conf.PRESSURE_LEVELS,
         ):
-            print("PRESSURE FIELDS ", field, plevel)
             yield RawRecipe(
                 recipe="generic_plevel_power_spectrum_series.yaml",
                 variables={
@@ -106,7 +105,6 @@ def load(conf: Config):
     #    if conf.SPECTRUM_SURFACE_FIELD_AGGREGATION:
     if conf.SPECTRUM_SURFACE_FIELD and conf.SPECTRUM_SURFACE_FIELD_AGGREGATION:
         for field in conf.SURFACE_FIELDS:
-            print("LOADER AGGREGATION ")
             yield RawRecipe(
                 recipe="generic_surface_power_spectrum_series_mean_case.yaml",
                 variables={
@@ -126,7 +124,6 @@ def load(conf: Config):
     # Pressure level fields.
     if conf.SPECTRUM_PLEVEL_FIELD and conf.SPECTRUM_PLEVEL_FIELD_AGGREGATION:
         for field in conf.PRESSURE_LEVEL_FIELDS:
-            print("PRESSURE FIELDS AGG", field, plevel)
             variables = {
                 "VARNAME": field,
                 "LEVELTYPE": "pressure",
