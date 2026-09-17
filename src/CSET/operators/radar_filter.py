@@ -177,7 +177,7 @@ def radar_apply_mask(
     mask: iris.cube.Cube | iris.cube.CubeList,
     boundary_margin: int = 8,
 ) -> iris.cube.Cube | iris.cube.CubeList:
-    """Apply a mask to given data as a masked array.
+    """Apply a mask to given field as a masked array.
 
     Parameters
     ----------
@@ -192,19 +192,19 @@ def radar_apply_mask(
     Returns
     -------
     masked_field: iris.cube.Cube | iris.cube.CubeList
-        A cube or cubelist of the masked field(s).
+        A cube or CubeList of the masked field(s).
 
     Notes
     -----
     The mask is first converted to 1s and NaNs before multiplication with
     the original data.
 
-    As discussed in generate_mask, you can combine multiple masks in a
+    As discussed in filters.generate_mask, you can combine multiple masks in a
     recipe using other functions before applying the mask to the data.
 
     Examples
     --------
-    >>> land_points_only = radar_apply_mask( surface_microphysical_rainfall_rate, Nimrod2km)
+    >>> radar_domain_only = radar_apply_mask( surface_microphysical_rainfall_rate, Nimrod2km_wts)
     """
     # Create an empty cubelist to hold the filtered fields.
     masked_fields = iris.cube.CubeList([])
