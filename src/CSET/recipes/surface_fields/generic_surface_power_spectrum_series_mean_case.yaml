@@ -47,8 +47,8 @@ steps:
   - operator: power_spectrum.calculate_power_spectrum
 
   - operator: collapse.collapse
-    coordinate: "time"
     method: MEAN
+    coordinate: "time"
 
   - operator: write.write_cube_to_nc
     overwrite: True
