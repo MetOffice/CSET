@@ -111,6 +111,9 @@ def load(conf: Config):
         if radar["varname"] == "Hourly rain accumulation"
     ]
 
+    # Specify the boundary margin width to use when trimming model fields.
+    boundary_margin = 16
+
     # Surface (2D) fields for Nimrod radar rainfall.
     #
     # These loaders produce 2D plots of both the Nimrod
@@ -139,7 +142,6 @@ def load(conf: Config):
 
     # Radar 2D plots using a common domain between model and radar network.
     if conf.NIMROD_RADAR_OBS and conf.PROCESS_RADAR_2D and (len(accum_radars) > 0):
-        # field = "Hourly rain accumulation"
         radar_source = select_radar_source([source["id"] for source in accum_radars])
         radar_obs_ids = [radar_source]
         radar_wts_ids = [radar_source + "_weights"]
@@ -151,26 +153,20 @@ def load(conf: Config):
                 "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
                 "RADAR_VARNAME": "Hourly rain accumulation",
                 "MODEL_LABEL": model_names_list[0],
-                # "MODEL_LABEL": "ModelA",
-                # "RADAR_LABEL": "Nimrod2km",
-                # "MASK_LABEL": "Nimrod2km_wts",
                 "RADAR_LABEL": radar_obs_ids[0],
                 "MASK_LABEL": radar_wts_ids[0],
                 "METHOD": "SEQ",
-                # "OUTPUTS": "radar",
+                "BOUNDARY_MARGIN": boundary_margin,
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
                 "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
             },
             model_ids=[model_ids_list[0], "Nimrod2km", "Nimrod2km_weights"],
-            # model_ids=["1", "Nimrod2km", "Nimrod2km_weights"],
-            # model_ids=["ModelA", "Nimrod2km", "Nimrod2km_weights"],
             aggregation=False,
         )
 
-    # Radar 2D plots using a common domain between model and radar network.
+    # Model rainfall 2D plots using a common domain between model and radar network.
     if conf.NIMROD_RADAR_OBS and conf.PROCESS_RADAR_2D and (len(accum_radars) > 0):
-        # field = "Hourly rain accumulation"
         radar_source = select_radar_source([source["id"] for source in accum_radars])
         radar_obs_ids = [radar_source]
         radar_wts_ids = [radar_source + "_weights"]
@@ -182,20 +178,15 @@ def load(conf: Config):
                 "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
                 "RADAR_VARNAME": "Hourly rain accumulation",
                 "MODEL_LABEL": model_names_list[0],
-                # "MODEL_LABEL": "ModelA",
-                # "RADAR_LABEL": "Nimrod2km",
-                # "MASK_LABEL": "Nimrod2km_wts",
                 "RADAR_LABEL": radar_obs_ids[0],
                 "MASK_LABEL": radar_wts_ids[0],
                 "METHOD": "SEQ",
-                # "OUTPUTS": "model",
+                "BOUNDARY_MARGIN": boundary_margin,
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
                 "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
             },
             model_ids=[model_ids_list[0], "Nimrod2km", "Nimrod2km_weights"],
-            # model_ids=["1", "Nimrod2km", "Nimrod2km_weights"],
-            # model_ids=["ModelA", "Nimrod2km", "Nimrod2km_weights"],
             aggregation=False,
         )
 
@@ -223,6 +214,7 @@ def load(conf: Config):
                 "ALL_LABEL": combined_names,
                 "SEQUENCE": "time",
                 "OUTPUTS": "all",
+                "BOUNDARY_MARGIN": boundary_margin,
                 "TITLE_STRING": "sequence plots",
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
@@ -256,6 +248,7 @@ def load(conf: Config):
                 "ALL_LABEL": combined_names,
                 "SEQUENCE": "realization",
                 "OUTPUTS": "all",
+                "BOUNDARY_MARGIN": boundary_margin,
                 "TITLE_STRING": "case study",
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
