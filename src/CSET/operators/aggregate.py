@@ -76,6 +76,7 @@ interval_iso: str
     ValueError
         If the constraint doesn't produce a single cube containing a field.
     """
+    # Return unchanged cubes if interval_iso is 0, to allow this operator to be used across multiple fields where only some will need resampling.
     if interval_iso == "0":
         return cubes
 
