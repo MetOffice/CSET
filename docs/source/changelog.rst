@@ -7,6 +7,162 @@ Changelog
     Full list of changes with who made them and a link to the PR.
     See contributing/releases.rst for more information.
 
+26.9.0 (2026-09-02)
+-------------------
+
+A feature release with major new features including:
+
+* Support for Nimrod radar observations
+* Support for verification via the scores library
+* Support for point observations
+* Implemented instantaneous power spectrum for regional models
+* Added CSET gallery in documentation
+* CSET now installs version appropriate site specific restricted files with the new ``cset install-restricted-files``
+
+List of full changes:
+
+* Support UK radar data by `@BernardClaxton`_ in :pr:`1825`
+* Calculate power spectra using a separate operator power_spectrum by `@cehalliwell`_ in :pr:`1872`
+* Adds a wrapper for RMSE calculated using the scores package by `@daflack`_ in :pr:`2107`
+* Don't guess instantaneous time coordinate bounds by `@ScottWales`_ in :pr:`2111`
+* Calculate wind vector speed and direction from U and V compts by `@mo-sro`_ in :pr:`2119`
+* Modify to multi variable constraint function by `@mo-sro`_ in :pr:`2120`
+* Add remove scalar coordinates operator by `@mo-sro`_ in :pr:`2121`
+* Add rainfall depth to rate converter by `@mo-sro`_ in :pr:`2122`
+* Add functions to convert covariances into heat fluxes by `@mo-sro`_ in :pr:`2125`
+* Adds windspeed below the MAUL by `@daflack`_ in :pr:`2140`
+* Adds directional windshear across a MAUL by `@daflack`_ in :pr:`2146`
+* Adding feature tracking operator by `@A-Gainford`_ in :pr:`2148`
+* Adds saturation fraction by `@daflack`_ in :pr:`2149`
+* Add METplus ensemble stats capability by `@JorgeBornemann`_ in :pr:`2159`
+* Refactor plot.py by `@ukmo-huw-lewis`_ in :pr:`2163`
+* Make finish_website app self-contained by `@jfrost-mo`_ in :pr:`2168`
+* Correct extract time in test to account for removed bounds by `@jfrost-mo`_ in :pr:`2184`
+* Use micromamba if available in `make setup` by `@jfrost-mo`_ in :pr:`2186`
+* Correct indentation of Scores references in docstrings by `@jfrost-mo`_ in :pr:`2188`
+* Tidy up imports and function signatures for `scoreswappers.py` by `@jfrost-mo`_ in :pr:`2189`
+* Use micromamba for GitHub Actions conda environment creation by `@jfrost-mo`_ in :pr:`2193`
+* Adds a bug fix to scores_RMSE implementation by `@daflack`_ in :pr:`2194`
+* Reference correct variable in model level difference loader by `@jfrost-mo`_ in :pr:`2197`
+* Add Makefile target and script to update developer environment lock files by `@jfrost-mo`_ in :pr:`2208`
+* Automatically check conda lockfiles are up-to-date and remove unneeded documentation by `@jfrost-mo`_ in :pr:`2209`
+* Skip running scheduled Actions workflows on forks by `@jfrost-mo`_ in :pr:`2210`
+* Create the update PR without using the GitHub App by `@jfrost-mo`_ in :pr:`2211`
+* Support Hinton (triangle scorecard) plots by `@jwarner8`_ in :pr:`2219`
+* Pin matplotlib version to avoid plot breakage by `@jfrost-mo`_ in :pr:`2223`
+* added ascii2nc ncmrwf config by `@ezhils19`_ in :pr:`2224`
+* Remove unused QQ plot cylc include file by `@jfrost-mo`_ in :pr:`2225`
+* Remove unused rose configuration settings by `@jfrost-mo`_ in :pr:`2226`
+* Validate cylc workflow and rose metadata via automatic tests by `@jfrost-mo`_ in :pr:`2227`
+* Update description for rmse scores  by `@mo-khanley`_ in :pr:`2228`
+* Add RMSE scores based vertical pressure profile recipe by `@Sylviabohnenstengel`_ in :pr:`2230`
+* Add Scores diagnostics for spatial and timeseries RMSE, Additive Bias, MAE, and Pearson’s Correlation Coefficient by `@BernardClaxton`_ in :pr:`2232`
+* Add CRPS for ensemble verification by `@james-a-f-ross`_ in :pr:`2235`
+* Add icm site to rose metadata by `@refszkentla`_ in :pr:`2236`
+* Enable users to select all Scores metrics by `@mo-khanley`_ in :pr:`2237`
+* Extend multi-plotting to multiple plots and flexibility on overlay and contour choices by `@ukmo-huw-lewis`_ in :pr:`2238`
+* Implement calculate wind_speed from components by `@ukmo-huw-lewis`_ in :pr:`2241`
+* Add reformatted coverage report as Actions job summary by `@jfrost-mo`_ in :pr:`2243`
+* Fix missed custom conda path in `app_env_wrapper` by `@jfrost-mo`_ in :pr:`2244`
+* Update install restricted files to use version appropriate branch and make into `cset` subcommand by `@jfrost-mo`_ in :pr:`2251`
+* Satisfy typechecker in loglevel code by `@jfrost-mo`_ in :pr:`2257`
+* Skip null facet values in CSET website to avoid crash by `@jfrost-mo`_ in :pr:`2259`
+* Add new helper function to check if we're running under Cylc by `@jwarner8`_ in :pr:`2263`
+* added .idea to gitignore by `@james-a-f-ross`_ in :pr:`2265`
+* Support analysis/reanalysis comparisons  by `@jwarner8`_ in :pr:`2268`
+* Update default plotting styles by `@ukmo-huw-lewis`_ in :pr:`2270`
+* Extend fetch_obs support to loop over multiple ob types by `@ukmo-huw-lewis`_ in :pr:`2272`
+* Implement support for concatenation of multiple obs inputs in read by `@ukmo-huw-lewis`_ in :pr:`2274`
+* Support point-based observation plotting with generic spatial_plot functions by `@ukmo-huw-lewis`_ in :pr:`2276`
+* Increased test coverage across untested code by `@ukmo-huw-lewis`_ in :pr:`2279`
+* Use login bash shell instead of micromamba-shell to ensure tests fail the GitHub Actions checks by `@jfrost-mo`_ in :pr:`2282`
+* Add support for CubeLists in subtraction and common_points operators by `@ukmo-huw-lewis`_ in :pr:`2284`
+* Update regrid to point cube method and update model vs obs difference recipe by `@ukmo-huw-lewis`_ in :pr:`2287`
+* Fix the radar loaders to check radar data are requested  #1759 by `@BernardClaxton`_ in :pr:`2288`
+* fixing unit test not using tmp_working_dir by `@james-a-f-ross`_ in :pr:`2290`
+* Update workflow for more general point-based observations support. by `@ukmo-huw-lewis`_ in :pr:`2291`
+* Exclude public opt and site files from gitignore to avoid warning from Git by `@jfrost-mo`_ in :pr:`2292`
+* add tmp working dir to other plot tests so meta.json isn't put into the CSET dir by `@james-a-f-ross`_ in :pr:`2293`
+* Extend coverage of wind_speed calculation for non-UM inputs by `@ukmo-huw-lewis`_ in :pr:`2296`
+* Explicitly import used iris modules in conftest.py by `@jfrost-mo`_ in :pr:`2298`
+* Small cleanups to `test_scoreswrapper.py` by `@jfrost-mo`_ in :pr:`2299`
+* New plot types for model comparisons with point obs by `@ukmo-huw-lewis`_ in :pr:`2300`
+* Follow up to update install restricted files to use version appropriate branch and make into cset subcommand by `@Fraetor`_ in :pr:`2301`
+* New colormaps test to cover Nimrod wts case by `@ukmo-huw-lewis`_ in :pr:`2302`
+* Test that `meta.json` is not leaked from any tests by `@jfrost-mo`_ in :pr:`2304`
+* Tidy up imports in `test_colormaps.py` by `@jfrost-mo`_ in :pr:`2306`
+* Update obs retrieval paths by `@mo-tomosevans`_ in :pr:`2308`
+* Add wind gust colorbar by `@mo-tomosevans`_ in :pr:`2312`
+* Update line-series validation and plotting logic to make realization optional. by `@mo-LewisBlunn`_ in :pr:`2313`
+* plot: fix axes extent also for RotatedGeogCS by `@CGenie`_ in :pr:`2315`
+* Remove "Technical" from References title to make it clear it contains all kinds of reference material by `@jfrost-mo`_ in :pr:`2317`
+* Add utils directory for community maintained utilities by `@jfrost-mo`_ in :pr:`2319`
+* Install rose and cylc in weekly checks full-test workflow by `@jfrost-mo`_ in :pr:`2320`
+* Fix typo in docstring by `@jfrost-mo`_ in :pr:`2324`
+* Move references into central bibliography to avoid duplicate reference warning by `@jfrost-mo`_ in :pr:`2325`
+* Update GitHub docs links to avoid unneeded redirects by `@jfrost-mo`_ in :pr:`2336`
+* Copy web files into correct location for playwright tests by `@jfrost-mo`_ in :pr:`2338`
+* Update to Ruff v0.16 and fix newly raised lint issues by `@jfrost-mo`_ in :pr:`2339`
+* Fixed feature tracking colormaps by `@A-Gainford`_ in :pr:`2344`
+* Ensure line color is black for reanalysis by `@jwarner8`_ in :pr:`2350`
+* Fix bug in plot_line_series to allow plotting of spectra for multiple models by `@cehalliwell`_ in :pr:`2351`
+* Add CSET gallery infrastructure and sphinx-gallery dependency by `@ukmo-huw-lewis`_ in :pr:`2354`
+* Install `main` branch of restricted files for development versions of CSET by `@jfrost-mo`_ in :pr:`2357`
+* Save and close figure via function call and protect for sphinx-documentation by `@ukmo-huw-lewis`_ in :pr:`2359`
+* Add spatial_plot gallery example by `@ukmo-huw-lewis`_ in :pr:`2361`
+* Plot coastlines with masked data present by `@jwarner8`_ in :pr:`2366`
+* Continue plotting power spectra if np.nan present by `@jwarner8`_ in :pr:`2368`
+* Clarify that variable arguments can be in any Sequence type by `@Fraetor`_ in :pr:`2369`
+* Create FastNetUK utils script by `@jwarner8`_ in :pr:`2370`
+* Implement scores model-obs RMSE by `@james-a-f-ross`_ in :pr:`2373`
+* Scores: Probability of detection Model vs Obs by `@jwarner8`_ in :pr:`2374`
+* Allow multiple cases when calculating power spectrum by `@cehalliwell`_ in :pr:`2376`
+* Fix bug in the checks within plot_line_series to consider what type of dimension realization is. by `@cehalliwell`_ in :pr:`2379`
+* Add the ability for scoreswrappers functions and recipes to handle and plot multiple model-model comparisons  by `@james-a-f-ross`_ in :pr:`2383`
+* Scores [Categorical] Equitable Threat Score Model vs Obs by `@jwarner8`_ in :pr:`2385`
+* Adding model obs MAE by `@james-a-f-ross`_ in :pr:`2390`
+* Adding model vs obs additive bias recipes + operators by `@james-a-f-ross`_ in :pr:`2391`
+* Adding model-obs pearson correlation recipe + operator by `@james-a-f-ross`_ in :pr:`2392`
+* Update release process documentation by `@jfrost-mo`_ in :pr:`2395`
+* Fix link to community utils documentation in utils README by `@jfrost-mo`_ in :pr:`2397`
+* Fix handling of SCORES_CATEGORICAL_POD_ENTRIES and disable by default in example configuration by `@jfrost-mo`_ in :pr:`2401`
+* Fix AOA varnames and optimise tests by `@jwarner8`_ in :pr:`2402`
+* New docs gallery global spatial plot example by `@ukmo-huw-lewis`_ in :pr:`2406`
+* New docs gallery spatial difference example by `@ukmo-huw-lewis`_ in :pr:`2408`
+* New docs gallery timeseries example by `@ukmo-huw-lewis`_ in :pr:`2413`
+* New docs gallery gridcells cutout example by `@ukmo-huw-lewis`_ in :pr:`2415`
+* New docs gallery profile example by `@ukmo-huw-lewis`_ in :pr:`2417`
+* Refactoring and simplification of scoreswrappers.py by `@james-a-f-ross`_ in :pr:`2420`
+* Rearrange observations GUI by `@james-a-f-ross`_ in :pr:`2421`
+* Run scheduled update on the first of the month instead of weekly by `@jfrost-mo`_ in :pr:`2423`
+* Scores [Categorical] Frequency Bias by `@jwarner8`_ in :pr:`2424`
+* Scores [Categorical] Probability of False Detection by `@jwarner8`_ in :pr:`2425`
+* New docs gallery spatial cutout example by `@ukmo-huw-lewis`_ in :pr:`2427`
+* New docs gallery histogram example by `@ukmo-huw-lewis`_ in :pr:`2429`
+* Add developer guide to adding gallery pages by `@ukmo-huw-lewis`_ in :pr:`2432`
+* New docs multi-layer plotting example by `@ukmo-huw-lewis`_ in :pr:`2434`
+* Add metadata for model obs scores metrics by `@james-a-f-ross`_ in :pr:`2435`
+* Remove `cset_comparison_base` attribute when loading data by `@jfrost-mo`_ in :pr:`2437`
+* Handle non-masked data in spatial plotting by `@jfrost-mo`_ in :pr:`2439`
+* Add restricted files branch creation step to release documentation by `@jfrost-mo`_ in :pr:`2455`
+* Add release notes for version 26.9.0 by `@james-a-f-ross`_ in :pr:`2457`
+
+New Contributors:
+
+* `@A-Gainford`_ made their first contribution in :pr:`2148`
+* `@ezhils19`_ made their first contribution in :pr:`2224`
+* `@mo-khanley`_ made their first contribution in :pr:`2228`
+* `@james-a-f-ross`_ made their first contribution in :pr:`2235`
+* `@mo-tomosevans`_ made their first contribution in :pr:`2308`
+* `@CGenie`_ made their first contribution in :pr:`2315`
+
+.. _@A-Gainford: https://github.com/A-Gainford
+.. _@ezhils19: https://github.com/ezhils19
+.. _@mo-khanley: https://github.com/mo-khanley
+.. _@james-a-f-ross: https://github.com/james-a-f-ross
+.. _@mo-tomosevans: https://github.com/mo-tomosevans
+.. _@CGenie: https://github.com/CGenie
+
 26.5.1 (2026-06-10)
 -------------------
 
