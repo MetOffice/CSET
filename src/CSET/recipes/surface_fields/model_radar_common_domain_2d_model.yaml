@@ -53,7 +53,7 @@ steps:
       condition: 'ge'
       value: 11
 
-    boundary_margin: 16
+    boundary_margin: $BOUNDARY_MARGIN
     outputs: "model"
 
   - operator: collapse.collapse
