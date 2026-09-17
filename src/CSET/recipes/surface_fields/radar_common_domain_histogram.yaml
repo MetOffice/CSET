@@ -56,7 +56,7 @@ steps:
       condition: 'ge'
       value: 11
 
-    boundary_margin: 16
+    boundary_margin: $BOUNDARY_MARGIN
     outputs: $OUTPUTS
 
   - operator: radar_filter.match_varname_and_units
