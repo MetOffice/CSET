@@ -39,7 +39,7 @@ def time_aggregate(
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Aggregate cube/cubes by its time coordinate.
 
-    Aggregates similar (stash) fields in a cube or cube list for the specified coordinate and
+    Aggregates fields in a cube or cube list for the specified coordinate and
     using the method supplied. The aggregated cube/cubelist will keep the coordinate and
     add a coordinate with the aggregated end time points.
 
