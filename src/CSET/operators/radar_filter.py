@@ -258,67 +258,44 @@ def radar_mask(
     filtered_radar = iris.cube.CubeList([])
     filtered_model = iris.cube.CubeList([])
 
-    # ensure the three inputs to this function are model_field, nimrod_field, nimrod_mask
-
+    # Loop over nimrod_field, model_field and nimrod_mask.
     for M, F, N in zip(
         iter_maybe(nimrod_mask),
         iter_maybe(model_field),
         iter_maybe(nimrod_field),
         strict=True,
     ):
-        #        masked_field = F.copy()
-
-        # apply the function radar_apply_mask to generate the re-gridded and masked model_field
-        # i.e. generate masked_model_field
+        # Apply the function radar_apply_mask to generate the re-gridded
+        # and masked model field.
         masked_model_field = radar_apply_mask(F, M, boundary_margin=boundary_margin)
 
-        # use the model_field as the mask for the nimrod_field - note: no re-gridding required
-        # i.e. generate masked_nimrod_field
-
+        # Use the masked model field as the mask for the Nimrod field.
+        # Note: no re-gridding required.
         min_timesteps = min(N.shape[0], masked_model_field.shape[0])
 
         temp_mask = masked_model_field[0:min_timesteps].copy()
-        # temp_mask.data[ temp_mask.data != np.nan ] = 1.0
         temp_mask.data[~np.isnan(temp_mask.data)] = 1.0
 
         masked_nimrod_field = N[0:min_timesteps].copy()
-        # masked_nimrod_field.data = N[0:min_timesteps].data * temp_mask[0:min_timesteps].data
         masked_nimrod_field.data *= temp_mask.data
 
         # Append the masked field to the output list of masked fields.
         filtered_model.append(masked_model_field)
         filtered_radar.append(masked_nimrod_field)
 
-    # return masked_model_field and masked_nimrod_field --> these can then be passed to either
-    # the histogram or time series plotting operators.
-
-    print(" test point bmc1")
+    # Return either the masked model or Nimrod fields, or both.
     if outputs == "radar":
-        print(" test point bmc1a")
         filtered_fields.append(filtered_radar.merge_cube())
-    print(" test point bmc2")
     if outputs == "model":
-        print(" test point bmc2a")
         filtered_fields.append(filtered_model.merge_cube())
-    print(" test point bmc3")
     if outputs == "all":
-        print(" test point bmc4")
         filtered_fields.append(filtered_model.merge_cube())
-        print(" test point bmc5")
         filtered_fields.append(filtered_radar.merge_cube())
 
-    print("+++++++++++++++++++++++++++++")
-    print(filtered_fields)
-    print("+++++++++++++++++++++++++++++")
     # Return either a single cube or a cubelist.
-    print(" test point bmc6")
     if len(filtered_fields) == 1:
-        print(" test point bmc7a")
         return filtered_fields[0]
     else:
-        # return masked_fields
-        # return filtered_fields.merge()
-        print(" test point bmc7")
         return filtered_fields
 
 
