@@ -241,27 +241,14 @@ def radar_apply_mask(
     for M, F in zip(iter_maybe(mask), iter_maybe(original_field), strict=True):
         masked_field = F.copy()
 
-        # TODO set the model perimeter to NaN as these gridpoints contain no data.
+        # Set the model perimeter to NaN as these gridpoints contain no useful data.
         # c.f. boundary_margin in regrid.py
-        # Get bounds
-        # Get axis
-        # lat, lon = M.coord(y_coord), M.coord(x_coord)
-        # lat_min, lon_min = lat.points.min(), lon.points.min()
-        # lat_max, lon_max = lat.points.max(), lon.points.max()
         margin_width = boundary_margin
         if margin_width > 0:
             masked_field.data[:, -margin_width - 1 :, :] = np.nan
             masked_field.data[:, :, -margin_width - 1 :] = np.nan
             masked_field.data[:, :, 0:margin_width] = np.nan
             masked_field.data[:, 0:margin_width, :] = np.nan
-        # masked_field.data[:, -margin_width-1:-1, :] = 3.0
-        # masked_field.data[:, :, -margin_width-1:-1] = 1.5
-        # masked_field.data[:, :, 0:margin_width] = 50.0
-        # masked_field.data[:, 0:margin_width, :] = 30.0
-        # masked_field.data[ masked_field.data < 0.01 ] = 200.0
-        # masked_field.data[ masked_field.data == np.nan ] = 20.0
-
-        # TODO must mask the radar obs using the model domain
 
         # If the field and mask are on different grids, then regrid the field.
         if M[0].shape != masked_field[0].shape:
@@ -291,7 +278,7 @@ def radar_mask(
     nimrod_field: iris.cube.Cube | iris.cube.CubeList,
     nimrod_mask: iris.cube.Cube | iris.cube.CubeList,
     boundary_margin: int = 8,
-    outputs: str = "Nimrod",
+    outputs: str = "radar",
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Apply a mask to given data as a masked array."""
     # Create an empty cubelist to hold the filtered fields.
@@ -334,10 +321,12 @@ def radar_mask(
     # the histogram or time series plotting operators.
 
     print(" test point bmc1")
-    if outputs == "Nimrod":
+    if outputs == "radar":
+        print(" test point bmc1a")
         filtered_fields.append(filtered_radar.merge_cube())
     print(" test point bmc2")
     if outputs == "model":
+        print(" test point bmc2a")
         filtered_fields.append(filtered_model.merge_cube())
     print(" test point bmc3")
     if outputs == "all":
@@ -366,7 +355,7 @@ def radar_mask_loop(
     nimrod_field: iris.cube.Cube | iris.cube.CubeList,
     nimrod_mask: iris.cube.Cube | iris.cube.CubeList,
     boundary_margin: int = 8,
-    outputs: str = "Nimrod",
+    outputs: str = "radar",
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Find common domains between a list of models and radar observations."""
     # Create an empty cubelist to hold the filtered fields.
@@ -400,7 +389,7 @@ def radar_mask_loop(
             use_nimrod_field,
             use_nimrod_mask,
             boundary_margin=boundary_margin,
-            outputs="Nimrod",
+            outputs="radar",
         )
     else:
         filtered_radar = radar_mask(
@@ -408,7 +397,7 @@ def radar_mask_loop(
             use_nimrod_field,
             use_nimrod_mask,
             boundary_margin=boundary_margin,
-            outputs="Nimrod",
+            outputs="radar",
         )
 
     filtered_cubes.append(filtered_radar)
