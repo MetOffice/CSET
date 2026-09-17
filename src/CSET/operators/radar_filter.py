@@ -108,42 +108,28 @@ def mask_by_weights(
     weights_names: list[str],
     **kwargs,
 ) -> iris.cube.CubeList:
-    """Filter a field using a second field as a mask.
+    """Filter a field using a radar weights field as a mask.
 
     Parameters
     ----------
     cubes: iris.cube.CubeList
-        Two cubes containing the radar observations and their weights.
+        CubeList containing fields to mask and radar weights fields to use as the masks.
+    model_names: list[str]
+        A list of the model_names or radar sources to mask.
+    weights_names: list[str]
+        A list of radar weights sources to use as masks. There should be an entry
+        in weights_names to correspond with every entry in model_names.
 
     Returns
     -------
-    Cube
-
-    Raises
-    ------
-    ValueError, iris.exceptions.NotYetImplementedError
-        When the cubes are not compatible.
-
-    Notes
-    -----
-    This is a simple operator designed for combination of diagnostics or
-    creating new diagnostics by using recipes.
+    CubeList:
+        A CubeList of masked fields.
 
     Examples
     --------
     >>> field_filtered = mask_by_weights(cubelist, model_names)
 
     """
-    print("model_names are: ", model_names)
-    print("weights_names", weights_names)
-
-    for cube in cubes:
-        print("  cube.var_name ", cube.var_name)
-        print("    cube.name ", cube.name)
-        print("    cube: ")
-        print(cube)
-        print("    cube.attributes.model_name ", cube.attributes["model_name"])
-
     # Check the input unfiltered cubes and the mask cubes are both cubelists
     # with the same number of cubes. If not, then add extra mask cubes.
     if len(model_names) != len(weights_names):
@@ -159,11 +145,8 @@ def mask_by_weights(
         iter_maybe(model_names),
         iter_maybe(weights_names),
         strict=True,
-        #        iter_maybe(model_names), iter_maybe(weights_names), strict=True
     ):
-        print(" model, mask ", model, mask)
-
-        # grab the field to filter
+        # Grab the field to filter.
         model_constraint = iris.AttributeConstraint(model_name=model)
         unfiltered_field = cubes.extract_cube(var_constraint & model_constraint)
 
@@ -175,22 +158,6 @@ def mask_by_weights(
         # Create the mask - note that the condition e.g. "ge" can be set by a loader
         # as can the threshold value.
         mask_radar_wts = generate_mask(mask_field, "ge", 11)
-
-        # print(" This is cube radar_obs: ", radar_obs)
-        # print(" This is cube radar_weights: ", radar_wts)
-        # print(" This is cube unfiltered: ", unfiltered_field)
-
-        # check the coords of the unfiltered field and the mask field.
-        # If these do not match, then regrid the unfiltered field onto
-        # the grid used for the mask field.
-        # For radar weights fields can use the function regrid_onto_xyspacing in regrid.py,
-        # but then might have to extract a subarea to match the mask grid.
-        # Might have to consider serval cases for regridding:
-        #  (1) model_field(lat, lon) to radar_weights_field(x, y)
-        #  (2) model_field(lat, lon) to other_model_field(lat, lon)
-        #  (3) Nimrod_field(x, y) to radar_weights_field(x, y)
-        #  (4) Nimrod_field(x, y) to model_field(lat,lon) ?
-        #
 
         # Apply the mask.
         masked_radar_obs = apply_mask(unfiltered_field, mask_radar_wts)
