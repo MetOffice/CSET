@@ -5,6 +5,12 @@ description: |
   field over the domain common to both the model and the radar observation network.
   To achieve this, the model field is regridded onto the radar grid, enabling the
   mapping of the common domain that is then used to mask the radar field.
+  ATTENTION: the radar data are 1 hour accumulations. Because showers
+  typically advect, on a 2D plot of accumulated rainfall, showers show
+  as streaks i.e. lower intensity rainfall over a greater area than a
+  plot of instantaneous rainfall rate. This results in accumulated rainfall
+  being damped in intensity compared to rainfall rates so caution is
+  required when comparing model rainfall rate with observed rainfall accumulation.
 
 steps:
   - operator: read.read_cubes
