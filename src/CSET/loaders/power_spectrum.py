@@ -142,7 +142,7 @@ def load(conf: Config):
                 recipe="generic_plevel_power_spectrum_series_mean_case.yaml",
                 variables=variables,
                 model_ids=[model["id"] for model in models],
-                aggregation=True,
+                aggregation=False,
             )
 
     # Model level fields.
@@ -166,5 +166,5 @@ def load(conf: Config):
                 recipe="generic_mlevel_power_spectrum_series_mean_case.yaml",
                 variables=variables,
                 model_ids=[model["id"] for model in models],
-                aggregation=True,
+                aggregation=False,
             )
