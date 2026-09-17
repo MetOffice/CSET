@@ -29,24 +29,29 @@ def mask_list(model_names: list[str]) -> list[str]:
     Parameters
     ----------
     model_names: list[str]
-        A list of model and Nimrod hourly rainfall accumulation files.
+        A list containing model names and at least one Nimrod hourly
+        rainfall accumulation source.
+        Possible radar sources are:
+          "Nimrod2km", "Nimrod_2km".
+          "Nimrodxkm", "Nimrod_xkm".
+          "Nimrod1km", "Nimrod_1km".
 
     Returns
     -------
     list[str]
         A list of the Nimrod weights files to use with each of the input
-        model / observations files.
+        models and radar sources.
 
     Notes
     -----
-     At lest one of the entries in the input list must be a Nimrod hourly
-     rainfall accumulation file.
+     At least one of the entries in the input list must be a Nimrod hourly
+     rainfall accumulation source.
 
-     If just one Nimrod file is specified, then then the weights file associated
-     with this field is used.
+     If just one Nimrod source is specified, then the weights file associated
+     with this source is used.
 
-     If more than one Nimrod file is in the input list, then each of the these
-     Nimrod files is associated with its own weights file e.g. if the input list
+     If more than one Nimrod source is in the input list, then each of the these
+     Nimrod sources is associated with its own weights file e.g. if the input list
      contains ["Nimrod1km", "Nimrod2km"] then the weights files for these will
      be ["Nimrod1km_weights", "Nimrod2km_weights"]. Any model fields in the input
      list will be allocated a weights file according to the order of preference
