@@ -64,7 +64,8 @@ def time_aggregate(
         iris.analysis.SUM, etc.
     interval_iso: isodate timedelta ISO 8601 object i.e PT6H (6 hours), PT30M (30 mins)
         Interval to aggregate over.
-
+interval_iso: str
+    A string containing a datetime timedelta for resampling over in hours, i.e. PT3H, PT24H.
     Returns
     -------
     resampled_cubes: iris.cube.Cube | iris.cube.CubeList
