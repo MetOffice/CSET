@@ -485,20 +485,28 @@ def _get_effective_diameter_from_feature_size(
 
     """
     # Guess coord representing horizontal grid (choose first available)
-    hzntl_coord = next(
-        iter(
-            [
-                coord
-                for coord in cube_with_hzntl_coord.coords()
-                if iris.util.guess_coord_axis(coord) in ["X", "Y"]
-            ]
+    try:
+        hzntl_coord = next(
+            iter(
+                [
+                    coord
+                    for coord in cube_with_hzntl_coord.coords()
+                    if iris.util.guess_coord_axis(coord) in ["X", "Y"]
+                ]
+            )
         )
-    )
+    except StopIteration:
+        raise ValueError(
+            "No horizontal coordinate found in input cube. "
+            "Cannot calculate effective diameter."
+        ) from None
 
     logger.debug(f"Attempting to convert to effective diameter using {hzntl_coord}")
 
     # Check coordinate is regular, but only warn if not, this is a naive estimate
     # and will be inaccurate for irregular grids
+    # Additionally, the current function only checks for regularity in one horizontal
+    # coordinate. Again, this is a bit of naive estimate.
     if not iris.util.is_regular(hzntl_coord):
         logger.warning(
             f"Horizontal coordinate {hzntl_coord} is not regular. "
@@ -537,8 +545,8 @@ def _get_effective_diameter_from_feature_size(
             mean_latitude = 0
         grid_spacing = grid_spacing * 111 * np.cos(np.radians(mean_latitude))
 
-    effective_diameters_data = np.sqrt(size_data * grid_spacing**2 / np.pi) * 2
-    return effective_diameters_data, grid_spacing
+    effective_diameter_data = np.sqrt(size_data * grid_spacing**2 / np.pi) * 2
+    return effective_diameter_data, grid_spacing
 
 
 def _add_cell_stats_data_to_cubes(

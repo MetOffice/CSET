@@ -1,8 +1,7 @@
 category: Quick Look
 title: Example running cell_stats and plotting histograms
 description: |
-  Uses the feature.cell_stats operator to calculate cell size, mean cell values and max cell values for
-  identified features. Saves cell stats data to output and plots histograms
+  Uses the feature.cell_stats operator to calculate cell size, mean cell values and max cell values for identified features. Saves cell stats data to output and plots histograms
 
 steps:
   - operator: read.read_cubes

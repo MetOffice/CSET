@@ -717,7 +717,7 @@ def flatten(
     cubes : iris.cube.Cube or iris.cube.CubeList
         The input Cube or CubeList to flatten.
     remove_nans : bool, optional
-        If True, remove NaN values from the flattened data. Default is True.
+        If True, remove NaN values from the flattened data. Default is False.
 
     Returns
     -------
