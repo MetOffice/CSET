@@ -100,9 +100,9 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    # Surface (2D) fields.
+    # Mean spectra on surface and pressure/model levels.
 
-    #    if conf.SPECTRUM_SURFACE_FIELD_AGGREGATION:
+    # Surface (2D) fields.
     if conf.SPECTRUM_SURFACE_FIELD and conf.SPECTRUM_SURFACE_FIELD_AGGREGATION:
         for field in conf.SURFACE_FIELDS:
             yield RawRecipe(
@@ -123,7 +123,10 @@ def load(conf: Config):
 
     # Pressure level fields.
     if conf.SPECTRUM_PLEVEL_FIELD and conf.SPECTRUM_PLEVEL_FIELD_AGGREGATION:
-        for field in conf.PRESSURE_LEVEL_FIELDS:
+        for field, plevel in itertools.product(
+            conf.PRESSURE_LEVEL_FIELDS,
+            conf.PRESSURE_LEVELS,
+        ):
             variables = {
                 "VARNAME": field,
                 "LEVELTYPE": "pressure",
@@ -147,7 +150,10 @@ def load(conf: Config):
 
     # Model level fields.
     if conf.SPECTRUM_MLEVEL_FIELD and conf.POWER_SPECTRUM_MLEVEL_FIELD_AGGREGATION:
-        for field in conf.MODEL_LEVEL_FIELDS:
+        for field, mlevel in itertools.product(
+            conf.MODEL_LEVEL_FIELDS,
+            conf.MODEL_LEVELS,
+        ):
             variables = {
                 "VARNAME": field,
                 "LEVELTYPE": "model_level_number",
