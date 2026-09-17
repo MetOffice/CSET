@@ -120,7 +120,7 @@ def load(conf: Config):
                     "SPECTRUM_SURFACE_FIELD_SEQUENCE": conf.SPECTRUM_SURFACE_FIELD_SEQUENCE,
                 },
                 model_ids=[model["id"] for model in models],
-                aggregation=True,
+                aggregation=False,
             )
 
     # Pressure level fields.
