@@ -909,7 +909,8 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
 
 
 def _compute_winds(
-    cubes: iris.cube.CubeList, constraint: iris.Constraint | None = None
+    cubes: iris.cube.CubeList,
+    constraint: iris.Constraint | iris._constraints.ConstraintCombination | None = None,
 ):
     """To compute wind_speed from vector components if not available as diagnostic.
 
@@ -925,7 +926,7 @@ def _compute_winds(
     # the cell methods, but it may not be warranted.
     #
     # A check on UM STASH attributes is also conducted to adjust directions.
-
+    print(type(constraint))
     if constraint is None:
         return cubes
     if isinstance(constraint, iris._constraints.ConstraintCombination):
