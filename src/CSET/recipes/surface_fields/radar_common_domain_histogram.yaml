@@ -2,11 +2,18 @@ category: Surface Spatial Plot
 title: "Histogram $MODEL_VARNAME\n $TITLE_STRING common domain model and Nimrod radar"
 description: |
   Creates histograms of the model rainfall rate and
-  the observed radar rainfall rate. The model field is regridded onto
-  the radar grid. Both regridded model and radar grids are then masked
-  so that only data within a domain common to both are used.
+  the observed radar rainfall accumulation.
+  The model field is regridded onto the radar grid. Both regridded model
+  and radar grids are then masked so that only data within a domain common
+  to both are used.
   If $SEQUENCE is set to "time" then time sequence plots are produced.
   If $SEQUENCE is set to "realization" then a single case-study mean plot is produced.
+  ATTENTION: the radar data are 1 hour accumulations. Because showers
+  typically advect, on a 2D plot of accumulated rainfall, showers show
+  as streaks i.e. lower intensity rainfall over a greater area than a
+  plot of instantaneous rainfall rate. This results in accumulated rainfall
+  being damped in intensity compared to rainfall rates so caution is
+  required when comparing model rainfall rate with observed rainfall accumulation.
 
 steps:
   - operator: read.read_cubes
