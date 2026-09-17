@@ -1,5 +1,6 @@
 category: Surface Spatial Plot
-title: "bmc2c $NIMROD_LABEL $RADAR_VARNAME\n common domain $MODEL_LABEL and radar"
+title: "bmc2d"
+#title: "bmc2c $RADAR_VARNAME\n common domain $MODEL_LABEL and radar"
 description: |
   Creates a 2-d surface plot of the model field using the
   grid and masking appropriate to the Nimrod file $MASK_LABEL. An
@@ -9,7 +10,7 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: [$MODEL_LABEL, $NIMROD_LABEL, $MASK_LABEL]
+    model_names: [$MODEL_LABEL, $RADAR_LABEL, $MASK_LABEL]
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
     constraint: [$MODEL_VARNAME, "Hourly rain accumulation", "Hourly wts accumulation"]
