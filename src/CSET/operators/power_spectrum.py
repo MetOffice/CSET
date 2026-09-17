@@ -21,11 +21,9 @@ import iris.coords
 import iris.cube
 import iris.exceptions
 import numpy as np
-from iris.util import promote_aux_coord_to_dim_coord
 from scipy import fft
 
 from CSET._common import iter_maybe
-from CSET.operators.read import _lfric_time_callback
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +63,7 @@ def calculate_power_spectrum(
         Power-spectrum cube, or a CubeList for multiple models.
     """
     out = iris.cube.CubeList()
+
     for input_cube in iter_maybe(cubes):
         model = input_cube.attributes.get("model_name")
 
@@ -105,6 +104,7 @@ def calculate_power_spectrum(
 
             for frt_cube in input_cube.slices_over("forecast_reference_time"):
                 frt = frt_cube.coord("forecast_reference_time").points[0]
+
                 members.append((frt_cube, None, frt))
 
         else:
@@ -243,15 +243,10 @@ def calculate_power_spectrum(
                     # If all FRT cubes have the same time coordinate,
                     # only FRT varies and normal concatenation should
                     # work.
-                    for frt_cube in frt_power_spectra:
-                        # add a forecast_period coord to aux_coords
-                        _lfric_time_callback(frt_cube)
-                        promote_aux_coord_to_dim_coord(frt_cube, "forecast_period")
-                        frt_cube.remove_coord("time")
+                    first_time = frt_power_spectra[0].coord("time")
 
-                    first_time = frt_power_spectra[0].coord("forecast_period")
                     matching_times = all(
-                        frt_cube.coord("forecast_period") == first_time
+                        frt_cube.coord("time") == first_time
                         for frt_cube in frt_power_spectra[1:]
                     )
 
@@ -259,12 +254,13 @@ def calculate_power_spectrum(
                         raise ValueError(
                             "Cannot combine power spectra: "
                             "multiple forecast reference times "
-                            "have different forecast_period"
+                            "have different multi-point time "
                             "coordinates."
                         )
 
                     # Combine individual cubes into single cube.
                     combined_cube = frt_power_spectra.concatenate_cube()
+
         else:
             # Only one of realization or FRT varies, or neither
             # exists. In those cases only one concatenation axis is
