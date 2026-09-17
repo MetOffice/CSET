@@ -83,15 +83,12 @@ def collapse(
             for coord in ["frequency", "physical_wavenumber", "wavelength"]
         )
         if is_power_spectrum:
-            time_coord = get_time_coord_name(cubes[0])
+            for cube in cubes:
+                cube.coord("time").bounds = None
+            cubes = cubes.extract_overlapping(["time"])
 
             for cube in cubes:
-                cube.coord(time_coord).bounds = None
-
-            cubes = cubes.extract_overlapping([time_coord])
-
-            for cube in cubes:
-                t = cube.coord(time_coord)
+                t = cube.coord("time")
                 t.points = t.points.astype(np.float64)
 
                 if t.bounds is not None:
@@ -484,19 +481,6 @@ def proportion(
         return collapsed_cubes[0]
     else:
         return collapsed_cubes
-
-
-def get_time_coord_name(cube, candidates=("time", "forecast_period")):
-    """Return the name of whichever candidate coord is a dimension coordinate."""
-    found = [name for name in candidates if cube.coords(name, dim_coords=True)]
-    if not found:
-        raise ValueError(
-            f"None of {candidates} is a dimension coordinate on cube "
-            f"{cube.summary(shorten=True)}"
-        )
-    if len(found) > 1:
-        raise ValueError(f"Expected one time-like dimension coordinate, found {found}")
-    return found[0]
 
 
 # TODO
