@@ -355,3 +355,21 @@ def read_point_nc(file_path: Path) -> DataFrame:
     obs = obs.filter(items=list(mapping.keys()))
 
     return obs
+
+
+def save_obs_dataframe_as_met(
+    obs: DataFrame,
+    stations: DataFrame | None = None,
+    *,
+    output: Path,
+    format: str = "netcdf",
+):
+    """Save an obs dataframe to a MET compatible format."""
+    if format == "netcdf":
+        ds = to_point_nc(obs, stations)
+        ds.to_netcdf(output)  # type: ignore
+    elif format == "ascii":
+        ascii_data = to_ascii(obs, stations)
+        ascii_data.to_csv(output, index=False, header=False, sep="\t")
+    else:
+        raise ValueError(f"Unsupported format: {format}")

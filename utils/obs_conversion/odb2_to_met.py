@@ -4,7 +4,7 @@
 import argparse
 from pathlib import Path
 
-from .met import to_ascii, to_point_nc
+from .met import save_obs_dataframe_as_met
 from .odb2 import odb2_to_obs_dataframe
 
 
@@ -19,12 +19,7 @@ def main():
     args = parser.parse_args()
 
     data = odb2_to_obs_dataframe(args.input_files)
-    if args.format == "netcdf":
-        nc = to_point_nc(data)
-        nc.to_netcdf(args.output)  # type: ignore
-    else:
-        ascii_data = to_ascii(data)
-        ascii_data.to_csv(args.output, index=False, header=False, sep="\t")
+    save_obs_dataframe_as_met(data, output=args.output, format=args.format)
 
 
 if __name__ == "__main__":

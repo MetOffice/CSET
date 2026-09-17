@@ -10,7 +10,7 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from .met import read_point_nc, to_ascii, to_index_table, to_point_nc
+from .met import read_point_nc, save_obs_dataframe_as_met, to_index_table, to_point_nc
 
 
 def test_to_index_table():
@@ -166,15 +166,10 @@ def test_round_trip(tmp_path: Path):
     stations_df = pd.DataFrame(stations_data)
 
     ascii_file = tmp_path / "ascii.txt"
-    ascii_data = to_ascii(obs_df, stations_df)
-    ascii_data.to_csv(ascii_file, index=False, sep="\t", header=False)
-
-    with open(ascii_file) as f:
-        print(f.read())
+    save_obs_dataframe_as_met(obs_df, stations_df, output=ascii_file, format="ascii")
 
     nc_file = tmp_path / "processed.nc"
-    processed = to_point_nc(obs_df, stations_df)
-    processed.to_netcdf(nc_file)  # type: ignore
+    save_obs_dataframe_as_met(obs_df, stations_df, output=nc_file, format="netcdf")
 
     ascii2nc_file = tmp_path / "ascii_converted.nc"
 
