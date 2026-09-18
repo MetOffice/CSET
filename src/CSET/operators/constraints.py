@@ -96,9 +96,7 @@ def generate_var_constraint(varname: str | list[str], **kwargs) -> iris.Constrai
 
     else:
         varname_constraint = iris.Constraint(name=varname)
-
     varname_constraint.varname = varname_copy
-
     return varname_constraint
 
 

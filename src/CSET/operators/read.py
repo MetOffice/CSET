@@ -909,7 +909,8 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
 
 
 def _compute_winds(
-    cubes: iris.cube.CubeList, constraint: iris.Constraint | None = None
+    cubes: iris.cube.CubeList,
+    constraint: iris.Constraint | iris._constraints.ConstraintCombination | None = None,
 ):
     """To compute wind_speed from vector components if not available as diagnostic.
 
@@ -928,8 +929,12 @@ def _compute_winds(
 
     if constraint is None:
         return cubes
-
-    filter_windspeed = getattr(constraint, "varname", None)
+    filter_windspeed = None
+    for constr in _flatten_combined_constraint(constraint):
+        filter_windspeed = getattr(constr, "varname", None)
+        if filter_windspeed:
+            constraint = constr
+            break
 
     u_constr = iris.Constraint("eastward_wind_at_10m")
     v_constr = iris.Constraint("northward_wind_at_10m")
@@ -958,6 +963,17 @@ def _compute_winds(
         )
         cubes = cubes.extract(filter_windspeed_constraint)
     return cubes
+
+
+def _flatten_combined_constraint(
+    con: iris.Constraint | iris._constraints.ConstraintCombination,
+):
+    # generator to flatten a constraint combination
+    if isinstance(con, iris._constraints.ConstraintCombination):
+        yield from _flatten_combined_constraint(con.lhs)
+        yield from _flatten_combined_constraint(con.rhs)
+    else:
+        yield con
 
 
 def _add_wind_speed_um(cubes: iris.cube.CubeList):
