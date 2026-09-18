@@ -404,7 +404,9 @@ def _cutout_cubes(
     return cutout_cubes
 
 
-def _clean_unwanted_cube_attributes(cubes: iris.cube.CubeList):
+def _clean_unwanted_cube_attributes(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
     """Remove unwanted cube attributes, apart from those in an exception list.
 
     This is run as a final step in read, so cube metadata fixing has already been done.
@@ -417,7 +419,13 @@ def _clean_unwanted_cube_attributes(cubes: iris.cube.CubeList):
         "um_stash_source",
     ]
 
-    for cube in cubes:
+    # Support both cube and cubelist.
+    cubes_to_clean = (
+        iris.cube.CubeList([cubes]) if isinstance(cubes, iris.cube.Cube) else cubes
+    )
+
+    # Iterate through each cube and check each attribute.
+    for cube in cubes_to_clean:
         for attr in list(cube.attributes):
             if attr not in attrs_to_preserve:
                 cube.attributes.pop(attr, None)
