@@ -1410,42 +1410,9 @@ def test_qq_plot_grid_staggering_regrid(cube, tmp_working_dir):
     assert Path("qq_plot.png").is_file()
 
 
-def make_hinton_test_cubes():
-    """Create basic 2D iris cube for testing hinton plot functionality."""
-    cubes = iris.cube.CubeList()
-    for c in [
-        [[1, 2, 3, 4, 5, 6, 7, 8], "air_temperature_at_screen_level", "UM"],
-        [[1.1, 3, 4, 3, 4, 6, 7.5, 8.9], "air_temperature_at_screen_level", "LF"],
-        [[1, 2, 3, 4, 5, 6, 7, 8], "relative_humidity_at_screen_level", "UM"],
-        [
-            [1.1, 1.9, 3, 2.5, 4.5, 6.6, 7.1, 7.9],
-            "relative_humidity_at_screen_level",
-            "LF",
-        ],
-        [
-            [1, 0, 0, 0, 1, 1, 1, 0],
-            "significance_relative_humidity_at_screen_level",
-            "None",
-        ],
-    ]:
-        cube = iris.cube.Cube(
-            np.array(c[0], dtype=float),
-            long_name=c[1],
-            dim_coords_and_dims=[
-                (
-                    iris.coords.DimCoord(range(len(c[0])), long_name="forecast_period"),
-                    0,
-                ),
-            ],
-        )
-        cube.attributes["model_name"] = c[2]
-
-        cubes.append(cube)
-
-    return cubes
-
-
-def test_hinton_plot_raises_when_models_have_different_variable_counts(tmp_working_dir):
+def test_hinton_plot_raises_when_models_have_different_variable_counts(
+    tmp_working_dir, make_hinton_test_cubes
+):
     """Test case where one model has more variables than the other model."""
     cubes = make_hinton_test_cubes()
 
@@ -1470,7 +1437,7 @@ def test_hinton_plot_raises_when_models_have_different_variable_counts(tmp_worki
         )
 
 
-def test_hinton_plot_runs(tmp_working_dir):
+def test_hinton_plot_runs(tmp_working_dir, make_hinton_test_cubes):
     """Test end to end function produces plot at end."""
     cubes = make_hinton_test_cubes()
 
@@ -1484,7 +1451,7 @@ def test_hinton_plot_runs(tmp_working_dir):
     assert Path("hinton.png").is_file()
 
 
-def test_hinton_plot_without_significance_cube(tmp_working_dir):
+def test_hinton_plot_without_significance_cube(tmp_working_dir, make_hinton_test_cubes):
     """Test plotting works if no significance cube exists."""
     cubes = iris.cube.CubeList(
         [
@@ -1501,7 +1468,9 @@ def test_hinton_plot_without_significance_cube(tmp_working_dir):
     )
 
 
-def test_hinton_plot_different_forecast_lengths(tmp_working_dir):
+def test_hinton_plot_different_forecast_lengths(
+    tmp_working_dir, make_hinton_test_cubes
+):
     """Ensure plotting still works if one variable has more time points than others."""
     cubes = make_hinton_test_cubes()
 
@@ -1522,7 +1491,7 @@ def test_hinton_plot_different_forecast_lengths(tmp_working_dir):
     )
 
 
-def test_hinton_plot_single_variable(tmp_working_dir):
+def test_hinton_plot_single_variable(tmp_working_dir, make_hinton_test_cubes):
     """Check plotting works for a single variable."""
     cubes = iris.cube.CubeList(
         [
@@ -1539,7 +1508,7 @@ def test_hinton_plot_single_variable(tmp_working_dir):
     )
 
 
-def test_hinton_plot_with_nan_values(tmp_working_dir):
+def test_hinton_plot_with_nan_values(tmp_working_dir, make_hinton_test_cubes):
     """Check plotting works OK with nan values."""
     cubes = make_hinton_test_cubes()
 
@@ -1557,7 +1526,7 @@ def test_hinton_plot_with_nan_values(tmp_working_dir):
     )
 
 
-def test_hinton_plot_constant_difference(tmp_working_dir):
+def test_hinton_plot_constant_difference(tmp_working_dir, make_hinton_test_cubes):
     """Test things OK when model difference is constant and ensure divide by zero for scaling is protected."""
     cubes = make_hinton_test_cubes()
 
@@ -1572,7 +1541,9 @@ def test_hinton_plot_constant_difference(tmp_working_dir):
     )
 
 
-def test_hinton_plot_raises_for_multiple_dimension_coords(tmp_working_dir):
+def test_hinton_plot_raises_for_multiple_dimension_coords(
+    tmp_working_dir, make_hinton_test_cubes
+):
     """Check raise if more than just forecast_period exists as dimension coord."""
     cubes = make_hinton_test_cubes()
 
@@ -1611,7 +1582,9 @@ def test_hinton_plot_raises_for_multiple_dimension_coords(tmp_working_dir):
         )
 
 
-def test_hinton_plot_raises_for_wrong_dimension_name(tmp_working_dir):
+def test_hinton_plot_raises_for_wrong_dimension_name(
+    tmp_working_dir, make_hinton_test_cubes
+):
     """Check raise if single dimension is not called forecast period."""
     cubes = make_hinton_test_cubes()
 
