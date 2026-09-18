@@ -1005,7 +1005,10 @@ def _plot_and_save_line_series(
                 coord, cube, color=color, marker="o", ls="-", lw=3, label=label
             )
             line_plot_list.append(line_plot)
-        else:
+        elif sequence_coord is not None:
+            for cube_slice in cube.slices_over(sequence_coord):
+                iplt.plot(coord, cube_slice, color=color, ls="-", lw=1.5, alpha=0.75)
+        elif ensemble_coord:
             for cube_slice in cube.slices_over(ensemble_coord):
                 # Label with (control) if part of an ensemble or not otherwise.
                 if ensemble_coord == "realization":
@@ -1045,9 +1048,6 @@ def _plot_and_save_line_series(
                         alpha=0.75,
                         label=f"{label} (member)",
                     )
-        if sequence_coord is not None:
-            for cube_slice in cube.slices_over(sequence_coord):
-                iplt.plot(coord, cube_slice, color=color, ls="-", lw=1.5, alpha=0.75)
 
         # Calculate the global min/max if multiple cubes are given.
         _, levels, _ = colorbar_map_levels(cube, axis="y")
@@ -4035,7 +4035,7 @@ def plot_dfss_contour(
     return cubes_copy
 
 
-def plot_dfss_line_series_sequence1(
+def plot_dfss_line_series_sequence(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str = None,
     series_coordinate: str = "time",
@@ -4097,16 +4097,17 @@ def plot_dfss_line_series_sequence1(
     return cubes
 
 
-def plot_dfss_line_series_sequence(
-    cubes: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
-    series_coordinate: str = "time",
-    sequence_coordinate: str = "neighbourhoods",
-    **kwargs,
-) -> iris.cube.Cube | iris.cube.CubeList:
-    dfss_cubes = cubes.extract_cube(iris.AttributeConstraint(dfss_cube_type="dfss"))
-    _realization_callback(dfss_cubes)
-    dfss_stdev_cubes = cubes.extract_cube(
-        iris.AttributeConstraint(dfss_cube_type="dfss_stdev")
-    )
-    return plot_line_series(dfss_cubes,filename,series_coordinate= "neighbourhoods",sequence_coordinate = "time")
+# def plot_dfss_line_series_sequence(
+#     cubes: iris.cube.Cube | iris.cube.CubeList,
+#     filename: str = None,
+#     series_coordinate: str = "time",
+#     sequence_coordinate: str = "neighbourhoods",
+#     **kwargs,
+# ) -> iris.cube.Cube | iris.cube.CubeList:
+#     dfss_cubes = cubes.extract_cube(iris.AttributeConstraint(dfss_cube_type="dfss"))
+#     _realization_callback(dfss_cubes)
+#     dfss_stdev_cubes = cubes.extract_cube(
+#         iris.AttributeConstraint(dfss_cube_type="dfss_stdev")
+#     )
+#     breakpoint()
+#     return plot_line_series(dfss_cubes,filename,series_coordinate= "neighbourhoods",sequence_coordinate = "time",stamp_coordinate"realization",)
