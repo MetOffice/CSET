@@ -1400,6 +1400,7 @@ def make_hinton_test_cubes() -> iris.cube.Cube:
     return _make_cube
 
 
+@pytest.fixture()
 def wind_cubelist_um():
     """UM wind cube list."""
     wind_cubelist = CubeList()
