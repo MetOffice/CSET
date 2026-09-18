@@ -1398,3 +1398,54 @@ def make_hinton_test_cubes() -> iris.cube.Cube:
         return cubes
 
     return _make_cube
+
+
+def wind_cubelist_um():
+    """UM wind cube list."""
+    wind_cubelist = CubeList()
+
+    wind_cubelist.append(
+        Cube(
+            3.5, standard_name="x_wind", long_name="eastward_wind_at_10m", units="m s-1"
+        )
+    )
+    wind_cubelist.append(
+        Cube(
+            3.5,
+            standard_name="y_wind",
+            long_name="northward_wind_at_10m",
+            units="m s-1",
+        )
+    )
+
+    return wind_cubelist
+
+
+@pytest.fixture()
+def wind_cubelist_lfric():
+    """LFRic wind cube list."""
+    wind_cubelist = CubeList()
+
+    wind_cubelist.append(
+        Cube(3.5, var_name="wspd10m", long_name="wind_speed_at_10m", units="m s-1")
+    )
+    wind_cubelist.append(
+        Cube(3.5, var_name="u10m", long_name="eastward_wind_at_10m", units="m s-1")
+    )
+    wind_cubelist.append(
+        Cube(3.5, var_name="v10m", long_name="northward_wind_at_10m", units="m s-1")
+    )
+
+    return wind_cubelist
+
+
+@pytest.fixture()
+def wind_cubelist_observed():
+    """Observed wind cube list."""
+    wind_cubelist = CubeList()
+
+    wind_cubelist.append(
+        Cube(3.5, long_name="observed_wind_speed_at_10m", units="m s-1")
+    )
+
+    return wind_cubelist
