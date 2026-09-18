@@ -90,9 +90,7 @@ def time_aggregate(
     for cube in cubes:
         if cube.coord("forecast_reference_time").shape[0] > 1:
             # Handle cubes with multiple forecast cycles.
-            aggregated_cube = _aggregate_in_time_multiple_frt_cube(
-                cube, method, interval
-            )
+            aggregated_cube = _aggregate_in_time_multiple_frt(cube, method, interval)
         else:
             aggregated_cube = _aggregate_in_time_single_frt(cube, method, interval)
 
@@ -294,7 +292,7 @@ def _add_nref(cube: iris.cube.Cube):
     return cube
 
 
-def _aggregate_in_time_multiple_frt_cube(
+def _aggregate_in_time_multiple_frt(
     cube: iris.cube.Cube, method: str, interval: int
 ) -> iris.cube.Cube:
     """Aggregate a cube with multiple forecast reference times.
