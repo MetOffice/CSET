@@ -207,6 +207,9 @@ def read_cubes(
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
 
+    # Clean unwanted cube attributes
+    cubes = _clean_unwanted_cube_attributes(cubes)
+
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = _merge_cubes_check_ensemble(cubes)
     cubes = cubes.concatenate()
@@ -228,9 +231,6 @@ def read_cubes(
             # Iris can't guess the bounds of a scalar coordinate.
             if not dim_coord.has_bounds() and dim_coord.shape[0] > 1:
                 dim_coord.guess_bounds()
-
-    # Clean unwanted cube attributes
-    cubes = _clean_unwanted_cube_attributes(cubes)
 
     logger.info("Loaded cubes: %s", cubes)
     if len(cubes) == 0:
