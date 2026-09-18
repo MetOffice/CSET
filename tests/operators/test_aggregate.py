@@ -80,7 +80,7 @@ def test_aggregate_in_time_multi_frt(long_forecast_multi_day):
     timedelta = isodate.parse_duration(interval_iso)
     interval = int(timedelta.total_seconds() / 3600)
 
-    aggregated_cube = aggregate._aggregate_in_time_multiple_frt_cube(
+    aggregated_cube = aggregate._aggregate_in_time_multiple_frt(
         long_forecast_multi_day.copy(), method="SUM", interval=interval
     )
     # Check if number of coords on aggregated cube one less than original cube,
