@@ -19,7 +19,7 @@ dependencies:
   - xarray # Required for scores verification now as used.
   - dask-core # Dask with minimal dependencies.
   - proj = 9.7.1 # Newer versions break plotting, see issue #2052.
-  - cartopy>=0.26
+  - cartopy >= 0.26
   - matplotlib-base
   - simple-track # For feature tracking and cell stats operators
 
