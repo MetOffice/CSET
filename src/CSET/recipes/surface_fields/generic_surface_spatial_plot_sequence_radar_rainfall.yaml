@@ -1,6 +1,13 @@
 category: Surface Spatial Plot
-title: $RADAR_NAME $VARNAME $SUBAREA_NAME
-description: Extracts and plots radar rainfall data.
+title: "$RADAR_NAME $VARNAME $SUBAREA_NAME"
+description: |
+  Extracts and plots radar rainfall data.
+  ATTENTION: the radar data can be 1 hour accumulations. Because showers
+  typically advect, on a 2D plot of accumulated rainfall, showers show
+  as streaks i.e. lower intensity rainfall over a greater area than a
+  plot of instantaneous rainfall rate. This results in accumulated rainfall
+  being damped in intensity compared to rainfall rates so caution is
+  required when comparing model rainfall rate with observed rainfall accumulation.
 
 steps:
   - operator: read.read_cube
