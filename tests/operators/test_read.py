@@ -1518,3 +1518,10 @@ def test_wind_combined_constraint(wind_cubelist_um):
     assert len(cubes) == 1
     speed = cubes.extract_cube(iris.Constraint("wind_speed_at_10m"))
     assert speed.standard_name == "wind_speed"
+
+
+def test_flatten_single_constraint():
+    """A single constraint is returned unchanged."""
+    constraint = iris.Constraint(name="wind_speed_at_10m")
+    flattened = list(read._flatten_combined_constraint(constraint))
+    assert flattened == [constraint]

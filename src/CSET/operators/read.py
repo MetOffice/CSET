@@ -929,7 +929,7 @@ def _compute_winds(
 
     if constraint is None:
         return cubes
-
+    filter_windspeed = None
     for constr in _flatten_combined_constraint(constraint):
         filter_windspeed = getattr(constr, "varname", None)
         if filter_windspeed:
@@ -965,7 +965,9 @@ def _compute_winds(
     return cubes
 
 
-def _flatten_combined_constraint(con: iris.Constraint | iris._constraints.Constraint):
+def _flatten_combined_constraint(
+    con: iris.Constraint | iris._constraints.ConstraintCombination,
+):
     # generator to flatten a constraint combination
     if isinstance(con, iris._constraints.ConstraintCombination):
         yield from _flatten_combined_constraint(con.lhs)
