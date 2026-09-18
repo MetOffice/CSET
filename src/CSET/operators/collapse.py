@@ -77,6 +77,7 @@ def collapse(
         raise ValueError("Must specify additional_percent")
 
     # Retain only common time points between different models if multiple model inputs.
+    # Do this only if "forecast_reference_time" and "forecast_period" are present in the cubes.
     if isinstance(cubes, iris.cube.CubeList) and len(cubes) > 1:
         logger.debug("Extracting common time points as multiple model inputs detected.")
         for cube in cubes:
