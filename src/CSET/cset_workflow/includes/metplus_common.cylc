@@ -18,6 +18,14 @@
         inherit = METPLUS
         script = rose task-run -v --app-key=verpy_metloader
 
+{% if METPLUS_VERIFY_PRECIP %}
+    [[METPLUS]]
+        [[[environment]]]
+            METPLUS_VERIFY_PRECIP = TRUE
+            METPLUS_PRECIP_FCST_VARIABLE = {{METPLUS_PRECIP_FCST_VARIABLE}}
+            METPLUS_PRECIP_OBS_ACCUM = {{METPLUS_PRECIP_OBS_ACCUM}}
+{% endif %}
+
 {% for model in models %}
     [[metplus_prep_fcst_m{{model["id"]}}]]
     # Prepares model data for use by metplus
