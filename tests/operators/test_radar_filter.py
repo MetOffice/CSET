@@ -60,5 +60,4 @@ def test_mask_by_weights():
     cube_list.append(obs)
     cube_list.append(wts)
     masked = radar_filter.mask_by_weights(cube_list, [obs_name], [wts_name])
-
     assert np.array_equal(masked.data, out.data, equal_nan=True)
