@@ -501,12 +501,7 @@ def test_power_spectrum_non_overlapping():
     cube1.coord("time").points = np.array([0, 1, 2], dtype=np.int32)
     cube2.coord("time").points = np.array([3, 4, 5], dtype=np.int32)
 
-    print("CUBE 1", cube1)
-    print("CUBE 2", cube2)
-
     cubes = iris.cube.CubeList([cube1, cube2])
-
-    print("CUBES ", cubes)
 
     with pytest.raises(
         ValueError, match="No overlapping times detected in input cubes."
@@ -516,3 +511,19 @@ def test_power_spectrum_non_overlapping():
             coordinate="physical_wavenumber",
             method="MEAN",
         )
+
+
+def test_power_spectrum_time_coords_are_normalised():
+    """Identify when inputs have non-overlapping power spectrum cubes."""
+    cube1 = make_power_spectrum_cube()
+    cube2 = cube1.copy()
+
+    cubes = iris.cube.CubeList([cube1, cube2])
+
+    result = collapse.collapse(
+        cubes,
+        coordinate="physical_wavenumber",
+        method="MEAN",
+    )
+
+    assert result is not None
