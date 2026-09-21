@@ -20,6 +20,7 @@ import functools
 import glob
 import itertools
 import logging
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Literal
 
@@ -31,6 +32,7 @@ import iris.cube
 import iris.exceptions
 import iris.util
 import numpy as np
+from iris._constraints import ConstraintCombination
 from iris.analysis.cartography import rotate_pole, rotate_winds
 
 from CSET._common import iter_maybe
@@ -910,7 +912,7 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
 
 def _compute_winds(
     cubes: iris.cube.CubeList,
-    constraint: iris.Constraint | iris._constraints.ConstraintCombination | None = None,
+    constraint: iris.Constraint | ConstraintCombination | None = None,
 ):
     """To compute wind_speed from vector components if not available as diagnostic.
 
@@ -966,10 +968,10 @@ def _compute_winds(
 
 
 def _flatten_combined_constraint(
-    con: iris.Constraint | iris._constraints.ConstraintCombination,
-):
-    # generator to flatten a constraint combination
-    if isinstance(con, iris._constraints.ConstraintCombination):
+    con: iris.Constraint | ConstraintCombination,
+) -> Iterator[iris.Constraint]:
+    # yields constraints of a possibly nested constraint combination
+    if isinstance(con, ConstraintCombination):
         yield from _flatten_combined_constraint(con.lhs)
         yield from _flatten_combined_constraint(con.rhs)
     else:
