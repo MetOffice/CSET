@@ -84,16 +84,16 @@ def collapse(
             for coord in ["frequency", "physical_wavenumber", "wavelength"]
         )
         if is_power_spectrum:
-            coord_names = ["time"]           
+            coord_names = ["time"]
         else:
             coord_names = ["forecast_reference_time", "forecast_period"]
-        
-         for coord_name in coord_names:
-             cube.coord(coord_name).bounds = None
-          cubes = cubes.extract_overlapping(coord_names)
 
-         if is_power_spectrum:
-             for cube in cubes:
+        for cube in cubes:
+            cube.coord(coord_names).bounds = None
+        cubes = cubes.extract_overlapping(coord_names)
+
+        if is_power_spectrum:
+            for cube in cubes:
                 t = cube.coord("time")
                 t.points = t.points.astype(np.float64)
 
