@@ -89,7 +89,8 @@ def collapse(
             coord_names = ["forecast_reference_time", "forecast_period"]
 
         for cube in cubes:
-            cube.coord(coord_names).bounds = None
+            for coord_name in coord_names:
+                cube.coord(coord_name).bounds = None
         cubes = cubes.extract_overlapping(coord_names)
 
         if is_power_spectrum:
