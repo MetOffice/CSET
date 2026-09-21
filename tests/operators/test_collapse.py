@@ -21,6 +21,7 @@ import iris
 import iris.cube
 import numpy as np
 import pytest
+from iris.coords import DimCoord
 
 from CSET.operators import collapse
 
@@ -459,3 +460,59 @@ def test_collapse_by_proportion_less_than(ensemble_cube):
         threshold=276,
     )
     assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)
+
+
+# new test
+
+
+def make_power_spectrum_cube():
+    """Create dummy power spectrum cube."""
+    data = np.random.rand(3, 10)
+
+    time = DimCoord(
+        np.array([0, 1, 2], dtype=np.int32),
+        standard_name="time",
+        units="hours since 2000-01-01 00:00:00",
+    )
+
+    physical_wavenumber = DimCoord(
+        np.arange(10, dtype=np.float64),
+        long_name="physical_wavenumber",
+        units="1",
+    )
+
+    cube = iris.cube.Cube(
+        data,
+        long_name="power_spectrum",
+        dim_coords_and_dims=[
+            (time, 0),
+            (physical_wavenumber, 1),
+        ],
+    )
+
+    return cube
+
+
+def test_power_spectrum_non_overlapping():
+    """Identify when inputs have non-overlapping power spectrum cubes."""
+    cube1 = make_power_spectrum_cube()
+    cube2 = cube1.copy()
+
+    cube1.coord("time").points = np.array([0, 1, 2], dtype=np.int32)
+    cube2.coord("time").points = np.array([3, 4, 5], dtype=np.int32)
+
+    print("CUBE 1", cube1)
+    print("CUBE 2", cube2)
+
+    cubes = iris.cube.CubeList([cube1, cube2])
+
+    print("CUBES ", cubes)
+
+    with pytest.raises(
+        ValueError, match="No overlapping times detected in input cubes."
+    ):
+        collapse.collapse(
+            cubes,
+            coordinate="physical_wavenumber",
+            method="MEAN",
+        )
