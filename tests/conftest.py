@@ -1444,60 +1444,31 @@ def wind_cubelist_observed():
 
     return wind_cubelist
 
-@pytest.fixture
-def dfss_cube() -> iris.cube.Cube:
-    """Set up three timesteps and three neighbourhoods of data and place into cube."""
-    data_arr = np.zeros((3, 3))
-    data_arr[:, :] = 1
-
-    neighbourhoods = iris.coords.DimCoord(points=[0, 1, 2], long_name="neighbourhoods")
-    time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
-    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0)
-    time_dt_points = [
-        time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)
-    ]
-    time_points = [time_units.date2num(time_point) for time_point in time_dt_points]
-    time_coord = iris.coords.DimCoord(
-        points=time_points, standard_name="time", units=time_units
-    )
-
-    coords = (neighbourhoods, time_coord)
-    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
-    cube = iris.cube.Cube(
-        data=data_arr,
-        dim_coords_and_dims=dim_coords_and_dims,
-        long_name="dfss",
-    )
-
-    return cube
-
 
 @pytest.fixture
-def dfss_stdev_cube() -> iris.cube.Cube:
-    """Set up three timesteps and three neighbourhoods of data and place into cube."""
-    data_arr = np.zeros((3, 3))
-    data_arr[:, :] = 1
-
-    neighbourhoods = iris.coords.DimCoord(points=[0, 1, 2], long_name="neighbourhoods")
+def dfss_cubelist() -> iris.cube.CubeList:
+    """Set up DFSS and DFSS stdev cubes with three neighbourhoods and three timesteps."""
     time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
-    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0)
-    time_dt_points = [
-        time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)
-    ]
-    time_points = [time_units.date2num(time_point) for time_point in time_dt_points]
-    time_coord = iris.coords.DimCoord(
-        points=time_points, standard_name="time", units=time_units
+    time_start = datetime.datetime(2010, 1, 1, tzinfo=datetime.UTC)
+    time_points = time_units.date2num(
+        [time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)]
     )
 
-    coords = (neighbourhoods, time_coord)
-    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
-    cube = iris.cube.Cube(
-        data=data_arr,
-        dim_coords_and_dims=dim_coords_and_dims,
-        long_name="dfss_stdev",
-    )
-
-    return cube
+    cubes = iris.cube.CubeList()
+    for name in ("dfss", "dfss_stdev"):
+        neighbourhoods = iris.coords.DimCoord([3, 5, 7], long_name="neighbourhoods")
+        time_coord = iris.coords.DimCoord(
+            time_points, standard_name="time", units=time_units
+        )
+        cubes.append(
+            iris.cube.Cube(
+                np.ones((3, 3)),
+                long_name=name,
+                dim_coords_and_dims=[(neighbourhoods, 0), (time_coord, 1)],
+                attributes={"dfss_cube_type": name},
+            )
+        )
+    return cubes
 
 
 def _create_dfss_data(
@@ -1538,7 +1509,7 @@ def _create_dfss_cube(data_arr: np.ndarray) -> iris.cube.Cube:
         points=np.arange(n_realizations), standard_name="realization"
     )
     time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
-    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0)
+    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0, tzinfo=datetime.UTC)
     time_dt_points = [
         time_start + datetime.timedelta(minutes=5 * idx) for idx in range(n_times)
     ]
@@ -1627,7 +1598,7 @@ def dfss_cube_no_neighbourhoods() -> iris.cube.Cube:
         points=[0, 1, 2], long_name="not_neighbourhoods"
     )
     time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
-    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0)
+    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0, tzinfo=datetime.UTC)
     time_dt_points = [
         time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)
     ]

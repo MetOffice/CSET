@@ -105,17 +105,19 @@ def test_calc_fss(dfss_ensemble_cube):
     """Test the calc_fss function."""
     cube_a_in = dfss_ensemble_cube[1, :, :, :]
     cube_b_in = dfss_ensemble_cube[2, :, :, :]
-    fss = dfss._calc_fss(cube_a_in, cube_b_in, neighbourhood_length=2, centile=95)
-    assert type(fss) is float
+    fss = dfss._calc_fss(cube_a_in, cube_b_in, neighbourhood_length=3, centile=95)
+
+    assert isinstance(fss, np.float32)
 
     fss = dfss._calc_fss(
         cube_a_in,
         cube_b_in,
         neighbourhood_length=3,
         centile_or_threshold="threshold",
-        threshold=1,
+        threshold=0.1,
     )
-    assert type(fss) is float
+
+    assert isinstance(fss, np.float32)
 
 
 @pytest.mark.filterwarnings("ignore: Warning")
@@ -169,7 +171,7 @@ def test_serial_calculate_dfss(dfss_ensemble_cube):
 @pytest.mark.filterwarnings("ignore: Warning")
 def test_parallel_calculate_dfss(dfss_ensemble_cube):
     """Test parallel_calculate_dfss function."""
-    outlist_centile = dfss._parallel_calculate_dfss(dfss_ensemble_cube, [1], centile=95)
+    outlist_centile = dfss._parallel_calculate_dfss(dfss_ensemble_cube, [3], centile=95)
     assert type(outlist_centile) is iris.cube.CubeList
     assert type(outlist_centile[0]) is iris.cube.Cube
     assert type(outlist_centile[1]) is iris.cube.Cube
@@ -219,8 +221,8 @@ def test_get_spatial_coords(dfss_ensemble_cube):
     x, y = dfss._get_spatial_coords(dfss_ensemble_cube)
     assert x.name() == "projection_x_coordinate"
     assert y.name() == "projection_y_coordinate"
-    assert x.shape == (10,)
-    assert y.shape == (10,)
+    assert x.shape == (100,)
+    assert y.shape == (100,)
     assert x.units.name == "meter"
     assert y.units.name == "meter"
 

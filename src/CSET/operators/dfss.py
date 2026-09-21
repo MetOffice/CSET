@@ -60,8 +60,8 @@ def _parallel_calculate_dfss(
     cube_xy: Cube,
     neighbourhood_lengths: list[int],
     centile_or_threshold: str = "centile",
-    centile: float = None,
-    threshold: float = None,
+    centile: float | None = None,
+    threshold: float | None = None,
 ) -> CubeList:
 
     time_slices = list(cube_xy.slices_over("time"))
@@ -99,8 +99,8 @@ def _serial_calculate_dfss(
     cube_xy: Cube,
     neighbourhood_lengths: list[int],
     centile_or_threshold: str = "centile",
-    centile: float = None,
-    threshold: float = None,
+    centile: float | None = None,
+    threshold: float | None = None,
 ) -> CubeList:
 
     cube_list_dfss = CubeList()
@@ -138,8 +138,8 @@ def calculate_dfss(
     cube_xy: Cube,
     neighbourhood_lengths: list[int],
     centile_or_threshold: str = "centile",
-    centile: float = None,
-    threshold: float = None,
+    centile: float | None = None,
+    threshold: float | None = None,
     run_parallel: bool = True,
 ) -> CubeList:
     """Do the dfss calculation.
@@ -189,7 +189,7 @@ def calculate_dfss(
 
     for dfss_cubes in dfss_cube_list:
         dfss_cubes.attributes["method"] = centile_or_threshold
-        dfss_cubes.attributes["model_name"] = cube_xy.attributes["model_name"]
+        dfss_cubes.attributes["model_name"] = cube_xy.attributes.get("model_name")
         dfss_cubes.long_name = f"{dfss_cubes.long_name}_{cube_xy.long_name}"
         if centile_or_threshold == "centile":
             dfss_cubes.attributes["centile"] = centile
@@ -204,8 +204,8 @@ def _calc_dfss(
     neighbourhood_lengths: list[int],
     time_point,
     centile_or_threshold: str = "centile",
-    centile: float = None,
-    threshold: float = None,
+    centile: float | None = None,
+    threshold: float | None = None,
 ) -> tuple[Cube, Cube]:
     _ = (
         cube_xy.data
@@ -235,7 +235,7 @@ def _calc_dfss(
                         threshold=threshold,
                     )
 
-                    if fss_array[i_a, i_b] == np.nan:
+                    if np.isnan(fss_array[i_a, i_b]):
                         dfss[:] = np.nan
                         dfss_stdev[:] = np.nan
                         return dfss, dfss_stdev
@@ -268,8 +268,8 @@ def _calc_fss(
     cube_b_in: Cube,
     neighbourhood_length: int,
     centile_or_threshold: str = "centile",
-    centile: float = None,
-    threshold: float = None,
+    centile: float | None = None,
+    threshold: float | None = None,
 ) -> float:
     # Set the threshold of interest
     cube_a = cube_a_in.copy()
@@ -338,7 +338,6 @@ def _calc_fss_two_fields(
         fss = 1 - (mse / mse_ref)
     else:
         fss = np.nan
-
     return fss
 
 
