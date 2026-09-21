@@ -37,8 +37,9 @@ jobs:
           persist-credentials: false
 
       - name: Setup conda environment
-        uses: mamba-org/setup-micromamba@f457c30a868e4760d3a6fcea5f25dc655b8edf39
+        uses: mamba-org/setup-micromamba@v2
         with:
+          micromamba-version: '2.9.0'
           environment-name: cset-dev
           environment-file: requirements/locks/${{ matrix.py-ver }}-lock-linux-64.txt
           cache-environment: true
