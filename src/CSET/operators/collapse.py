@@ -91,9 +91,6 @@ def collapse(
                 t = cube.coord("time")
                 t.points = t.points.astype(np.float64)
 
-                if t.bounds is not None:
-                    t.bounds = t.bounds.astype(np.float64)
-
         else:
             for cube in cubes:
                 cube.coord("forecast_reference_time").bounds = None
