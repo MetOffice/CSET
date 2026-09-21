@@ -96,6 +96,29 @@ def get_radar_sources(conf) -> list[dict]:
     return radar_sources
 
 
+def _model_and_radar_names_ids(models, radar_source, accum_radars):
+    """Select the model and radar names and ids."""
+    # Model and radar names and ids.
+    model_names_list = [model["name"] for model in models]
+    model_ids_list = [model["id"] for model in models]
+    radar_source = select_radar_source([source["id"] for source in accum_radars])
+    radar_obs_ids = [radar_source]
+    radar_wts_ids = [radar_source + "_weights"]
+
+    # Construct the dictionary to return.
+    model_and_radar = {
+        "radar_source": radar_source,
+        "radar_obs_ids": radar_obs_ids,
+        "radar_wts_ids": radar_wts_ids,
+        "model_names_list": model_names_list,
+        "model_ids_list": model_ids_list,
+        "combined_names": model_names_list + radar_obs_ids + radar_wts_ids,
+        "combined_ids": model_ids_list + radar_obs_ids + radar_wts_ids,
+    }
+
+    return model_and_radar
+
+
 def load(conf: Config):
     """Yield recipes from the given workflow configuration."""
     # Load a list of model detail dictionaries.
@@ -143,46 +166,43 @@ def load(conf: Config):
     # Radar 2D plots using a common domain between model and radar network.
     if conf.NIMROD_RADAR_OBS and conf.PROCESS_RADAR_2D and (len(accum_radars) > 0):
         radar_source = select_radar_source([source["id"] for source in accum_radars])
-        radar_obs_ids = [radar_source]
-        radar_wts_ids = [radar_source + "_weights"]
-        model_names_list = [model["name"] for model in models]
-        model_ids_list = [model["id"] for model in models]
+        names_ids = _model_and_radar_names_ids(models, radar_source, accum_radars)
         yield RawRecipe(
             recipe="model_radar_common_domain_2d_radar.yaml",
             variables={
                 "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
                 "RADAR_VARNAME": "Hourly rain accumulation",
-                "MODEL_LABEL": model_names_list[0],
-                "RADAR_LABEL": radar_obs_ids[0],
-                "MASK_LABEL": radar_wts_ids[0],
+                "MODEL_LABEL": names_ids["model_names_list"][0],
+                "RADAR_LABEL": names_ids["radar_obs_ids"][0],
+                "MASK_LABEL": names_ids["radar_wts_ids"][0],
                 "METHOD": "SEQ",
                 "BOUNDARY_MARGIN": boundary_margin,
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
                 "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
             },
-            # model_ids=[model_ids_list[0], "Nimrod2km", "Nimrod2km_weights"],
-            model_ids=[model_ids_list[0], radar_obs_ids[0], radar_wts_ids[0]],
+            model_ids=[
+                names_ids["model_ids_list"][0],
+                names_ids["radar_obs_ids"][0],
+                names_ids["radar_wts_ids"][0],
+            ],
             aggregation=False,
         )
 
     # Model rainfall 2D plots using a common domain between model and radar network.
     if conf.NIMROD_RADAR_OBS and conf.PROCESS_RADAR_2D and (len(accum_radars) > 0):
         radar_source = select_radar_source([source["id"] for source in accum_radars])
-        radar_obs_ids = [radar_source]
-        radar_wts_ids = [radar_source + "_weights"]
-        model_names_list = [model["name"] for model in models]
-        model_ids_list = [model["id"] for model in models]
+        names_ids = _model_and_radar_names_ids(models, radar_source, accum_radars)
         # Loop over the model names.
-        for idx, model_use in enumerate(model_names_list):
+        for idx, model_use in enumerate(names_ids["model_names_list"]):
             yield RawRecipe(
                 recipe="model_radar_common_domain_2d_model.yaml",
                 variables={
                     "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
                     "RADAR_VARNAME": "Hourly rain accumulation",
                     "MODEL_LABEL": model_use,
-                    "RADAR_LABEL": radar_obs_ids[0],
-                    "MASK_LABEL": radar_wts_ids[0],
+                    "RADAR_LABEL": names_ids["radar_obs_ids"][0],
+                    "MASK_LABEL": names_ids["radar_wts_ids"][0],
                     "METHOD": "SEQ",
                     "BOUNDARY_MARGIN": boundary_margin,
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
@@ -191,8 +211,11 @@ def load(conf: Config):
                     else None,
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                 },
-                # model_ids=[model_ids_list[0], "Nimrod2km", "Nimrod2km_weights"],
-                model_ids=[model_ids_list[idx], radar_obs_ids[0], radar_wts_ids[0]],
+                model_ids=[
+                    names_ids["model_ids_list"][idx],
+                    names_ids["radar_obs_ids"][0],
+                    names_ids["radar_wts_ids"][0],
+                ],
                 aggregation=False,
             )
 
@@ -205,19 +228,14 @@ def load(conf: Config):
     ):
         # Select the radar source to use.
         radar_source = select_radar_source([source["id"] for source in accum_radars])
-        radar_obs_ids = [radar_source]
-        radar_wts_ids = [radar_source + "_weights"]
-        model_names_list = [model["name"] for model in models]
-        model_ids_list = [model["id"] for model in models]
-        combined_names = model_names_list + radar_obs_ids + radar_wts_ids
-        combined_ids = model_ids_list + radar_obs_ids + radar_wts_ids
+        names_ids = _model_and_radar_names_ids(models, radar_source, accum_radars)
         yield RawRecipe(
             recipe="radar_common_domain_histogram.yaml",
             variables={
                 "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
                 "RADAR_VARNAME": "Hourly rain accumulation",
                 "RADAR_WTS_VARNAME": "Hourly wts accumulation",
-                "ALL_LABEL": combined_names,
+                "ALL_LABEL": names_ids["combined_names"],
                 "SEQUENCE": "time",
                 "OUTPUTS": "all",
                 "BOUNDARY_MARGIN": boundary_margin,
@@ -226,7 +244,7 @@ def load(conf: Config):
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
                 "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
             },
-            model_ids=combined_ids,
+            model_ids=names_ids["combined_ids"],
             aggregation=False,
         )
 
@@ -239,19 +257,14 @@ def load(conf: Config):
     ):
         # Select the radar source to use.
         radar_source = select_radar_source([source["id"] for source in accum_radars])
-        radar_obs_ids = [radar_source]
-        radar_wts_ids = [radar_source + "_weights"]
-        model_names_list = [model["name"] for model in models]
-        model_ids_list = [model["id"] for model in models]
-        combined_names = model_names_list + radar_obs_ids + radar_wts_ids
-        combined_ids = model_ids_list + radar_obs_ids + radar_wts_ids
+        names_ids = _model_and_radar_names_ids(models, radar_source, accum_radars)
         yield RawRecipe(
             recipe="radar_common_domain_histogram.yaml",
             variables={
                 "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
                 "RADAR_VARNAME": "Hourly rain accumulation",
                 "RADAR_WTS_VARNAME": "Hourly wts accumulation",
-                "ALL_LABEL": combined_names,
+                "ALL_LABEL": names_ids["combined_names"],
                 "SEQUENCE": "realization",
                 "OUTPUTS": "all",
                 "BOUNDARY_MARGIN": boundary_margin,
@@ -260,6 +273,6 @@ def load(conf: Config):
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
                 "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
             },
-            model_ids=combined_ids,
+            model_ids=names_ids["combined_ids"],
             aggregation=False,
         )
