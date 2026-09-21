@@ -1443,3 +1443,176 @@ def wind_cubelist_observed():
     )
 
     return wind_cubelist
+
+
+@pytest.fixture
+def dfss_cubelist() -> iris.cube.CubeList:
+    """Set up DFSS and DFSS stdev cubes with three neighbourhoods and three timesteps."""
+    time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
+    time_start = datetime.datetime(2010, 1, 1, tzinfo=datetime.UTC)
+    time_points = time_units.date2num(
+        [time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)]
+    )
+
+    cubes = iris.cube.CubeList()
+    for name in ("dfss", "dfss_stdev"):
+        neighbourhoods = iris.coords.DimCoord([3, 5, 7], long_name="neighbourhoods")
+        time_coord = iris.coords.DimCoord(
+            time_points, standard_name="time", units=time_units
+        )
+        cubes.append(
+            iris.cube.Cube(
+                np.ones((3, 3)),
+                long_name=name,
+                dim_coords_and_dims=[(neighbourhoods, 0), (time_coord, 1)],
+                attributes={"dfss_cube_type": name},
+            )
+        )
+    return cubes
+
+
+def _create_dfss_data(
+    n_realizations: int = 3,
+    n_times: int = 3,
+    ny: int = 100,
+    nx: int = 100,
+    seed: int = 42,
+) -> np.ndarray:
+    """Create ensemble data.
+
+    Here realization 0 is fixed and the rest are
+    perturbations of it.
+    """
+    rng = np.random.default_rng(seed)
+    data_arr = np.zeros((n_realizations, n_times, ny, nx))
+
+    for t_idx in range(n_times):
+        data_arr[0, t_idx] = rng.uniform(0.0, 1.0, size=(ny, nx))
+
+    for real_idx in range(1, n_realizations):
+        for t_idx in range(n_times):
+            control_slice = data_arr[0, t_idx]
+            dy, dx = rng.integers(-5, 6, size=2)
+            shifted = np.roll(control_slice, shift=(dy, dx), axis=(0, 1))
+
+            noise = rng.normal(loc=0.0, scale=0.05, size=(ny, nx))
+            data_arr[real_idx, t_idx] = np.clip(shifted + noise, 0.0, 1.0)
+
+    return data_arr
+
+
+def _create_dfss_cube(data_arr: np.ndarray) -> iris.cube.Cube:
+    """Make cube for running dfss tests."""
+    n_realizations, n_times, ny, nx = data_arr.shape
+
+    realization = iris.coords.DimCoord(
+        points=np.arange(n_realizations), standard_name="realization"
+    )
+    time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
+    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0, tzinfo=datetime.UTC)
+    time_dt_points = [
+        time_start + datetime.timedelta(minutes=5 * idx) for idx in range(n_times)
+    ]
+    time_points = [time_units.date2num(time_point) for time_point in time_dt_points]
+    time_coord = iris.coords.DimCoord(
+        points=time_points, standard_name="time", units=time_units
+    )
+    forecast_period = iris.coords.AuxCoord(
+        points=[5 * idx for idx in range(n_times)],
+        standard_name="forecast_period",
+        units="minutes",
+    )
+    coord_system = iris.coord_systems.TransverseMercator(
+        latitude_of_projection_origin=55, longitude_of_central_meridian=0
+    )
+    y_range = np.arange(0, ny * 1000, 1000)  # 1 km spacing
+    x_range = np.arange(0, nx * 1000, 1000)
+    proj_y_coord = iris.coords.DimCoord(
+        points=y_range,
+        standard_name="projection_y_coordinate",
+        var_name="projection_y_coordinate",
+        units="m",
+        coord_system=coord_system,
+    )
+    proj_x_coord = iris.coords.DimCoord(
+        points=x_range,
+        standard_name="projection_x_coordinate",
+        var_name="projection_x_coordinate",
+        units="m",
+        coord_system=coord_system,
+    )
+    proj_y_coord.guess_bounds()
+    proj_x_coord.guess_bounds()
+
+    coords = (realization, time_coord, proj_y_coord, proj_x_coord)
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+
+    cube = iris.cube.Cube(
+        data=data_arr,
+        dim_coords_and_dims=dim_coords_and_dims,
+        long_name="dfss test",
+    )
+    cube.add_aux_coord(forecast_period, data_dims=[1])
+    return cube
+
+
+@pytest.fixture
+def dfss_ensemble_cube() -> iris.cube.Cube:
+    """Create ensemble cube.
+
+    Set up three timesteps and three realizations of data and place into a cube,
+    with realization 0 fixed and the rest perturbations of it.
+    """
+    data_arr = _create_dfss_data()
+    return _create_dfss_cube(data_arr)
+
+
+@pytest.fixture
+def dfss_cube_no_time() -> iris.cube.Cube:
+    """Set up bad dfss cube."""
+    data_arr = np.zeros((3, 3))
+    data_arr[:, :] = 1
+
+    neighbourhoods = iris.coords.DimCoord(points=[0, 1, 2], long_name="neighbourhoods")
+
+    not_time_coord = iris.coords.DimCoord(points=[0, 1, 2], long_name="not_time")
+
+    coords = (neighbourhoods, not_time_coord)
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cube = iris.cube.Cube(
+        data=data_arr,
+        dim_coords_and_dims=dim_coords_and_dims,
+        long_name="dfss",
+    )
+
+    return cube
+
+
+@pytest.fixture
+def dfss_cube_no_neighbourhoods() -> iris.cube.Cube:
+    """Set up bad dfss cube."""
+    data_arr = np.zeros((3, 3))
+    data_arr[:, :] = 1
+
+    not_neighbourhoods = iris.coords.DimCoord(
+        points=[0, 1, 2], long_name="not_neighbourhoods"
+    )
+    time_units = cf_units.Unit("days since 2000-01-01 00:00:00", calendar="gregorian")
+    time_start = datetime.datetime(2010, 1, 1, 0, 0, 0, tzinfo=datetime.UTC)
+    time_dt_points = [
+        time_start + datetime.timedelta(minutes=5 * idx) for idx in range(3)
+    ]
+    time_points = [time_units.date2num(time_point) for time_point in time_dt_points]
+    time_coord = iris.coords.DimCoord(
+        points=time_points, standard_name="time", units=time_units
+    )
+
+    coords = (not_neighbourhoods, time_coord)
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cube = iris.cube.Cube(
+        data=data_arr,
+        dim_coords_and_dims=dim_coords_and_dims,
+        long_name="dfss",
+    )
+
+    return cube
