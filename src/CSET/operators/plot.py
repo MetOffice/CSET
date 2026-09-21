@@ -66,7 +66,6 @@ from CSET.operators._utils import (
 )
 from CSET.operators.collapse import collapse
 from CSET.operators.misc import _extract_common_time_points
-from CSET.operators.read import _realization_callback
 from CSET.operators.regrid import regrid_onto_cube
 
 logger = logging.getLogger(__name__)
@@ -316,7 +315,6 @@ def _get_start_end_strings(seq_coord: iris.coords.Coord, use_bounds: bool):
         seq_coord_name = seq_coord.name()
     else:
         seq_coord_name = ""
-
 
     if start == end:
         sequence_title = f"\n{seq_coord_name} [{start}]"
@@ -952,13 +950,13 @@ def _plot_and_save_postage_stamp_spatial_plot(
 
 
 def _plot_and_save_line_series(
-    cubes: iris.cube.CubeList,
-    coords: list[iris.coords.Coord],
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+    coords: iris.coords.Coord | list[iris.coords.Coord],
     filename: str,
     title: str,
-    ensemble_coord: str = None,
-    sequence_coord: str = None,
-    stdev: iris.cube.CubeList = None,
+    ensemble_coord: str | None = None,
+    sequence_coord: str | None = None,
+    stdev: iris.cube.Cube | iris.cube.CubeList | None = None,
     **kwargs,
 ):
     """Plot and save a 1D line series.
@@ -989,10 +987,13 @@ def _plot_and_save_line_series(
 
     # Store min/max ranges.
     y_levels = []
+    cubes = iter_maybe(cubes)
+    coords = iter_maybe(coords)
 
     # Check match-up across sequence coords gives consistent sizes
     # validate_cubes_coords(cubes, coords)
     line_plot_list = []
+
     for cube, coord in zip(cubes, coords, strict=True):
         label = None
         color = "black"
@@ -1055,15 +1056,16 @@ def _plot_and_save_line_series(
             y_levels.append(min(levels))
             y_levels.append(max(levels))
 
-    if stdev is not None:
-        for i, std in enumerate(stdev):
-            plt.fill_between(
-                line_plot_list[i][0].get_xdata(),
-                cube.data - std.data,
-                cube.data + std.data,
-                color=color,
-                alpha=0.2,
-            )
+        if stdev is not None:
+            stdev = iter_maybe(stdev)
+            for i, std in enumerate(stdev):
+                plt.fill_between(
+                    line_plot_list[i][0].get_xdata(),
+                    cube.data - std.data,
+                    cube.data + std.data,
+                    color=color,
+                    alpha=0.2,
+                )
 
     # Get the current axes.
     ax = plt.gca()
@@ -2476,11 +2478,21 @@ def plot_line_series(
             # Do the actual plotting for all other series coordinate options.
             if sequence_coordinate:
                 _plot_and_save_line_series(
-                cubes, coords, plot_filename, plot_title, ensemble_coord=stamp_coordinate, sequence_coordinate=sequence_coordinate)
+                    cubes,
+                    coords,
+                    plot_filename,
+                    plot_title,
+                    ensemble_coord=stamp_coordinate,
+                    sequence_coordinate=sequence_coordinate,
+                )
             else:
                 _plot_and_save_line_series(
-                    cubes, coords, plot_filename, plot_title, ensemble_coord=stamp_coordinate)
-
+                    cubes,
+                    coords,
+                    plot_filename,
+                    plot_title,
+                    ensemble_coord=stamp_coordinate,
+                )
 
         plot_index.append(plot_filename)
 
@@ -3938,7 +3950,7 @@ def _plot_and_save_postage_stamps_in_single_plot_power_spectrum_series(
 
 def plot_dfss_contour(
     cubes: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Create a contour plot between two variables.
 
@@ -4023,7 +4035,6 @@ def plot_dfss_contour(
 
     fig.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
 
-    logging.info("Saved contour plot", filename)
     plt.close(fig)
 
     # Add list of plots to plot metadata.
@@ -4037,7 +4048,7 @@ def plot_dfss_contour(
 
 def plot_dfss_line_series_sequence(
     cubes: iris.cube.Cube | iris.cube.CubeList,
-    filename: str = None,
+    filename: str | None = None,
     series_coordinate: str = "time",
     sequence_coordinate: str = "neighbourhoods",
     **kwargs,
@@ -4061,18 +4072,14 @@ def plot_dfss_line_series_sequence(
     seq_coord = cubes[0].coord(sequence_coordinate)
     nplots = np.size(seq_coord.points)
     series_coord = cubes[0].coord(series_coordinate)
-
     dfss_cubes = cubes.extract_cube(iris.AttributeConstraint(dfss_cube_type="dfss"))
     dfss_stdev_cubes = cubes.extract_cube(
         iris.AttributeConstraint(dfss_cube_type="dfss_stdev")
     )
-
-    for i, (dfss_cube, dfss_stdev_cube) in enumerate(
-        zip(
-            dfss_cubes.slices_over(sequence_coordinate),
-            dfss_stdev_cubes.slices_over(sequence_coordinate),
-            strict=True,
-        )
+    for dfss_cube, dfss_stdev_cube in zip(
+        dfss_cubes.slices_over(sequence_coordinate),
+        dfss_stdev_cubes.slices_over(sequence_coordinate),
+        strict=True,
     ):
         plot_title, plot_filename = _set_title_and_filename(
             dfss_cube.coord(sequence_coordinate),
@@ -4083,12 +4090,12 @@ def plot_dfss_line_series_sequence(
         )
 
         _plot_and_save_line_series(
-            [dfss_cube],
-            [series_coord],
+            dfss_cube,
+            series_coord,
             plot_filename,
             plot_title,
             sequence_coord=sequence_coordinate,
-            stdev=[dfss_stdev_cube],
+            stdev=dfss_stdev_cube,
         )
 
         plot_index = _append_to_plot_index([plot_filename])
