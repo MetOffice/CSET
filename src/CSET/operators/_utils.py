@@ -458,7 +458,7 @@ def is_time_aux_coord(cube: iris.cube.Cube) -> bool:
     Returns
     -------
     bool
-        If true, then the cube has both 'forecast_period' and
+        If True, then the cube has both 'forecast_period' and
         'forecast_reference_time' as auxiliary coordinates (not dimension
         coordinates).
     """
