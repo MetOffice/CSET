@@ -38,7 +38,6 @@ def test_mask_by_weights():
     obs = Cube([[1.0, 2.0], [3.0, 4.0]])
     wts = Cube([[13, 0], [10, 11]])
     out = Cube([[1.0, np.nan], [np.nan, 4.0]])
-    print("----> 1 obs ", obs)
 
     var_name_obs = "hourly_rain_accumulation"
     var_name_wts = "hourly_wts_accumulation"
@@ -59,5 +58,6 @@ def test_mask_by_weights():
     cube_list = iris.cube.CubeList([])
     cube_list.append(obs)
     cube_list.append(wts)
+
     masked = radar_filter.mask_by_weights(cube_list, [obs_name], [wts_name])
     assert np.array_equal(masked.data, out.data, equal_nan=True)
