@@ -4,7 +4,7 @@ description: |
   Extracts and plots the power spectral density of surface $VARNAME
 
   Power Spectra calculated on regional domains using Discrete Cosine Transform (DCT)
-  as described in [Denis_etal_2002].
+  as described in [Denis_etal_2002]_.
   The power spectra is then converted into a power spectral density to enable fair comparison
   between different model resolutions, comparison with observations with different number of data points
   or comparison of models between different domain sizes, cases, run lengths.
