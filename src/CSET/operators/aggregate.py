@@ -328,7 +328,6 @@ def _aggregate_in_time_multiple_frt(
 
 def _aggregate_in_time_single_frt(cube: iris.cube.Cube, method: str, interval: int):
     """Aggregate a cube with one forecast reference time."""
-
     iris.coord_categorisation.add_categorised_coord(
         cube,
         "interval",
