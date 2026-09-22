@@ -617,10 +617,7 @@ def identify_unique_times(cubes, time_coord_name):
 
 
 def remove_cell_method(cube, cell_method):
-    cell_methods = [cm for cm in cube.cell_methods if cm != cell_method]
-    cube.cell_methods = ()
-    for cm in cell_methods:
-        cube.add_cell_method(cm)
+    cube.cell_methods = tuple(cm for cm in cube.cell_methods if cm != cell_method)
     return cube
 
 
