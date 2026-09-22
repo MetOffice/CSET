@@ -231,7 +231,7 @@ def radar_apply_mask(
         min_timesteps = min(M.shape[0], masked_field.shape[0])
         masked_field = apply_mask(masked_field[0:min_timesteps], M[0:min_timesteps])
 
-        # Attach and attribute to the masked field detailing the mask used.
+        # Attach an attribute to the masked field detailing the mask used.
         masked_field.attributes["mask"] = f"mask_of_{F.name()}"
 
         # Append the masked field to the output list of masked fields.
