@@ -124,10 +124,8 @@ def _make_plot_html_page(plots: list):
         "plots": plots,
         "title_slug": slugify(title),
     }
-
     # Render template.
     html = render_file(template_file, **variables)
-
     # Save completed HTML.
     with open("index.html", "wt", encoding="UTF-8") as fp:
         fp.write(html)
