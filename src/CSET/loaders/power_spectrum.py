@@ -106,7 +106,7 @@ def load(conf: Config):
     if conf.SPECTRUM_SURFACE_FIELD and conf.SPECTRUM_SURFACE_FIELD_AGGREGATION:
         for field in conf.SURFACE_FIELDS:
             yield RawRecipe(
-                recipe="generic_surface_power_spectrum_series_mean_case.yaml",
+                recipe="generic_surface_power_spectrum_series_mean_over_time.yaml",
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": [model["name"] for model in models],
@@ -142,7 +142,7 @@ def load(conf: Config):
             }
 
             yield RawRecipe(
-                recipe="generic_plevel_power_spectrum_series_mean_case.yaml",
+                recipe="generic_plevel_power_spectrum_series_mean_over_time.yaml",
                 variables=variables,
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
@@ -169,7 +169,7 @@ def load(conf: Config):
             }
 
             yield RawRecipe(
-                recipe="generic_mlevel_power_spectrum_series_mean_case.yaml",
+                recipe="generic_mlevel_power_spectrum_series_mean_over_time.yaml",
                 variables=variables,
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
