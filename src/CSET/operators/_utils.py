@@ -622,23 +622,7 @@ def remove_cell_method(cube, cell_method):
 
 
 def remove_duplicates(cubelist):
-    # Nothing to do if the cubelist is empty
-    if not cubelist:
-        return cubelist
-    # Build up a list of indices of the cubes to remove because they are
-    # duplicated
-    indices_to_remove = []
-    for i in range(len(cubelist) - 1):
-        cube_i = cubelist[i]
-        for j in range(i + 1, len(cubelist)):
-            cube_j = cubelist[j]
-            if cube_i == cube_j and j not in indices_to_remove:
-                indices_to_remove.append(j)
-    # Only keep unique cubes
-    cubelist = iris.cube.CubeList(
-        [cube for index, cube in enumerate(cubelist) if index not in indices_to_remove]
-    )
-    return cubelist
+    return iris.cube.CubeList(set(cubelist))
 
 
 def check_single_cube(cube: iris.cube.Cube | iris.cube.CubeList) -> iris.cube.Cube:
