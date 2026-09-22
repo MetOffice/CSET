@@ -18,7 +18,6 @@ import inspect
 import json
 import logging
 import os
-import tarfile
 import zipfile
 from pathlib import Path
 
@@ -186,16 +185,6 @@ def create_diagnostic_archive():
                 archive.write(file, arcname=file.relative_to(output_directory))
 
 
-def create_diagnostic_tars():
-    """Create archive for easy download of plots and data."""
-    output_directory: Path = Path.cwd()
-    archive_path = output_directory.parent / (output_directory.name + ".tar")
-    with tarfile.open(archive_path, "w") as archive:
-        for file in output_directory.rglob("*"):
-            if not file.samefile(archive_path):
-                archive.add(file, arcname=file.relative_to(output_directory))
-
-
 def execute_recipe(
     recipe: dict,
     output_directory: Path,
@@ -265,6 +254,5 @@ def execute_recipe(
 
         logger.info("Creating diagnostic archive.")
         create_diagnostic_archive()
-        create_diagnostic_tars()
     finally:
         os.chdir(original_working_directory)
