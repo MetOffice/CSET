@@ -18,6 +18,7 @@ import inspect
 import json
 import logging
 import os
+import shutil
 import tarfile
 import zipfile
 from pathlib import Path
@@ -189,11 +190,17 @@ def create_diagnostic_archive():
 def create_diagnostic_tars():
     """Create archive for easy download of plots and data."""
     output_directory: Path = Path.cwd()
-    archive_path = output_directory.parent / (output_directory.name + ".tar")
+    archive_dir = output_directory.parent
+    archive_path = archive_dir / (output_directory.name + ".tar")
+    json_path = archive_dir / (output_directory.name + ".json")
+
     with tarfile.open(archive_path, "w") as archive:
-        for file in output_directory.rglob("*"):
+        for file in [output_directory.rglob(e) for e in ["*.png", "*.html"]]:
             if not file.samefile(archive_path):
                 archive.add(file, arcname=file.relative_to(output_directory))
+
+    for file in output_directory.rglob("*.json"):
+        shutil.copyfile(file, json_path)
 
 
 def execute_recipe(
