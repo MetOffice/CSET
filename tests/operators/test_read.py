@@ -1320,7 +1320,9 @@ def test_compute_winds(vector_cubes, tmp_working_dir):
     output_cubes = read._compute_winds(vector_cubes, constraint=constraint)
     assert len(output_cubes) == 1
     assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))
-    assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))[0].units == "ms-1"
+    assert (
+        output_cubes.extract(iris.Constraint("wind_speed_at_10m"))[0].units == "m s-1"
+    )
     u = vector_cubes[0].data
     v = vector_cubes[1].data
     expected_wind = (u**2 + v**2) ** 0.5
