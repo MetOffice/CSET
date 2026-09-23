@@ -61,6 +61,7 @@
         [[[environment]]]
             MODEL_NAME = {{model["name"]}}
             model_name = {{model["name"] | lower}}
+            MODEL_ID = m{{model["id"]}}
 
     [[metplus_point_stat_postproc_m{{model["id"]}}]]
     # Archives point stat results in tar files ready for verpy loading.
