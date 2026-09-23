@@ -209,6 +209,9 @@ def read_cubes(
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
 
+    # Clean unwanted cube attributes
+    cubes = _clean_unwanted_cube_attributes(cubes)
+
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = _merge_cubes_check_ensemble(cubes)
     cubes = cubes.concatenate()
@@ -403,14 +406,42 @@ def _cutout_cubes(
     return cutout_cubes
 
 
+def _clean_unwanted_cube_attributes(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Remove unwanted cube attributes, apart from those in an exception list.
+
+    This is run as a final step in read, so cube metadata fixing has already been done.
+    """
+    # List of cube attributes to preserve
+    attrs_to_preserve = [
+        "model_name",
+        "cset_comparison_base",
+        "STASH",
+        "um_stash_source",
+    ]
+
+    # Support both cube and cubelist.
+    cubes_to_clean = (
+        iris.cube.CubeList([cubes]) if isinstance(cubes, iris.cube.Cube) else cubes
+    )
+
+    # Iterate through each cube and check each attribute.
+    for cube in cubes_to_clean:
+        for attr in list(cube.attributes):
+            if attr not in attrs_to_preserve:
+                cube.attributes.pop(attr, None)
+
+    return cubes
+
+
 def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
     """Compose together the needed callbacks into a single function."""
     # Most callbacks operate in-place, but save the cube when returned!
     _remove_cset_comparison_base_attribute_callback(cube)
     _realization_callback(cube)
     _um_normalise_callback(cube)
-    _lfric_normalise_callback(cube)
-    _nimrod_normalise_callback(cube)
+    _lfric_stash_source_callback(cube)
     cube = _lfric_time_coord_fix_callback(cube)
     _normalise_var0_varname(cube)
     cube = _fix_no_spatial_coords_callback(cube)
@@ -476,39 +507,19 @@ def _um_normalise_callback(cube: iris.cube.Cube):
             )
 
 
-def _lfric_normalise_callback(cube: iris.cube.Cube):
-    """Normalise attributes that prevents LFRic cube from merging.
-
-    The uuid and timeStamp relate to the output file, as saved by XIOS, and has
-    no relation to the data contained. These attributes are removed.
+def _lfric_stash_source_callback(cube: iris.cube.Cube):
+    """Add um stash source to LFRic data.
 
     The um_stash_source is a list of STASH codes for when an LFRic field maps to
     multiple UM fields, however it can be encoded in any order. This attribute
     is sorted to prevent this. This attribute is only present in LFRic data that
     has been converted to look like UM data.
     """
-    # Remove unwanted attributes.
-    cube.attributes.pop("timeStamp", None)
-    cube.attributes.pop("uuid", None)
-    cube.attributes.pop("name", None)
-    cube.attributes.pop("source", None)
-    cube.attributes.pop("analysis_source", None)
-    cube.attributes.pop("history", None)
-
     # Sort STASH code list.
     stash_list = cube.attributes.get("um_stash_source")
     if stash_list:
         # Parse the string as a list, sort, then re-encode as a string.
         cube.attributes["um_stash_source"] = str(sorted(ast.literal_eval(stash_list)))
-
-
-def _nimrod_normalise_callback(cube: iris.cube.Cube):
-    """Normalise attributes that prevents NIMROD radar cubes from merging."""
-    # Remove unwanted attributes.
-    cube.attributes.pop("radar_sites", None)
-    cube.attributes.pop("additional_radar_sites", None)
-    cube.attributes.pop("recursive_filter_iterations", None)
-    cube.attributes.pop("Probability methods", None)
 
 
 def _lfric_time_coord_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
@@ -1081,9 +1092,6 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                 logger.warning(
                     "Cannot find forecast_reference_time, but no `time_origin` attribute to construct it from."
                 )
-
-        # Remove time_origin to allow multiple case studies to merge.
-        tcoord.attributes.pop("time_origin", None)
 
         # Construct forecast_period axis (forecast lead time) if it doesn't exist.
         if not cube.coords("forecast_period"):
