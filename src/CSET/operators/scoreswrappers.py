@@ -79,7 +79,6 @@ def scores_rmse(
 
         scores_cube = _make_scores_cube(base, other, "rmse", preserved_coordinates)
 
-        scores_cube.rename(f"RMSE_of_{base.name()}")
         scores_cubelist.append(scores_cube)
 
     return scores_cubelist[0] if len(scores_cubelist) == 1 else scores_cubelist
@@ -115,13 +114,8 @@ def scores_mae(
 
     for other in others:
         base, other = _process_cubes_for_verification(base, other)
-
         scores_cube = _make_scores_cube(base, other, "mae", preserved_coordinates)
-
-        scores_cube.rename(f"MAE_of_{base.name()}")
         scores_cubelist.append(scores_cube)
-        model_name = other.attributes["model_name"]
-        scores_cube.attributes["model_name"] = model_name
 
     return scores_cubelist[0] if len(scores_cubelist) == 1 else scores_cubelist
 
@@ -703,10 +697,21 @@ def _make_scores_cube(
     else:
         raise ValueError(f"Scores Unknown metric: {metric}")
 
+    _fix_spatial_coord(base, scores_cube)
     _attach_scaler_time_coord_maybe(scores_cube, base)
     model_name = other.attributes["model_name"]
     scores_cube.attributes["model_name"] = model_name
     return scores_cube
+
+
+def _fix_spatial_coord(base_cube: Cube, scores_cube: Cube):
+    if not (scores_cube.coords("grid_latitude") or base_cube.coords("grid_latitude")):
+        return
+    if not scores_cube.coord("grid_latitude").coord_system:
+        for xy_name in ("grid_latitude", "grid_longitude"):
+            scores_cube.coord(xy_name).coord_system = base_cube.coord(
+                xy_name
+            ).coord_system
 
 
 def _sort_cube_into_base_and_other(cubes: CubeList) -> tuple[Cube, CubeList]:
