@@ -2,6 +2,11 @@
 [runtime]
 
     [[METPLUS]]
+        script = """
+        rose task-run
+
+        {% if METPLUS_VERIFY_PRECIP %} rose task-run --command-key=precip {% endif %}
+        """
         [[[environment]]]
         # Next line is to provide compatibility with cylc versions before 8.5.1, where CYLC_WORKFLOW_SHARE_DIR does not yet exist
         CYLC_TASK_SHARE_CYCLE_DIR = {{CYLC_TASK_SHARE_CYCLE_DIR| default("${CYLC_WORKFLOW_SHARE_DIR}/cycle/${CYLC_TASK_CYCLE_POINT}")}}
@@ -19,6 +24,16 @@
     # Family grouping for all VerPy metloader tasks
         inherit = METPLUS
         script = rose task-run -v --app-key=verpy_metloader
+
+{% if METPLUS_VERIFY_PRECIP %}
+    [[METPLUS]]
+        [[[environment]]]
+            METPLUS_VERIFY_PRECIP = TRUE
+            METPLUS_PRECIP_FCST_VARIABLE = {{METPLUS_PRECIP_FCST_VARIABLE}}
+            METPLUS_PRECIP_FCST_ACCUM = {{METPLUS_PRECIP_FCST_ACCUM | duration_as('h') | int}}
+            # TODO: Allow for different FCST and OBS accums using PcpCombine
+            METPLUS_PRECIP_OBS_ACCUM = {{METPLUS_PRECIP_FCST_ACCUM | duration_as('h') | int}}
+{% endif %}
 
 {% for model in models %}
     [[metplus_prep_fcst_m{{model["id"]}}]]
