@@ -16,12 +16,16 @@
 
 import fcntl
 import importlib.resources
+import io
 import itertools
 import json
 import logging
 import math
 import os
 import sys
+import tarfile
+import time
+from pathlib import Path
 from typing import Literal
 
 import cartopy.crs as ccrs
@@ -102,6 +106,15 @@ def _append_to_plot_index(plot_index: list) -> list:
     return complete_plot_index
 
 
+def _plot_archive_index(tar_path: Path, plot_names: list[str]) -> str:
+    """JSON [[name, offset, size], ...] for the {{plots}} template slot."""
+    with tarfile.open(tar_path) as tf:
+        members = {m.name: m for m in tf.getmembers()}
+    return json.dumps(
+        [[n, members[n].offset_data, members[n].size] for n in plot_names]
+    )
+
+
 def _make_plot_html_page(plots: list):
     """Create a HTML page to display a plot image."""
     # Debug check that plots actually contains some strings.
@@ -116,15 +129,16 @@ def _make_plot_html_page(plots: list):
     title = meta.get("title", "Untitled")
     description = MarkdownIt().render(meta.get("description", "*No description.*"))
 
+    names = [Path(p).name for p in plots]
+    tar_path = _plot_archive_path()
+    plot_index = _plot_archive_index(Path(tar_path), names)
     # Prepare template variables.
     variables = {
         "title": title,
         "description": description,
-        "initial_plot": plots[0],
-        "plots": plots,
+        "plots": plot_index,
         "title_slug": slugify(title),
     }
-
     # Render template.
     html = render_file(template_file, **variables)
 
@@ -133,8 +147,23 @@ def _make_plot_html_page(plots: list):
         fp.write(html)
 
 
+def _append_to_plot_archive(tar_path: Path, name: str, data: bytes):
+    """Append a file's bytes to a tar, creating it if needed."""
+    info = tarfile.TarInfo(name)
+    info.size = len(data)
+    info.mtime = time.time()
+    with tarfile.open(tar_path, "a") as tf:
+        tf.addfile(info, io.BytesIO(data))
+
+
+def _plot_archive_path() -> Path:
+    """Tar with the .png files."""
+    cwd = Path.cwd()
+    return cwd / "plots.tar"
+
+
 def _save_close_figure(figure, plot_type: str, filename: str):
-    """Save generated plot figure file and close figure.
+    """Save generated plot figure to file and plot archive, then close figure.
 
     If running documentation gallery generation, avoid saving to file.
 
@@ -145,11 +174,23 @@ def _save_close_figure(figure, plot_type: str, filename: str):
     plot_type: str
         String identifier for plot type for logging information.
     filename: str
-        Filename for saved figure.
+        Filename for saved figure. The figure is also appended to
+        plots.tar in the same directory, under its basename.
     """
     if not in_sphinx_gallery():
-        figure.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-        logger.info("Saved %s plot to %s", plot_type, filename)
+        path = Path(filename)
+
+        tar_path = _plot_archive_path()
+        buf = io.BytesIO()
+        figure.savefig(
+            buf,
+            format=path.suffix.lstrip(".") or "png",
+            bbox_inches="tight",
+            dpi=_get_plot_resolution(),
+        )
+        data = buf.getvalue()
+        _append_to_plot_archive(tar_path, path.name, data)
+        logger.info("Saved %s plot to %s and %s", plot_type, filename, tar_path)
         plt.close(figure)
 
 

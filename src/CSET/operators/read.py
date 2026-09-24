@@ -247,6 +247,7 @@ def _load_model(
     # If unset, a constraint of None lets everything be loaded.
     logger.debug("Constraint: %s", constraint)
     cubes = iris.load(input_files, constraint, callback=_loading_callback)
+
     # If required, compute wind_speed from components.
     cubes = _compute_winds(cubes, constraint)
 
@@ -620,6 +621,7 @@ def _fix_no_spatial_coords_callback(cube: iris.cube.Cube):
 
             cube.add_aux_coord(lat_coord)
             cube.add_aux_coord(lon_coord)
+
             return cube
 
         # if lat/long are not in attributes, then return cube unchanged:
