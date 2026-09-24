@@ -120,6 +120,20 @@ def get_model_colors_map(cubes: iris.cube.CubeList | iris.cube.Cube) -> dict:
     return {mname: color for mname, color in zip(model_names, color_list, strict=False)}
 
 
+def _strip_varname_of_prefix(varnames: list[str]) -> list[str]:
+    prefixes = ["observed_"]
+    scores_prefixes = [
+        "RMSE_of_",
+        "MAE_of_",
+        "Additive_Bias_of_",
+        "Pearson_Correlation_of_",
+    ]
+    prefixes.extend(scores_prefixes)
+    for prefix in prefixes:
+        varnames = [varname.replace(prefix, "") for varname in varnames]
+    return varnames
+
+
 def colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = None):
     """Get an appropriate colorbar for the given cube.
 
@@ -171,8 +185,10 @@ def colorbar_map_levels(cube: iris.cube.Cube, axis: Literal["x", "y"] | None = N
     # as long name is the one we correct between models, so it most likely to be
     # consistent.
     varnames = list(filter(None, [cube.long_name, cube.standard_name, cube.var_name]))
+
     # Treat observation-labelled var names consistently with model var names.
-    varnames = [varname.replace("observed_", "") for varname in varnames]
+    varnames = _strip_varname_of_prefix(varnames)
+
     for varname in varnames:
         # Get the colormap for this variable.
         try:
