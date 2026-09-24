@@ -81,7 +81,6 @@ def scores_rmse(
 
         scores_cube.rename(f"RMSE_of_{base.name()}")
         scores_cubelist.append(scores_cube)
-
     return scores_cubelist[0] if len(scores_cubelist) == 1 else scores_cubelist
 
 
@@ -703,7 +702,6 @@ def _make_scores_cube(
     else:
         raise ValueError(f"Scores Unknown metric: {metric}")
 
-    _attach_scaler_time_coord_maybe(scores_cube, base)
     model_name = other.attributes["model_name"]
     scores_cube.attributes["model_name"] = model_name
     return scores_cube
