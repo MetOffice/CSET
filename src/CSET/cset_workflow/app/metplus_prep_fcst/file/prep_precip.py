@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+"""
+Extract precipitation data from a model.
+
+This is really a CSET recipe with a bit of logic for cell_methods.
+It's possible that the input dataset doesn't set cell_methods (e.g. BRIS), so
+we only look for that in the case of multiple VARNAME matches in the input
+dataset.
+"""
+
 from CSET.operators import read, filters, constraints, write
 from CSET._common import parse_variable_options
 import os.path
