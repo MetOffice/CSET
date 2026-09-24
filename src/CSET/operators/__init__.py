@@ -18,8 +18,6 @@ import inspect
 import json
 import logging
 import os
-import shutil
-import zipfile
 from pathlib import Path
 
 from iris import FUTURE
@@ -173,30 +171,6 @@ def _step_parser(step: dict, step_input: any) -> str:
         return operator(**kwargs)
 
 
-def create_diagnostic_archive():
-    """Create archive for easy download of plots and data."""
-    output_directory: Path = Path.cwd()
-    archive_path = output_directory / "diagnostic.zip"
-    with zipfile.ZipFile(
-        archive_path, "w", compression=zipfile.ZIP_DEFLATED
-    ) as archive:
-        for file in output_directory.rglob("*"):
-            # Check the archive doesn't add itself.
-            if not file.samefile(archive_path):
-                archive.write(file, arcname=file.relative_to(output_directory))
-
-
-def move_json_delete_folder():
-    """Create archive for easy download of plots and data."""
-    output_directory: Path = Path.cwd()
-    archive_dir = output_directory.parent
-
-    json_path = archive_dir / (output_directory.name + ".json")
-    output_json = output_directory / "meta.json"
-
-    shutil.move(output_json, json_path)
-
-
 def execute_recipe(
     recipe: dict,
     output_directory: Path,
@@ -264,8 +238,5 @@ def execute_recipe(
             step_input = _step_parser(step, step_input)
         logger.info("Recipe output:\n%s", step_input)
 
-        logger.info("Creating diagnostic archive.")
-        # create_diagnostic_archive()
-        # move_json_delete_folder()
     finally:
         os.chdir(original_working_directory)
