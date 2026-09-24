@@ -69,51 +69,73 @@
         }
     </style>
     <script type="module">
-        "use strict";
+    "use strict";
 
-        function update_displayed_plot(event) {
-            const plot_img = document.querySelector("#plot");
-            plot_img.src = plot_urls[event.srcElement.value - 1];
+    const plot_index = {{plots}};
+    const tar_url = "plots.tar";
+    const plot_cache = new Map();
+
+    // Fetch one plot's bytes from the tar using a Range request.
+    async function get_plot_url(i) {
+        if (plot_cache.has(i)) return plot_cache.get(i);
+        const [name, start, size] = plot_index[i];
+        const resp = await fetch(tar_url, {
+            headers: { Range: `bytes=${start}-${start + size - 1}` },
+        });
+        if (resp.status !== 206) {
+            throw new Error(`Expected partial content (206), got ${resp.status}`);
+        }
+        const type = name.endsWith(".svg") ? "image/svg+xml" : "image/png";
+        const url = URL.createObjectURL(new Blob([await resp.blob()], { type }));
+        plot_cache.set(i, url);
+        return url;
+    }
+
+    async function show_plot(i) {
+        try {
+            document.querySelector("#plot").src = await get_plot_url(i);
+        } catch (err) {
+            console.error(`Failed to load plot ${i + 1}:`, err);
+            return;
+        }
+        [i - 1, i + 1]
+            .filter(j => j >= 0 && j < plot_index.length)
+            .forEach(j => get_plot_url(j).catch(() => {}));
+    }
+
+    function update_displayed_plot(event) {
+        show_plot(event.target.value - 1);
+    }
+
+    function display_sequence_controls(plot_urls) {
+        // Only show sequence controls if there are multiple plots.
+        if (plot_urls == undefined || plot_urls.length < 2) {
+            return;
         }
 
-        function display_sequence_controls(plot_urls) {
-            // Only show sequence controls if there are multiple plots.
-            if (plot_urls == undefined || plot_urls.length < 2) {
-                return;
-            }
+        // Wire up the controls.
+        const sequence_range = document.querySelector("#sequence_range");
+        sequence_range.max = plot_urls.length;
+        sequence_range.addEventListener("input", () => {
+            sequence_number.value = sequence_range.value;
+        });
+        sequence_range.addEventListener("input", update_displayed_plot);
 
-            // Wire up the controls.
-            const sequence_range = document.querySelector("#sequence_range");
-            sequence_range.max = plot_urls.length;
-            sequence_range.addEventListener("input", () => {
-                sequence_number.value = sequence_range.value;
-            });
-            sequence_range.addEventListener("input", update_displayed_plot);
+        const sequence_number = document.querySelector("#sequence_number");
+        sequence_number.max = plot_urls.length;
+        sequence_number.addEventListener("input", () => {
+            sequence_range.value = sequence_number.value;
+        });
+        sequence_number.addEventListener("change", update_displayed_plot);
 
-            const sequence_number = document.querySelector("#sequence_number");
-            sequence_number.max = plot_urls.length;
-            sequence_number.addEventListener("input", () => {
-                sequence_range.value = sequence_number.value;
-            });
-            sequence_number.addEventListener("change", update_displayed_plot);
+        // Display sequence controls.
+        const sequence_controls = document.querySelector("#sequence_controls");
+        sequence_controls.classList.remove("hidden");
+    }
 
-            // Display sequence controls.
-            const sequence_controls = document.querySelector("#sequence_controls");
-            sequence_controls.classList.remove("hidden")
-        }
-
-        // Ensure image is already in browser cache.
-        function preload_image(image_url) {
-            const img = new Image();
-            img.src = image_url;
-        }
-
-        const plot_urls = {{plots}}
-        display_sequence_controls(plot_urls);
-
-        // Preload plots so they appear as you slide.
-        plot_urls.forEach(preload_image);
-    </script>
+    display_sequence_controls(plot_index);
+    await show_plot(0);
+</script>
 </head>
 
 <body>
@@ -124,12 +146,13 @@
             <input type="range" id="sequence_range" value="1" min="1" max="1">
             <input type="number" id="sequence_number" value="1" min="1" max="1">
         </fieldset>
-        <img id="plot" src="{{initial_plot}}" alt="plot">
+        <img id="plot" alt="plot">
     </main>
     <aside id="description-container">
         <h1>{{title}}</h1>
         {{description}}
         <hr>
-        <p><a href="diagnostic.zip" download="{{title_slug}}.zip">💾 Save Diagnostic</a></p>
+        <p><a href="plots.tar" download="{{title_slug}}.tar">💾 Save Plots</a></p>
+        <p><a href="CSET.log" download="{{title_slug}}.CSET.log">💾 Save CSET log file</a></p>
     </aside>
 </body>

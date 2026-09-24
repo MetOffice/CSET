@@ -247,6 +247,7 @@ def _load_model(
     # If unset, a constraint of None lets everything be loaded.
     logger.debug("Constraint: %s", constraint)
     cubes = iris.load(input_files, constraint, callback=_loading_callback)
+
     # If required, compute wind_speed from components.
     cubes = _compute_winds(cubes, constraint)
 
@@ -620,6 +621,7 @@ def _fix_no_spatial_coords_callback(cube: iris.cube.Cube):
 
             cube.add_aux_coord(lat_coord)
             cube.add_aux_coord(lon_coord)
+
             return cube
 
         # if lat/long are not in attributes, then return cube unchanged:
@@ -640,7 +642,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     # Check if cube is spatial.
     if not is_spatialdim(cube):
         # Don't modify non-spatial cubes.
-        return
+        return cube
 
     # Get spatial coords and dimension index.
     y_name, x_name = get_cube_yxcoordname(cube)
@@ -739,6 +741,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
         # This attribute is sometimes lost on iris.save
         if not cube.coord(x_name).coord_system:
             cube.coord(x_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
+    return cube
 
 
 def _fix_pressure_coord_callback(cube: iris.cube.Cube):

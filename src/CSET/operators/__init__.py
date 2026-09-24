@@ -19,7 +19,6 @@ import json
 import logging
 import os
 import shutil
-import tarfile
 import zipfile
 from pathlib import Path
 
@@ -187,20 +186,15 @@ def create_diagnostic_archive():
                 archive.write(file, arcname=file.relative_to(output_directory))
 
 
-def create_diagnostic_tars():
+def move_json_delete_folder():
     """Create archive for easy download of plots and data."""
     output_directory: Path = Path.cwd()
     archive_dir = output_directory.parent
-    archive_path = archive_dir / (output_directory.name + ".tar")
+
     json_path = archive_dir / (output_directory.name + ".json")
+    output_json = output_directory / "meta.json"
 
-    with tarfile.open(archive_path, "w") as archive:
-        for file in [output_directory.rglob(e) for e in ["*.png", "*.html"]]:
-            if not file.samefile(archive_path):
-                archive.add(file, arcname=file.relative_to(output_directory))
-
-    for file in output_directory.rglob("*.json"):
-        shutil.copyfile(file, json_path)
+    shutil.move(output_json, json_path)
 
 
 def execute_recipe(
@@ -271,7 +265,7 @@ def execute_recipe(
         logger.info("Recipe output:\n%s", step_input)
 
         logger.info("Creating diagnostic archive.")
-        create_diagnostic_archive()
-        create_diagnostic_tars()
+        # create_diagnostic_archive()
+        # move_json_delete_folder()
     finally:
         os.chdir(original_working_directory)
