@@ -28,9 +28,9 @@
         [[[environment]]]
             METPLUS_VERIFY_PRECIP = TRUE
             METPLUS_PRECIP_FCST_VARIABLE = {{METPLUS_PRECIP_FCST_VARIABLE}}
-            METPLUS_PRECIP_FCST_ACCUM = {{METPLUS_PRECIP_FCST_ACCUM | duration_as('h')}}
+            METPLUS_PRECIP_FCST_ACCUM = {{METPLUS_PRECIP_FCST_ACCUM | duration_as('h') | int}}
             # TODO: Allow for different FCST and OBS accums using PcpCombine
-            METPLUS_PRECIP_OBS_ACCUM = {{METPLUS_PRECIP_FCST_ACCUM | duration_as('h')}}
+            METPLUS_PRECIP_OBS_ACCUM = {{METPLUS_PRECIP_FCST_ACCUM | duration_as('h') | int}}
 {% endif %}
 
 {% for model in models %}

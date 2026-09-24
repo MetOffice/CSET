@@ -59,6 +59,7 @@
     # Runs METplus wrappers for point stat calculations.
         inherit = METPLUS_POINT_STAT
         [[[environment]]]
+            MODEL_ID = m{{model["id"]}}
             MODEL_NAME = {{model["name"]}}
             model_name = {{model["name"] | lower}}
 
