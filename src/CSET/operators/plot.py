@@ -133,7 +133,6 @@ def _make_plot_html_page(plots: list):
     tar_path = _plot_archive_path()
     plot_index = _plot_archive_index(Path(tar_path), names)
     # Prepare template variables.
-
     variables = {
         "title": title,
         "description": description,
