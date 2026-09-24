@@ -5,7 +5,7 @@
         script = """
         rose task-run
 
-        if ${METPLUS_VERIFY_PRECIP}; then rose task-run --app-key=precip; fi
+        {% if METPLUS_VERIFY_PRECIP %} rose task-run --command-key=precip {% endif %}
         """
         [[[environment]]]
         METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
