@@ -642,7 +642,7 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
     # Check if cube is spatial.
     if not is_spatialdim(cube):
         # Don't modify non-spatial cubes.
-        return cube
+        return
 
     # Get spatial coords and dimension index.
     y_name, x_name = get_cube_yxcoordname(cube)
@@ -741,7 +741,6 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
         # This attribute is sometimes lost on iris.save
         if not cube.coord(x_name).coord_system:
             cube.coord(x_name).coord_system = iris.coord_systems.GeogCS(6371229.0)
-    return cube
 
 
 def _fix_pressure_coord_callback(cube: iris.cube.Cube):
