@@ -1,0 +1,456 @@
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""Operators to perform various kind of filtering."""
+
+import iris
+import iris.cube
+import iris.exceptions
+import numpy as np
+
+from CSET._common import iter_maybe
+from CSET.operators.filters import apply_mask, generate_mask
+
+
+def mask_list(model_names: list[str]) -> list[str]:
+    """Determine the Nimrod weights files to use.
+
+    Parameters
+    ----------
+    model_names: list[str]
+        A list containing model names and at least one Nimrod hourly
+        rainfall accumulation source.
+        Possible radar sources are:
+          "Nimrod2km", "Nimrod_2km".
+          "Nimrodxkm", "Nimrod_xkm".
+          "Nimrod1km", "Nimrod_1km".
+
+    Returns
+    -------
+    list[str]
+        A list of the Nimrod weights files to use with each of the input
+        models and radar sources.
+
+    Notes
+    -----
+     At least one of the entries in the input list must be a Nimrod hourly
+     rainfall accumulation source.
+
+     If just one Nimrod source is specified, then the weights file associated
+     with this source is used.
+
+     If more than one Nimrod source is in the input list, then each of the these
+     Nimrod sources is associated with its own weights file e.g. if the input list
+     contains ["Nimrod1km", "Nimrod2km"] then the weights files for these will
+     be ["Nimrod1km_weights", "Nimrod2km_weights"]. Any model fields in the input
+     list will be allocated a weights file according to the order of preference
+     specified in the list nimrod_preference e.g. if the input list is
+     ["UM_model", "Nimrod1km", "Nimrod2km"] then the output weights files list will
+     be ["Nimrod2km_weights", "Nimrod1km_weights", "Nimrod2km_weights"] as the Nimrod
+     weights for 2km data are preferred over those for 1km.
+
+    Examples
+    --------
+     >>> list_weights = mask_list( ["UM_model", "Nimrod1km", "Nimrod2km"] )
+     >>> print(list_weights)
+     ["Nimrod2km_weights", "Nimrod1km_weights", "Nimrod2km_weights"]
+
+    """
+    # Set the preference order for choosing a Nimrod radar weights source
+    # in order of most to least preferred.
+    nimrod_preference = [
+        "Nimrod2km",
+        "Nimrod_2km",
+        "Nimrodxkm",
+        "Nimrod_xkm",
+        "Nimrod1km",
+        "Nimrod_1km",
+    ]
+
+    # Define the string that helps form a Nimrod weights file.
+    wei = "_weights"
+
+    # Determine the preferred Nimrod mask to use.
+    empty_string = ""
+    preferred_nimrod = empty_string
+    for prefer in reversed(nimrod_preference):
+        if any(prefer in model for model in model_names):
+            preferred_nimrod = prefer
+
+    # Create the list of the required Nimrod masks.
+    mask_names_list = []
+    if preferred_nimrod != empty_string:
+        # Loop over the input model_names.
+        for model in model_names:
+            if any(model in nimrod for nimrod in nimrod_preference):
+                nimrod_mask = model + wei
+            else:
+                nimrod_mask = preferred_nimrod + wei
+            mask_names_list.append(nimrod_mask)
+
+    return mask_names_list
+
+
+def mask_by_weights(
+    cubes: iris.cube.CubeList,
+    model_names: list[str],
+    weights_names: list[str],
+    **kwargs,
+) -> iris.cube.CubeList:
+    """Filter a field using a radar weights field as a mask.
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        CubeList containing fields to mask and radar weights fields to use as the masks.
+    model_names: list[str]
+        A list of the model_names or radar sources to mask.
+    weights_names: list[str]
+        A list of radar weights sources to use as masks. There should be an entry
+        in weights_names to correspond with every entry in model_names.
+
+    Returns
+    -------
+    CubeList:
+        A CubeList of masked fields.
+
+    Examples
+    --------
+    >>> field_filtered = mask_by_weights(cubelist, model_names)
+
+    """
+    # Check the input unfiltered cubes and the mask cubes are both cubelists
+    # with the same number of cubes. If not, then add extra mask cubes.
+    if len(model_names) != len(weights_names):
+        weights_names = mask_list(model_names)
+
+    # Create an empty cubelist to hold the filtered fields.
+    filtered_list = iris.cube.CubeList([])
+
+    # Loop over the fields to filter.
+    for model, mask in zip(
+        iter_maybe(model_names),
+        iter_maybe(weights_names),
+        strict=True,
+    ):
+        # Grab the field to filter.
+        model_constraint = iris.AttributeConstraint(model_name=model)
+        unfiltered_field = cubes.extract_cube(model_constraint)
+
+        # Select the field to use as the mask.
+        # Nice to do - put in support for a static mask.
+        mask_constraint = iris.AttributeConstraint(model_name=mask)
+        mask_field = cubes.extract_cube(mask_constraint)
+
+        # Create the mask - note that the condition e.g. "ge" can be set by a loader
+        # as can the threshold value.
+        mask_radar_wts = generate_mask(mask_field, "ge", 11)
+
+        # Apply the mask.
+        masked_radar_obs = apply_mask(unfiltered_field, mask_radar_wts)
+
+        # Put the filtered cube into the list of filtered cubes.
+        filtered_list.append(masked_radar_obs)
+
+    # Preserve returning a cube if only a cube has been supplied to filter.
+    if len(filtered_list) == 1:
+        return filtered_list[0]
+    else:
+        return filtered_list
+
+
+def radar_apply_mask(
+    original_field: iris.cube.Cube | iris.cube.CubeList,
+    mask: iris.cube.Cube | iris.cube.CubeList,
+    boundary_margin: int = 8,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Apply a mask to given field as a masked array.
+
+    Parameters
+    ----------
+    original_field: iris.cube.Cube | iris.cube.CubeList
+        The field(s) to be masked.
+    mask: iris.cube.Cube | iris.cube.CubeList
+        The mask(s) being applied to the original field(s).
+    boundary_margin: int, optional
+        Number of grid points from the domain boundary considered "unreliable".
+        Defaults to 8.
+
+    Returns
+    -------
+    masked_field: iris.cube.Cube | iris.cube.CubeList
+        A cube or CubeList of the masked field(s).
+
+    Notes
+    -----
+    The mask is first converted to 1s and NaNs before multiplication with
+    the original data.
+
+    As discussed in filters.generate_mask, you can combine multiple masks in a
+    recipe using other functions before applying the mask to the data.
+
+    Examples
+    --------
+    >>> radar_domain_only = radar_apply_mask( surface_microphysical_rainfall_rate, Nimrod2km_wts)
+    """
+    # Create an empty cubelist to hold the filtered fields.
+    masked_fields = iris.cube.CubeList([])
+
+    # Loop over the input mask and field cubes.
+    for M, F in zip(iter_maybe(mask), iter_maybe(original_field), strict=True):
+        masked_field = F.copy()
+
+        # Set the model perimeter to NaN as these gridpoints contain no useful data.
+        # c.f. boundary_margin in regrid.py
+        margin_width = boundary_margin
+        if margin_width > 0:
+            masked_field.data[:, -margin_width - 1 :, :] = np.nan
+            masked_field.data[:, :, -margin_width - 1 :] = np.nan
+            masked_field.data[:, :, 0:margin_width] = np.nan
+            masked_field.data[:, 0:margin_width, :] = np.nan
+
+        # If the field and mask are on different grids, then regrid the field.
+        if M[0].shape != masked_field[0].shape:
+            scheme = iris.analysis.Linear(extrapolation_mode="nan")
+            masked_field = masked_field.regrid(M, scheme)
+
+        # Apply the mask.
+        min_timesteps = min(M.shape[0], masked_field.shape[0])
+        masked_field = apply_mask(masked_field[0:min_timesteps], M[0:min_timesteps])
+
+        # Attach an attribute to the masked field detailing the mask used.
+        masked_field.attributes["mask"] = f"mask_of_{F.name()}"
+
+        # Append the masked field to the output list of masked fields.
+        masked_fields.append(masked_field)
+
+    # Return either a single cube or a cubelist.
+    if len(masked_fields) == 1:
+        return masked_fields[0]
+    else:
+        # return masked_fields
+        return masked_fields.merge()
+
+
+def radar_mask(
+    model_field: iris.cube.Cube | iris.cube.CubeList,
+    nimrod_field: iris.cube.Cube | iris.cube.CubeList,
+    nimrod_mask: iris.cube.Cube | iris.cube.CubeList,
+    boundary_margin: int = 8,
+    outputs: str = "radar",
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Apply a mask to given fields using a masked array.
+
+    Parameters
+    ----------
+    model_field: iris.cube.Cube | iris.cube.CubeList
+        The model field(s) to be masked.
+    nimrod_field: iris.cube.Cube | iris.cube.CubeList
+        The Nimrod field(s) to be masked.
+    nimrod_mask: iris.cube.Cube | iris.cube.CubeList
+        The Nimrod mask(s) to use. These are normally Nimrod wts fields.
+    boundary_margin: int, optional
+        Number of grid points from the domain boundary considered "unreliable".
+        Defaults to 8.
+    outputs: str, optional
+        Specifies which outputs are required:
+           "radar" outputs masked Nimrod rainfall field(s)
+           "model" outputs masked model field(s)
+           "all" outputs both masked model and masked Nimrod field(s).
+
+    Returns
+    -------
+    masked_field: iris.cube.Cube | iris.cube.CubeList
+        A cube or CubeList of the masked field(s).
+
+    Examples
+    --------
+    To mask both model and Nimrod fields using the Nimrod weights in nimrod_wts:
+    >>> masked_fields = radar_mask( model_fields, nimrod_fields, nimrod_wts, outputs="all")
+
+    """
+    # Create an empty cubelist to hold the filtered fields.
+    filtered_fields = iris.cube.CubeList([])
+    filtered_radar = iris.cube.CubeList([])
+    filtered_model = iris.cube.CubeList([])
+
+    # Loop over nimrod_field, model_field and nimrod_mask.
+    for M, F, N in zip(
+        iter_maybe(nimrod_mask),
+        iter_maybe(model_field),
+        iter_maybe(nimrod_field),
+        strict=True,
+    ):
+        # Apply the function radar_apply_mask to generate the re-gridded
+        # and masked model field.
+        masked_model_field = radar_apply_mask(F, M, boundary_margin=boundary_margin)
+
+        # Use the masked model field as the mask for the Nimrod field.
+        # Note: no re-gridding required.
+        min_timesteps = min(N.shape[0], masked_model_field.shape[0])
+
+        temp_mask = masked_model_field[0:min_timesteps].copy()
+        temp_mask.data[~np.isnan(temp_mask.data)] = 1.0
+
+        masked_nimrod_field = N[0:min_timesteps].copy()
+        masked_nimrod_field.data *= temp_mask.data
+
+        # Append the masked field to the output list of masked fields.
+        filtered_model.append(masked_model_field)
+        filtered_radar.append(masked_nimrod_field)
+
+    # Return either the masked model or Nimrod fields, or both.
+    if outputs == "radar":
+        filtered_fields.append(filtered_radar.merge_cube())
+    if outputs == "model":
+        filtered_fields.append(filtered_model.merge_cube())
+    if outputs == "all":
+        filtered_fields.append(filtered_model.merge_cube())
+        filtered_fields.append(filtered_radar.merge_cube())
+
+    # Return either a single cube or a cubelist.
+    if len(filtered_fields) == 1:
+        return filtered_fields[0]
+    else:
+        return filtered_fields
+
+
+def radar_mask_loop(
+    model_field: iris.cube.Cube | iris.cube.CubeList,
+    nimrod_field: iris.cube.Cube | iris.cube.CubeList,
+    nimrod_mask: iris.cube.Cube | iris.cube.CubeList,
+    boundary_margin: int = 8,
+    outputs: str = "radar",
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Find common domains between a list of models and radar sources.
+
+    Parameters
+    ----------
+    model_field: iris.cube.Cube | iris.cube.CubeList
+        The model field(s) to be masked.
+    nimrod_field: iris.cube.Cube | iris.cube.CubeList
+        The Nimrod field(s) to be masked.
+    nimrod_mask: iris.cube.Cube | iris.cube.CubeList
+        The Nimrod mask(s) to use. These are normally Nimrod wts fields.
+    boundary_margin: int, optional
+        Number of grid points from the domain boundary considered "unreliable".
+        Defaults to 8.
+    outputs: str, optional
+        Specifies which outputs are required:
+           "radar" outputs masked Nimrod rainfall field(s)
+           "model" outputs masked model field(s)
+           "all" outputs both masked model and masked Nimrod field(s).
+
+    Returns
+    -------
+    masked_field: iris.cube.Cube | iris.cube.CubeList
+        A cube or CubeList of the masked field(s).
+
+    Examples
+    --------
+    To mask both model and Nimrod fields using the Nimrod weights in nimrod_wts:
+    >>> masked_fields = radar_mask_loop( model_fields, nimrod_fields, nimrod_wts, outputs="all")
+
+    """
+    # Create an empty cubelist to hold the filtered fields.
+    filtered_cubes = iris.cube.CubeList([])
+
+    use_nimrod_field = nimrod_field
+    use_nimrod_mask = nimrod_mask
+
+    # Loop over the models.
+    for model in model_field:
+        print("-------> using model ", model)
+        filtered_model = radar_mask(
+            model,
+            use_nimrod_field,
+            use_nimrod_mask,
+            boundary_margin=boundary_margin,
+            outputs="model",
+        )
+        filtered_cubes.append(filtered_model)
+
+    # Filter the radar observations.
+    if len(model_field) == 1:
+        filtered_radar = radar_mask(
+            model_field[0],
+            use_nimrod_field,
+            use_nimrod_mask,
+            boundary_margin=boundary_margin,
+            outputs="radar",
+        )
+    else:
+        filtered_radar = radar_mask(
+            model_field[0],
+            use_nimrod_field,
+            use_nimrod_mask,
+            boundary_margin=boundary_margin,
+            outputs="radar",
+        )
+    filtered_cubes.append(filtered_radar)
+
+    return filtered_cubes
+
+
+def match_varname_and_units(cubes: iris.cube.Cube | iris.cube.CubeList):
+    """Match the varname and units of a cube list.
+
+    Arguments
+    ---------
+    cubes: iris.cube.Cube | iris.cube.CubeList
+        A Cube or CubeList of a field to be matched.
+
+    Returns
+    -------
+    iris.cube.Cube | iris.cube.CubeList
+        The matched cubes.
+
+
+    Notes
+    -----
+    This function converts the names and units of a cube list to match
+    the first cube in the list. If just one cube is input, then this is
+    returned.
+    """
+    # If just one cube, then no need to match so return.
+    if isinstance(cubes, iris.cube.Cube):
+        cubes_in = iris.cube.CubeList([cubes])
+    else:
+        cubes_in = cubes
+    if len(cubes_in) == 1:
+        return cubes
+
+    # Initialise the list of matched cubes.
+    new_cubelist = iris.cube.CubeList([])
+
+    # Use the first cube in the CubeList as the base cube.
+    base_cube = cubes_in[0]
+    new_cubelist.append(base_cube)
+
+    # Loop over the cubes matching each to the base cube.
+    for cube in cubes_in[1:]:
+        new_cube = cube.copy()
+
+        # Match the cube varname.
+        new_cube.rename(base_cube.long_name)
+        new_cube.long_name = base_cube.long_name
+        new_cube.var_name = base_cube.var_name
+
+        # Match the cube units.
+        new_cube.units = base_cube.units
+
+        # Append the matched cube to the output cube list.
+        new_cubelist.append(new_cube)
+
+    return new_cubelist
