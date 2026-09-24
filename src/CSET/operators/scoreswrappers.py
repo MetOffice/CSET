@@ -372,7 +372,7 @@ def _scores_categorical_metric(
             raise ValueError(f"Unknown metric {metric}")
 
         scores_cube = xr.DataArray.to_iris(result)
-
+        _fix_spatial_coord(cubes[0], scores_cube)
         scores_cube.rename(f"{name}_{op_func}_{threshold}_{observed.name()}")
         scores_cube.units = "1"
         scores_cube.attributes["model_name"] = model.attributes["model_name"]
