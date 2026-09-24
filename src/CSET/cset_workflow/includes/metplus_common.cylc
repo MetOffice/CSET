@@ -2,6 +2,11 @@
 [runtime]
 
     [[METPLUS]]
+        script = """
+        rose task-run
+
+        if ${METPLUS_VERIFY_PRECIP}; then rose task-run --app-key=precip; fi
+        """
         [[[environment]]]
         METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
         METPLUS_FCST_DIR = {{METPLUS_FCST_DIR|default("$CYLC_TASK_SHARE_CYCLE_DIR/metplus_fcst")}}
@@ -23,7 +28,9 @@
         [[[environment]]]
             METPLUS_VERIFY_PRECIP = TRUE
             METPLUS_PRECIP_FCST_VARIABLE = {{METPLUS_PRECIP_FCST_VARIABLE}}
-            METPLUS_PRECIP_OBS_ACCUM = {{METPLUS_PRECIP_OBS_ACCUM}}
+            METPLUS_PRECIP_FCST_ACCUM = {{METPLUS_PRECIP_FCST_ACCUM | duration_as('h')}}
+            # TODO: Allow for different FCST and OBS accums using PcpCombine
+            METPLUS_PRECIP_OBS_ACCUM = {{METPLUS_PRECIP_FCST_ACCUM | duration_as('h')}}
 {% endif %}
 
 {% for model in models %}
