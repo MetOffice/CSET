@@ -139,8 +139,6 @@ def mask_by_weights(
     filtered_list = iris.cube.CubeList([])
 
     # Loop over the fields to filter.
-    var_constraint = iris.NameConstraint(var_name="hourly_rain_accumulation")
-    mask_var_constraint = iris.NameConstraint(var_name="hourly_wts_accumulation")
     for model, mask in zip(
         iter_maybe(model_names),
         iter_maybe(weights_names),
@@ -148,12 +146,12 @@ def mask_by_weights(
     ):
         # Grab the field to filter.
         model_constraint = iris.AttributeConstraint(model_name=model)
-        unfiltered_field = cubes.extract_cube(var_constraint & model_constraint)
+        unfiltered_field = cubes.extract_cube(model_constraint)
 
         # Select the field to use as the mask.
         # Nice to do - put in support for a static mask.
         mask_constraint = iris.AttributeConstraint(model_name=mask)
-        mask_field = cubes.extract_cube(mask_var_constraint & mask_constraint)
+        mask_field = cubes.extract_cube(mask_constraint)
 
         # Create the mask - note that the condition e.g. "ge" can be set by a loader
         # as can the threshold value.
@@ -426,18 +424,22 @@ def match_varname_and_units(cubes: iris.cube.Cube | iris.cube.CubeList):
     returned.
     """
     # If just one cube, then no need to match so return.
-    if len(cubes) == 1:
+    if isinstance(cubes, iris.cube.Cube):
+        cubes_in = iris.cube.CubeList([cubes])
+    else:
+        cubes_in = cubes
+    if len(cubes_in) == 1:
         return cubes
 
     # Initialise the list of matched cubes.
     new_cubelist = iris.cube.CubeList([])
 
     # Use the first cube in the CubeList as the base cube.
-    base_cube = cubes[0]
+    base_cube = cubes_in[0]
     new_cubelist.append(base_cube)
 
     # Loop over the cubes matching each to the base cube.
-    for cube in cubes[1:]:
+    for cube in cubes_in[1:]:
         new_cube = cube.copy()
 
         # Match the cube varname.
@@ -447,19 +449,6 @@ def match_varname_and_units(cubes: iris.cube.Cube | iris.cube.CubeList):
 
         # Match the cube units.
         new_cube.units = base_cube.units
-
-        # Match the cube forecast_reference_time, a single value e.g. 2023-11-12 00:00:00.
-        forecast_reference_time_use = base_cube.coord("forecast_reference_time")
-        new_cube.remove_coord("forecast_reference_time")
-        new_cube.add_aux_coord(forecast_reference_time_use)
-        # new_cube.replace_coord(base_cube.coord('forecast_reference_time'))
-
-        # Match the cube forecast_period - an array points: [ 1.,  2., ..., 47., 48.].
-        coord_dims = base_cube.coord_dims("forecast_period")
-        new_coord = base_cube.coord("forecast_period")
-        if new_cube.coords("forecast_period"):
-            new_cube.remove_coord("forecast_period")
-        new_cube.add_aux_coord(new_coord, coord_dims)
 
         # Append the matched cube to the output cube list.
         new_cubelist.append(new_cube)
