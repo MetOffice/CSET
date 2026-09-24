@@ -241,6 +241,30 @@ def test_difference_flip_pressure_order(transect_source_cube_readonly):
     assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
 
 
+def test_process_cubes_for_verification_equalise_pressure(
+    transect_source_cube_readonly,
+):
+    """Test that pressure is equalised for two cubes."""
+    cube1 = transect_source_cube_readonly.copy()
+    cube2 = transect_source_cube_readonly.copy()
+
+    out = scoreswrappers._process_cubes_for_verification(cube1, cube2)
+
+    assert np.allclose(
+        out[0].coord("pressure").points, out[1].coord("pressure").points, atol=1e-9
+    )
+
+    # Remove a pressure level
+    cube1 = cube1[:, 1:, :, :]
+
+    # Check that final result means that pressure level removed in both
+    out = scoreswrappers._process_cubes_for_verification(cube1, cube2)
+
+    assert np.allclose(
+        out[0].coord("pressure").points, out[1].coord("pressure").points, atol=1e-9
+    )
+
+
 def test_crps(feature_cube):
     """Test basic crps functionality.
 
