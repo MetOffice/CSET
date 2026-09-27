@@ -39,6 +39,16 @@
     "max": 1000,
     "min": -1000
   },
+  "area_cloud_fraction": {
+    "cmap": "viridis",
+    "max": 1,
+    "min": 0
+  },
+  "area_cloud_fraction_difference": {
+    "cmap": "viridis",
+    "max": -1,
+    "min": 1
+  },
   "atmosphere_boundary_layer_thickness": {
     "cmap": "terrain",
     "max": 5000,
@@ -706,6 +716,18 @@
     "max": 1.0,
     "min": -1.0
   },
+  "surface_air_pressure": {
+    "cmap": "coolwarm",
+    "max": 104000,
+    "min": 94000,
+    "ymax": "auto",
+    "ymin": "auto"
+  },
+  "surface_air_pressure_difference": {
+    "cmap": "bwr",
+    "max": 1000,
+    "min": -1000
+  },
   "surface_altitude": {
     "cmap": "terrain",
     "max": "auto",
@@ -725,6 +747,28 @@
     "cmap": "viridis",
     "max": 0.1,
     "min": 0.0
+  },
+  "surface_direct_shortwave_flux_radiative_timestep": {
+    "cmap": "Greys",
+    "max": 1400,
+    "min": 0,
+    "ymax": 800,
+    "ymin": 0
+  },
+  "surface_direct_shortwave_flux_radiative_timestep_difference": {
+    "cmap": "PuOr",
+    "max": 1400,
+    "min": -1400
+  },
+  "surface_downward_clear_longwave_flux_radiative_timestep": {
+    "cmap": "Greys_r",
+    "max": 500,
+    "min": 0
+  },
+  "surface_downward_clear_longwave_flux_radiative_timestep_difference": {
+    "cmap": "PuOr",
+    "max": 500,
+    "min": -500
   },
   "surface_downward_longwave_flux": {
     "cmap": "Greys_r",
