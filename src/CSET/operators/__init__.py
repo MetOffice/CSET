@@ -32,6 +32,7 @@ from CSET.operators import (
     collapse,
     constraints,
     convection,
+    dfss,
     ensembles,
     feature,
     filters,
@@ -82,6 +83,7 @@ __all__ = [
     "transect",
     "wind",
     "write",
+    "dfss",
 ]
 
 logger = logging.getLogger(__name__)
