@@ -1320,7 +1320,9 @@ def test_compute_winds(vector_cubes, tmp_working_dir):
     output_cubes = read._compute_winds(vector_cubes, constraint=constraint)
     assert len(output_cubes) == 1
     assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))
-    assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))[0].units == "ms-1"
+    assert (
+        output_cubes.extract(iris.Constraint("wind_speed_at_10m"))[0].units == "m s-1"
+    )
     u = vector_cubes[0].data
     v = vector_cubes[1].data
     expected_wind = (u**2 + v**2) ** 0.5
@@ -1504,3 +1506,24 @@ def test_wind_observed(wind_cubelist_observed):
     assert len(cubes) == 1
     observed_speed = cubes.extract_cube(iris.Constraint("observed_wind_speed_at_10m"))
     assert observed_speed
+
+
+def test_wind_combined_constraint(wind_cubelist_um):
+    """UM cubes filtered to wind speed only."""
+    cubes = wind_cubelist_um.copy()
+    var_constraint = constraints.generate_var_constraint("wind_speed_at_10m")
+    constraint_1 = iris.Constraint(name="air_potential_temperature")
+    constraint_2 = iris.Constraint(name="temperature_at_screen_level")
+    combined_constraint_1 = var_constraint & constraint_1
+    combined_constraint_2 = combined_constraint_1 & constraint_2
+    cubes = read._compute_winds(cubes, constraint=combined_constraint_2)
+    assert len(cubes) == 1
+    speed = cubes.extract_cube(iris.Constraint("wind_speed_at_10m"))
+    assert speed.standard_name == "wind_speed"
+
+
+def test_flatten_single_constraint():
+    """A single constraint is returned unchanged."""
+    constraint = iris.Constraint(name="wind_speed_at_10m")
+    flattened = list(read._flatten_combined_constraint(constraint))
+    assert flattened == [constraint]
