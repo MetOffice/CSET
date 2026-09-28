@@ -419,13 +419,8 @@ def _clean_unwanted_cube_attributes(
         "um_stash_source",
     ]
 
-    # Support both cube and cubelist.
-    cubes_to_clean = (
-        iris.cube.CubeList([cubes]) if isinstance(cubes, iris.cube.Cube) else cubes
-    )
-
     # Iterate through each cube and check each attribute.
-    for cube in cubes_to_clean:
+    for cube in iter_maybe(cubes):
         for attr in list(cube.attributes):
             if attr not in attrs_to_preserve:
                 cube.attributes.pop(attr, None)
