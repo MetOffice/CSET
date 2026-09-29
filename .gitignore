@@ -73,6 +73,9 @@ instance/
 # Sphinx documentation
 docs/_build/
 
+# Docs from cset_restricted_files
+docs/
+
 # PyBuilder
 target/
 
