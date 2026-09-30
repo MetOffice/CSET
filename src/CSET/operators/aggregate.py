@@ -539,10 +539,9 @@ def _aggregate_in_time_multiple_frt(
     """
     aggregated_cycles = iris.cube.CubeList()
     for frt_cube in cube.slices_over("forecast_reference_time"):
-
         forecast_period = frt_cube.coord("forecast_period")
         forecast_period.bounds = None
-   
+
         iris.coord_categorisation.add_categorised_coord(
             frt_cube,
             "interval",
