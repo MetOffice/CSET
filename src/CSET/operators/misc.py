@@ -821,6 +821,7 @@ def _mask_fill_cube(
     import dask.array as da  
 
     raw = cube.core_data()
+    x   = cube.lazy_data()
     fill_values = []
     # NetCDF-style fill value (if present)
     try:
@@ -843,7 +844,6 @@ def _mask_fill_cube(
     else:
         x_mask = None
         
-    x = cube.lazy_data()
     x_data = x
     data = da.asarray(x_data, dtype=np.float32)
 
