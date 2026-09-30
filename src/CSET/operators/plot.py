@@ -2798,11 +2798,6 @@ def hinton_plot(
         Option bool when if True, then plot the numerical value difference in two values under each
         triangle.
     """
-    # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Hinton")
-    title = f"{recipe_title}"
-    filename = slugify(recipe_title)
-
     # Check that all cubes only have one dimension called forecast_period
     for cube in cubes:
         if len(cube.dim_coords) > 1:
@@ -3031,11 +3026,24 @@ def hinton_plot(
                         zorder=4,
                     )
 
+    # Ensure we have a name for the plot file.
+    recipe_title = get_recipe_metadata().get("title", "Hinton")
+
+    try:
+        ncase = base_cube.attributes["number_reference_times"]
+        recipe_title = f"{recipe_title} for {ncase} cases"
+    except:
+        pass
+
+    title = f"{recipe_title}"
+    filename = slugify(recipe_title)
+
     ax.set_title(title)
+    ax.set_xlabel("Forecast Period (hours)")
     plt.tight_layout()
 
     # Save plot.
-    _save_close_figure(fig, "hinton", filename)
+    _save_close_figure(fig, "Hinton", filename)
 
     # Add file extension.
     plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
