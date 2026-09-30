@@ -1,0 +1,61 @@
+category: Time series of surface temperature at single point
+title: "Time series of surface temperature at Cardington [52.10438N, -0.42286E]"
+description: "Plots a time series of surface temperature at gridpoint nearest to Cardington."
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names:
+      - Obs (05min)
+      - Obs (30min)
+      - $MODEL_NAME
+    constraint: ['$OBS_VARNAME', '$VARNAME']
+
+    constraints:
+      $MODEL_NAME:
+        operator: constraints.combine_constraints
+        stash_constraint:
+          operator: constraints.generate_attribute_constraint
+          attribute: STASH
+          values:
+            - $VARNAME
+        cell_methods_constraint:
+          operator: constraints.generate_cell_methods_constraint
+          cell_methods: [ 'maximum' ]
+          coord: 'time'
+          interval: '1 hour'
+    preprocessors:
+      - operator: misc.remove_scalar_coords
+        coords:
+          - forecast_reference_time
+          - realization
+
+  - operator: filters.filter_multiple_cubes
+    temperature:
+      operator: constraints.generate_var_constraint
+      varname: $OBS_VARNAME
+
+  - operator: misc.remove_attribute
+    attribute:
+      - time_coverage_end
+      - time_coverage_start
+      - valid_min
+      - valid_max
+      - date
+      - date_created
+
+  - operator: misc.convert_units
+    units: 'Celsius'
+
+  - operator: regrid.regrid_to_single_point
+    lat_pt: 52.10438
+    lon_pt: -0.42286
+    latlon_in_type: "realworld"
+    method: "Nearest"
+    boundary_margin: 0
+
+  - operator: misc.mask_fill_values
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: plot.plot_line_series
