@@ -2249,6 +2249,7 @@ def plot_line_series(
 
     # Iterate over all cubes and extract coordinate to plot.
     cubes = iris.cube.CubeList(iter_maybe(cube))
+
     coords = []
     for model_cube in cubes:
         try:
@@ -2257,19 +2258,28 @@ def plot_line_series(
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        # Count dimensions excluding realization
+        # Count cube dimensions and exclude realization and
+        # forecast_reference_time if they exist.
         ndim = model_cube.ndim
 
         if model_cube.coords("realization"):
+            # returns coord dimension
             realization_dims = model_cube.coord_dims("realization")
 
             # Only subtract if realization is a dimension coordinate
             if realization_dims:
                 ndim -= len(realization_dims)
 
+        if model_cube.coords("forecast_reference_time"):
+            frt_dims = model_cube.coord_dims("forecast_reference_time")
+
+            # Only subtract if frt is a dimension coordinate
+            if frt_dims:
+                ndim -= len(frt_dims)
+
         if ndim > 2:
             raise ValueError(
-                "Cube must be 1D or 2D (excluding any realization dimension)."
+                "Cube must be 1D or 2D (excluding any realization or forecast_reference_time dimensions)."
             )
 
     plot_index = []
@@ -2760,7 +2770,9 @@ def qq_plot(
     return iris.cube.CubeList([base, other])
 
 
-def hinton_plot(cubes, base_name, other_name, magnitude=None):
+def hinton_plot(
+    cubes: iris.cube.CubeList, base_name: str, other_name: str, magnitude: bool = False
+) -> None:
     """
     Plot a Hinton style triangle/scorecard plot.
 
@@ -2773,11 +2785,11 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
     Parameters
     ----------
     cubes: iris.cube.CubeList
-        A iris cubelist, containing at least two cubes for two models/one variable to plot. Can
-        include multiple variables, in which the plot will automatically scale for, up to a maximum
-        of 8 (before redering starts to look problematic). If cubes containing significance_<var> 
-        exist, containing a bool array, then it will also plot whether each triangle is significant
-        by using a thick black outline. Each cube should be 1D, with forecast_period as the dimension.
+        A iris cubelist, containing at least two cubes of a skill metric to plot (model vs obs). Can
+        include multiple variables, in which the plot will automatically scale for. If cubes containing
+        a name significance_<var> exist, containing a bool array, then it will also plot whether each
+        triangle is significant by using a thick black outline. Each cube should be 1D, with
+        forecast_period as the only dimension.
     base_name: str
         The name of the base model to use as the control in the Hinton plot, as a string.
     other_name: str
@@ -2789,9 +2801,18 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
     # Ensure we have a name for the plot file.
     recipe_title = get_recipe_metadata().get("title", "Hinton")
     title = f"{recipe_title}"
-
     filename = slugify(recipe_title)
 
+    # Check that all cubes only have one dimension called forecast_period
+    for cube in cubes:
+        if len(cube.dim_coords) > 1:
+            raise ValueError(f"Should only have one dimension coord, {cube}")
+        if cube.dim_coords[0].name() != "forecast_period":
+            raise ValueError(
+                f"Single coord should be forecast_period, not {cube.dim_coords[0].name()}"
+            )
+
+    # Separate out base cubes and other cubes.
     base_cubes = iris.cube.CubeList()
     other_cubes = iris.cube.CubeList()
     for c in cubes:
@@ -2800,14 +2821,21 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
         elif c.attributes["model_name"] == other_name:
             other_cubes.append(c)
 
+    # base cubes should be the same length as other cubes, otherwise one is missing a variable.
+    if len(base_cubes) != len(other_cubes):
+        raise ValueError(
+            f"base cubes {base_cubes} are not same number as {other_cubes}"
+        )
+
+    # Find common variable names in the two groups.
     base_vars = {cube.long_name for cube in base_cubes if cube.long_name is not None}
     other_vars = {cube.long_name for cube in other_cubes if cube.long_name is not None}
     common_vars = sorted(base_vars & other_vars)
 
+    # Iterate over each variable (row)
     rows = []
-
     for var in common_vars:
-
+        # Extract cube with matching variable name
         base_cube = next(
             (c for c in base_cubes if c.long_name == var),
             None,
@@ -2818,36 +2846,35 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
             None,
         )
 
+        # If we can't find a variable in both cubes, then skip
         if base_cube is None or other_cube is None:
             continue
 
+        # Compute difference (1D array)
+        # We can already make assumption both on same forecast_periods as checked
+        # prior to computing metric.
         diff = other_cube.data - base_cube.data
 
+        # See if there is a significance cube present, if not, set as None.
         sig_cube = next(
-            (
-                cube
-                for cube in cubes
-                if cube.long_name == f"significance_{var}"
-            ),
+            (cube for cube in cubes if cube.long_name == f"significance_{var}"),
             None,
         )
 
+        # Append row information.
         rows.append(
             {
                 "name": var,
-                "forecast_periods":
-                    base_cube.coord("forecast_period").points,
+                "forecast_periods": base_cube.coord("forecast_period").points,
                 "change": diff,
-                "significance":
-                    sig_cube.data.astype(bool)
-                    if sig_cube is not None
-                    else None,
+                "significance": sig_cube.data.astype(bool)
+                if sig_cube is not None
+                else None,
             }
         )
 
-    # anomalies relative to row mean
+    # For each row, compute standardised anomalies
     for row in rows:
-
         change = np.asarray(row["change"])
 
         anoms = change - np.mean(change)
@@ -2873,10 +2900,7 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
 
     # Get the number of x and y elements
     ny = len(rows)
-    nx = max(
-        len(row["forecast_periods"])
-        for row in rows
-    )
+    nx = max(len(row["forecast_periods"]) for row in rows)
 
     # Build non-uniform y coordinates
     tri_height = 1.0
@@ -2912,10 +2936,7 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
     ax.set_xlim(-0.5, nx - 0.5)
     ax.set_ylim(0, total_height)
 
-    longest_row = max(
-        rows,
-        key=lambda row: len(row["forecast_periods"])
-    )
+    longest_row = max(rows, key=lambda row: len(row["forecast_periods"]))
 
     ax.set_xticks(np.arange(nx))
     ax.set_xticklabels(
@@ -2924,9 +2945,7 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
     )
 
     ax.set_yticks(tri_y)
-    ax.set_yticklabels(
-        [row["name"] for row in rows]
-    )
+    ax.set_yticklabels([row["name"] for row in rows])
 
     ax.set_xticks(np.arange(-0.5, nx, 1), minor=True)
     ax.set_yticks(y_edges, minor=True)
@@ -2954,13 +2973,11 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
 
     # Plot triangles + text
     for j, row in enumerate(rows):
-
         scaled = row["scaled"]
         anoms = row["anoms"]
         signif = row["significance"]
 
         for i in range(len(scaled)):
-
             val = scaled[i]
 
             if np.isnan(val):
@@ -3028,32 +3045,6 @@ def hinton_plot(cubes, base_name, other_name, magnitude=None):
 
     # Make a page to display the plots.
     _make_plot_html_page(plot_index)
-
-
-
-def make_test_cubes():
-    """Create basic 2D iris cube for testing functionality."""
-    cubes=iris.cube.CubeList()
-    for c in [
-             [[1,2,3,4,5,6,7,8],'air_temperature_at_screen_level','UM'],
-             [[1.1,3,4,3,4,6,7.5,8.9],'air_temperature_at_screen_level','LF'],
-             [[1,2,3,4,5,6,7,8],'relative_humidity_at_screen_level','UM'],
-             [[1.1,1.9,3,2.5,4.5,6.6,7.1,7.9],'relative_humidity_at_screen_level','LF'],
-             [[1,0,0,0,1,1,1,0],'significance_relative_humidity_at_screen_level','None'],             
-             ]:   
-        
-        cube = iris.cube.Cube(
-            np.array(c[0], dtype=float),
-            long_name=c[1],
-            dim_coords_and_dims=[
-                (iris.coords.DimCoord(range(0,len(c[0])), long_name="forecast_period"), 0),
-            ],
-        )
-        cube.attributes["model_name"] = c[2]
-
-        cubes.append(cube)
-
-    return cubes
 
 
 def scatter_plot(

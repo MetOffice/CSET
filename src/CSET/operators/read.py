@@ -20,6 +20,7 @@ import functools
 import glob
 import itertools
 import logging
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Literal
 
@@ -31,6 +32,7 @@ import iris.cube
 import iris.exceptions
 import iris.util
 import numpy as np
+from iris._constraints import ConstraintCombination
 from iris.analysis.cartography import rotate_pole, rotate_winds
 
 from CSET._common import iter_maybe
@@ -910,16 +912,9 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
         cube.data = dask.array.ma.masked_greater(cube.core_data(), 144.0)
 
 
-def get_filter_windspeed(constraint: iris.Constraint):
-    """Get the windspeed filter by using the hijacked constraint."""
-    if hasattr(constraint, "varname"):
-        return constraint.varname
-    else:
-        return None
-
-
 def _compute_winds(
-    cubes: iris.cube.CubeList, constraint: iris.Constraint | None = None
+    cubes: iris.cube.CubeList,
+    constraint: iris.Constraint | ConstraintCombination | None = None,
 ):
     """To compute wind_speed from vector components if not available as diagnostic.
 
@@ -938,8 +933,12 @@ def _compute_winds(
 
     if constraint is None:
         return cubes
-
-    filter_windspeed = get_filter_windspeed(constraint)
+    filter_windspeed = None
+    for constr in _flatten_combined_constraint(constraint):
+        filter_windspeed = getattr(constr, "varname", None)
+        if filter_windspeed:
+            constraint = constr
+            break
 
     u_constr = iris.Constraint("eastward_wind_at_10m")
     v_constr = iris.Constraint("northward_wind_at_10m")
@@ -970,6 +969,17 @@ def _compute_winds(
     return cubes
 
 
+def _flatten_combined_constraint(
+    con: iris.Constraint | ConstraintCombination,
+) -> Iterator[iris.Constraint]:
+    # yields constraints of a possibly nested constraint combination
+    if isinstance(con, ConstraintCombination):
+        yield from _flatten_combined_constraint(con.lhs)
+        yield from _flatten_combined_constraint(con.rhs)
+    else:
+        yield con
+
+
 def _add_wind_speed_um(cubes: iris.cube.CubeList):
     """Add windspeeds to cubes from components."""
     u_wind = cubes.extract_cube(iris.Constraint("eastward_wind_at_10m"))
@@ -978,7 +988,7 @@ def _add_wind_speed_um(cubes: iris.cube.CubeList):
     wspd10.attributes["STASH"] = "m01s03i227"
     wspd10.standard_name = "wind_speed"
     wspd10.long_name = "wind_speed_at_10m"
-    wspd10.units = "ms-1"
+    wspd10.units = "m s-1"
     cubes.append(wspd10)
 
 
