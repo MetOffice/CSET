@@ -522,7 +522,10 @@ def _add_nref(cube: iris.cube.Cube):
     otherwise be lost on subsequent calls to collapse functions.
     """
     nref = np.size(cube.coord("forecast_reference_time").points)
-    cube.coord("time").attributes["number_reference_times"] = nref
+    try:
+        cube.coord("time").attributes["number_reference_times"] = nref
+    except:
+        cube.attributes["number_reference_times"] = nref
     return cube
 
 
@@ -536,11 +539,15 @@ def _aggregate_in_time_multiple_frt(
     """
     aggregated_cycles = iris.cube.CubeList()
     for frt_cube in cube.slices_over("forecast_reference_time"):
+
+        forecast_period = frt_cube.coord("forecast_period")
+        forecast_period.bounds = None
+   
         iris.coord_categorisation.add_categorised_coord(
             frt_cube,
             "interval",
             "time",
-            lambda coord, cell: cell // interval * interval,
+            lambda coord, cell: (cell - 1) // interval * interval,
         )
         agg = frt_cube.aggregated_by(
             "interval",
@@ -566,7 +573,7 @@ def _aggregate_in_time_single_frt(cube: iris.cube.Cube, method: str, interval: i
         cube,
         "interval",
         "time",
-        lambda coord, cell: cell // interval * interval,
+        lambda coord, cell: (cell - 1) // interval * interval,
     )
     aggregated_cube = cube.aggregated_by(
         "interval",
