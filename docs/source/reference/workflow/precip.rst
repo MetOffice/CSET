@@ -28,4 +28,9 @@ BoM/NCI
 
 Verifying at NCI enables the following data sources:
 
-* ADAM Station Obs (PointStat)
+.. csv-table:: NCI Precip Obs
+    :header: "Obs", "Type", "Project"
+
+    "ADAM Station Obs", "PointStat", "dp9"
+    "`GPM Late <https://gpm.nasa.gov/taxonomy/term/1415>`_", "GridStat, "dp9"
+    "`Rainfields3 <https://geonetwork.nci.org.au/geonetwork/srv/eng/catalog.search#/metadata/f0493_5520_4121_7835>`_", "GridStat", "rq0"

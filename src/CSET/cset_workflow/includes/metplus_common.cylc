@@ -22,6 +22,9 @@
     # Family grouping for all VerPy metloader tasks
         inherit = METPLUS
         script = rose task-run -v --app-key=verpy_metloader
+        [[[environment]]]
+            VERPY_DIR = {{VERPY_DIR|default("")}}
+            METLOADER_CONF_FILE = metloader.conf
 
 {% if METPLUS_VERIFY_PRECIP %}
     [[METPLUS]]
