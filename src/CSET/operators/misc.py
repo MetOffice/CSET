@@ -818,10 +818,10 @@ def _mask_fill_cube(
       during file loading, but this routine additionally converts masked
       points to NaNs and handles known sentinel values.
     """
-    import dask.array as da  
+    import dask.array as da
 
     raw = cube.core_data()
-    x   = cube.lazy_data()
+    x = cube.lazy_data()
     fill_values = []
     # NetCDF-style fill value (if present)
     try:
@@ -843,7 +843,7 @@ def _mask_fill_cube(
         x_mask = np.ma.getmaskarray(raw)
     else:
         x_mask = None
-        
+
     x_data = x
     data = da.asarray(x_data, dtype=np.float32)
 

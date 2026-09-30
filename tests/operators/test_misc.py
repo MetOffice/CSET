@@ -16,6 +16,7 @@
 
 import datetime
 
+import dask.array as da
 import iris
 import iris.analysis.calculus
 import iris.coords
@@ -760,6 +761,14 @@ def test_mask_fill_value_masked_array():
     """Masked values should become NaNs."""
     data = np.ma.array([[1.0, 2.0]], mask=[[False, True]])
     cube = _make_cube(data)
+
+    print(type(cube.data))
+    print(np.ma.isMaskedArray(cube.data))
+
+    ld = cube.lazy_data()
+
+    print(type(ld))
+    print(da.ma.getmaskarray(ld).compute())
     out = misc._mask_fill_cube(cube)
     result = out.data.compute() if hasattr(out.data, "compute") else out.data
     result = np.ma.filled(result, np.nan)
