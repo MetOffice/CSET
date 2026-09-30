@@ -334,9 +334,13 @@ def cell_stats(
             "feature_mean": {
                 "data": mean_data,
                 "long_name": "feature_mean",
-                "units": 1,
+                "units": cube.units,
             },
-            "feature_max": {"data": max_data, "long_name": "feature_max", "units": 1},
+            "feature_max": {
+                "data": max_data,
+                "long_name": "feature_max",
+                "units": cube.units,
+            },
             "feature_effective_diameter": {
                 "data": effective_diameter_data,
                 "long_name": "feature_effective_diameter",
