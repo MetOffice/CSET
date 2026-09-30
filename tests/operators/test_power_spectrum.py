@@ -265,3 +265,166 @@ def test_power_spectrum_cube_regular_latlon_coords(cubes, tmp_working_dir, caplo
         power_spectrum.calculate_power_spectrum(cube)
 
     assert "longitude coordinates for grid spacing calculation." in caplog.text
+
+
+def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_times():
+    """Check power spectrum can be calculated for multiple forecast reference times and realizations."""
+    # Create a cube with multiple realizations and forecast reference times.
+    data = np.random.rand(2, 3, 10, 10)
+
+    # Define coordinates to add to cube
+    realization_coord = iris.coords.DimCoord(
+        [0, 1],
+        long_name="realization",
+        units="1",
+    )
+
+    time_coord = iris.coords.DimCoord(
+        [0, 1, 2],
+        standard_name="time",
+        units="hours since 1970-01-01 00:00:00",
+    )
+
+    y_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_latitude",
+        units="degrees",
+    )
+
+    x_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_longitude",
+        units="degrees",
+    )
+
+    # Create cube for testing power spectrum code
+    cube = iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[
+            (realization_coord, 0),
+            (time_coord, 1),
+            (y_coord, 2),
+            (x_coord, 3),
+        ],
+        long_name="test_data",
+    )
+
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2],
+            standard_name="forecast_reference_time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(1,),
+    )
+
+    result = power_spectrum.calculate_power_spectrum(cube)
+
+    # Check the power spectrum code works by testing the shape of the
+    # power spectrum code is as expected.
+    assert result.coord("realization").shape == (2,)
+    assert result.coord("forecast_reference_time").shape == (3,)
+
+
+def test_coord_dimension_raises_for_scalar_forecast_reference_time():
+    """Check scalar forecast_reference_time is rejected."""
+    y_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_latitude",
+        units="degrees",
+    )
+
+    x_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_longitude",
+        units="degrees",
+    )
+
+    cube = iris.cube.Cube(
+        np.zeros((10, 10)),
+        dim_coords_and_dims=[
+            (y_coord, 0),
+            (x_coord, 1),
+        ],
+        long_name="test_data",
+    )
+
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            0,
+            standard_name="forecast_reference_time",
+            units="hours since 1970-01-01 00:00:00",
+        )
+    )
+
+    # Confirm the test setup is exercising a scalar coordinate.
+    assert cube.coord_dims("forecast_reference_time") == ()
+
+    with pytest.raises(
+        ValueError,
+        match=("Expected forecast_reference_time to be a one-dimensional coordinate."),
+    ):
+        power_spectrum._coord_dimension(
+            cube,
+            "forecast_reference_time",
+        )
+
+
+def test_calculate_power_spectrum_raises_for_different_multi_point_times():
+    """Check error raised when FRTs have different multi-point time coords."""
+    data = np.random.rand(2, 6, 10, 10)
+
+    realization_coord = iris.coords.DimCoord(
+        [0, 1],
+        long_name="realization",
+        units="1",
+    )
+
+    time_coord = iris.coords.DimCoord(
+        [0, 1, 2, 3, 4, 5],
+        standard_name="time",
+        units="hours since 1970-01-01 00:00:00",
+    )
+
+    frt_coord = iris.coords.AuxCoord(
+        [0, 0, 0, 6, 6, 6],
+        standard_name="forecast_reference_time",
+        units="hours since 1970-01-01 00:00:00",
+    )
+
+    y_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_latitude",
+        units="degrees",
+    )
+
+    x_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_longitude",
+        units="degrees",
+    )
+
+    cube = iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[
+            (realization_coord, 0),
+            (time_coord, 1),
+            (y_coord, 2),
+            (x_coord, 3),
+        ],
+        aux_coords_and_dims=[
+            (frt_coord, (1,)),
+        ],
+        long_name="test_data",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "Cannot combine power spectra: "
+            "multiple forecast reference times "
+            "have different multi-point time "
+            "coordinates."
+        ),
+    ):
+        power_spectrum.calculate_power_spectrum(cube)
