@@ -820,7 +820,7 @@ def _mask_fill_cube(
     """
     import dask.array as da  
 
-    raw = cube.data
+    raw = cube.core_data()
     fill_values = []
     # NetCDF-style fill value (if present)
     try:
