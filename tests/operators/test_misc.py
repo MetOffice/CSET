@@ -667,21 +667,6 @@ def test_latent_heat_units_cubelist_mixed():
     assert any(c is other for c in out)
 
 
-def _make_cube(data, units="m"):
-    """Tiny cube generator."""
-    data = np.asarray(data)
-    ny, nx = data.shape
-    lat = iris.coords.DimCoord(np.arange(ny), standard_name="latitude", units="degrees")
-    lon = iris.coords.DimCoord(
-        np.arange(nx), standard_name="longitude", units="degrees"
-    )
-    return iris.cube.Cube(
-        data,
-        dim_coords_and_dims=[(lat, 0), (lon, 1)],
-        units=units,
-    )
-
-
 def test_visibility_m_to_km():
     """Test that visibility is converted to kilometres from metres (common use)."""
     cube = _make_cube([[1000.0]], units="m")

@@ -820,32 +820,27 @@ def _mask_fill_cube(
     """
     import dask.array as da
 
-    raw = cube.core_data()
     x = cube.lazy_data()
     fill_values = []
-    # NetCDF-style fill value (if present)
+
     try:
         fv = getattr(x._meta, "fill_value", None)
         if fv is not None:
             fill_values.append(fv)
     except AttributeError:
-        pass  # x has no _meta (plain ndarray)
-
-    # Known fill values
+        pass
     # - 1e10 observed as NetCDF _FillValue in some archived variables.
     # - 1e11 documented as the data value for missing/bad core data flags.
-    fill_values.extend([1e10, 1e11])
-
     # Defensive fallback: other NumPy masked-array default fill values.
-    fill_values.extend([999999, -999999])
+    fill_values.extend([1e10, 1e11, 999999, -999999])
 
-    if np.ma.isMaskedArray(raw):
-        x_mask = np.ma.getmaskarray(raw)
-    else:
-        x_mask = None
+    x_data = da.ma.getdata(x)
+    x_mask = da.ma.getmaskarray(x)
 
-    x_data = x
     data = da.asarray(x_data, dtype=np.float32)
+    m0 = da.asarray(x_mask, dtype=bool)
+
+    data = da.where(m0, np.nan, data)
 
     if x_mask is not None:
         m0 = da.asarray(x_mask, dtype=bool)
