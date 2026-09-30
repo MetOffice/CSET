@@ -1,0 +1,27 @@
+category: Cellstats
+title: "Feature mean $VARNAME over all times.\n Threshold $CELLTRACK_THRESHOLD"
+description: |
+  Uses the feature.cell_stats operator to calculate mean cell values for
+  identified features.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+
+  - operator: filters.filter_multiple_cubes
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: $VARNAME
+
+  - operator: feature.cell_stats
+    threshold: $CELLTRACK_THRESHOLD
+
+  # Filter tracking cubelist to one of "feature_mean", "feature_max", or "feature_size"
+  - operator: filters.filter_multiple_cubes
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: feature_mean
+
+  - operator: plot.plot_histogram_series
+    sequence_coordinate: realization
