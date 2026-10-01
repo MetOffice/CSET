@@ -154,6 +154,78 @@ class TestRadarMask:
         assert result[1].name() == "radar_field"
 
 
+def test_handles_multiple_field_and_mask_cubes():
+    """Test the loop over both the mask and rainfall fields."""
+    field1 = make_cube(np.ones((1, 3, 3), dtype=float), "field_a")
+    field2 = make_cube(np.full((1, 3, 3), 2.0, dtype=float), "field_b")
+
+    mask1 = make_cube(np.ones((1, 3, 3), dtype=float), "mask_a")
+    mask2 = make_cube(np.ones((1, 3, 3), dtype=float), "mask_b")
+
+    result = radar_filter.radar_apply_mask(
+        iris.cube.CubeList([field1, field2]),
+        iris.cube.CubeList([mask1, mask2]),
+        boundary_margin=0,
+    )
+
+    assert isinstance(result, iris.cube.CubeList)
+    assert len(result) == 2
+    assert np.allclose(result[0].data, 1.0)
+    assert np.allclose(result[1].data, 2.0)
+
+
+def test_returns_masked_model_cube_when_output_is_model():
+    """Test the branch that executes if just model output is required."""
+    model_field = make_cube(
+        np.arange(120, dtype=float).reshape(1, 10, 12), "model_field"
+    )
+    radar_field = make_cube(
+        np.arange(120, 240, dtype=float).reshape(1, 10, 12), "radar_field"
+    )
+    mask = make_cube(np.ones((1, 10, 12), dtype=float), "nimrod_mask")
+
+    result = radar_filter.radar_mask(
+        model_field, radar_field, mask, boundary_margin=2, outputs="model"
+    )
+
+    assert isinstance(result, iris.cube.Cube)
+    assert result.name() == "model_field"
+    assert np.isnan(result.data[0, 0, 0])
+
+
+def test_radar_mask_loop_returns_model_and_radar_outputs():
+    """Test the loop over all models."""
+    model_field = iris.cube.CubeList(
+        [
+            make_cube(np.ones((1, 3, 3), dtype=float), "model_1"),
+            make_cube(np.full((1, 3, 3), 2.0, dtype=float), "model_2"),
+        ]
+    )
+    radar_field = make_cube(np.full((1, 3, 3), 9.0, dtype=float), "radar_field")
+    mask = make_cube(np.ones((1, 3, 3), dtype=float), "nimrod_mask")
+
+    result = radar_filter.radar_mask_loop(
+        model_field,
+        radar_field,
+        mask,
+        boundary_margin=0,
+        outputs="radar",
+    )
+
+    assert isinstance(result, iris.cube.CubeList)
+    assert len(result) >= 2
+
+
+def test_boundary_margin_zero_keeps_all_inner_points():
+    """Test zero width boundary on model field."""
+    field = make_cube(np.arange(9, dtype=float).reshape(1, 3, 3), "rain_rate")
+    mask = make_cube(np.ones((1, 3, 3), dtype=float), "mask")
+
+    result = radar_filter.radar_apply_mask(field, mask, boundary_margin=0)
+
+    assert np.all(np.isfinite(result.data))
+
+
 # Session scope fixtures, so the test data only has to be loaded once.
 @pytest.fixture(scope="session")
 def cube_radar() -> iris.cube.Cube:
