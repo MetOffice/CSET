@@ -26,6 +26,134 @@ constraint_single = constraints.combine_constraints(
 )
 
 
+def make_cube(data, name, model_name=None):
+    """Create a cube with a model_name attribute when requested."""
+    cube = iris.cube.Cube(np.asarray(data, dtype=float), long_name=name)
+    cube.rename(name)
+    if model_name is not None:
+        cube.attributes["model_name"] = model_name
+    return cube
+
+
+class TestMaskList:
+    """Tests for the Nimrod mask selection helper."""
+
+    def test_returns_empty_list_when_no_nimrod_source_present(self):
+        """No Nimrod source should produce no mask names."""
+        assert radar_filter.mask_list(["UM_model", "UKV_model"]) == []
+
+    def test_prefers_highest_resolution_nimrod_source(self):
+        """The preferred Nimrod weights should match the highest resolution source."""
+        result = radar_filter.mask_list(["UM_model", "Nimrod1km", "Nimrod2km"])
+        assert result == [
+            "Nimrod2km_weights",
+            "Nimrod1km_weights",
+            "Nimrod2km_weights",
+        ]
+
+
+class TestMaskByWeights:
+    """Tests for applying a radar weight mask to a field."""
+
+    def test_applies_mask_using_weight_threshold(self):
+        """Only cells with a valid Nimrod weight should remain in the field."""
+        field = make_cube(np.arange(12, dtype=float).reshape(1, 3, 4), "rain_rate")
+        field.attributes["model_name"] = "UM_model"
+
+        mask_values = np.array(
+            [
+                [
+                    [0.0, 11.0, 12.0, 4.0],
+                    [13.0, 0.0, 5.0, 14.0],
+                    [10.0, 11.0, 0.0, 21.0],
+                ]
+            ],
+            dtype=float,
+        )
+        weights = make_cube(
+            mask_values, "Nimrod2km_weights", model_name="Nimrod2km_weights"
+        )
+
+        result = radar_filter.mask_by_weights(
+            iris.cube.CubeList([field, weights]),
+            ["UM_model"],
+            ["Nimrod2km_weights"],
+        )
+
+        expected = np.full((1, 3, 4), np.nan, dtype=float)
+        valid = np.array(
+            [
+                [
+                    [False, True, True, False],
+                    [True, False, False, True],
+                    [False, True, False, True],
+                ]
+            ],
+            dtype=bool,
+        )
+        expected[valid] = field.data[valid]
+
+        np.testing.assert_allclose(result.data, expected, equal_nan=True)
+
+
+class TestRadarApplyMask:
+    """Tests for the boundary-aware radar mask application."""
+
+    def test_masks_boundary_points_and_applies_valid_mask(self):
+        """Boundary cells and mask zeros should both become NaN."""
+        field = make_cube(np.arange(120, dtype=float).reshape(1, 10, 12), "rain_rate")
+        mask = make_cube(np.ones((1, 10, 12), dtype=float), "mask")
+
+        result = radar_filter.radar_apply_mask(field, mask, boundary_margin=2)
+
+        assert np.isnan(result.data[0, 0, 0])
+        assert np.isnan(result.data[0, 9, 11])
+        assert result.data[0, 2, 2] == 26.0
+        assert result.data[0, 5, 5] == 65.0
+
+
+class TestRadarMask:
+    """Tests for masking radar and model data together."""
+
+    def test_returns_masked_radar_cube(self):
+        """Valid model points should propagate to the radar field output."""
+        model_field = make_cube(
+            np.arange(120, dtype=float).reshape(1, 10, 12), "model_field"
+        )
+        radar_field = make_cube(
+            np.arange(120, 240, dtype=float).reshape(1, 10, 12), "radar_field"
+        )
+        mask = make_cube(np.ones((1, 10, 12), dtype=float), "nimrod_mask")
+
+        result = radar_filter.radar_mask(
+            model_field, radar_field, mask, boundary_margin=2, outputs="radar"
+        )
+
+        assert isinstance(result, iris.cube.Cube)
+        assert np.isnan(result.data[0, 0, 0])
+        assert np.isnan(result.data[0, 9, 11])
+        assert result.data[0, 2, 2] == 146.0
+
+    def test_returns_both_model_and_radar_cubes_for_all_output(self):
+        """The all-output mode should return both model and radar cubes."""
+        model_field = make_cube(
+            np.arange(120, dtype=float).reshape(1, 10, 12), "model_field"
+        )
+        radar_field = make_cube(
+            np.arange(120, 240, dtype=float).reshape(1, 10, 12), "radar_field"
+        )
+        mask = make_cube(np.ones((1, 10, 12), dtype=float), "nimrod_mask")
+
+        result = radar_filter.radar_mask(
+            model_field, radar_field, mask, boundary_margin=2, outputs="all"
+        )
+
+        assert isinstance(result, iris.cube.CubeList)
+        assert len(result) == 2
+        assert result[0].name() == "model_field"
+        assert result[1].name() == "radar_field"
+
+
 # Session scope fixtures, so the test data only has to be loaded once.
 @pytest.fixture(scope="session")
 def cube_radar() -> iris.cube.Cube:
@@ -105,7 +233,7 @@ def cube_radar_masked_by_wts(cube_radar) -> iris.cube.Cube:
 def cube_model(cube_radar) -> iris.cube.Cube:
     """Construct a model rainfall rate cube."""
     test_cube = cube_radar.copy()
-    new_data = np.array([[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]])
+    new_data = np.array([[[11.0, 12.0, 13.0], [14.0, 15.0, 16.0], [17.0, 18.0, 19.0]]])
     test_cube.data = new_data
     test_cube.attributes["model_name"] = "ModelA"
     test_cube.long_name = "surface_microphysical_rainfall_rate"
@@ -159,6 +287,17 @@ def test_mask_by_weights(cube_radar, cube_radar_wts, cube_radar_masked_by_wts):
     print()
     print("----> masked.data ", masked.data)
     assert np.array_equal(masked.data, cube_radar_masked_by_wts.data, equal_nan=True)
+
+
+def test_radar_apply_mask(cube_model, cube_radar_wts):
+    """Test the mask_by_weights function."""
+    masked = radar_filter.radar_apply_mask(
+        cube_model, cube_radar_wts, boundary_margin=0
+    )
+    print()
+    print("---->masked from test_radar_apply_mask", masked)
+    print()
+    print("----> masked.data ", masked.data)
 
 
 def test_match_varname_and_units(cube_model, cube_radar):
