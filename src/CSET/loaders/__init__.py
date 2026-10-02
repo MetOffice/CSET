@@ -21,6 +21,7 @@ __all__ below.
 
 from CSET.loaders import (
     aoa,
+    cellstats,
     histograms,
     observations,
     power_spectrum,
@@ -37,6 +38,7 @@ from CSET.loaders import (
 
 __all__ = [
     "aoa",
+    "cellstats",
     "histograms",
     "observations",
     "power_spectrum",

@@ -603,3 +603,55 @@ def test_not_remove_non_scalar_coord():
     # Check it is still present
     cube_out = out[0]
     assert cube_out.coords("time")
+
+
+def test_flatten_cube_no_nans():
+    """Test misc.flatten without nans in single cube."""
+    data_shape = (3, 4)
+    data = np.arange(12).reshape(data_shape)
+    coords = [
+        iris.coords.DimCoord(np.arange(shape), long_name=f"test{shape}", units="1")
+        for shape in data_shape
+    ]
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cube = iris.cube.Cube(data, dim_coords_and_dims=dim_coords_and_dims)
+    flattened_cube = misc.flatten(cube)
+    assert flattened_cube.shape == (12,)
+    assert np.allclose(flattened_cube.data, np.arange(12))
+
+
+def test_flatten_cubelist_no_nans():
+    """Test misc.flatten without nans in CubeList."""
+    data_shape = (3, 4)
+    data = np.arange(12).reshape(data_shape)
+    coords = [
+        iris.coords.DimCoord(np.arange(shape), long_name=f"test{shape}", units="1")
+        for shape in data_shape
+    ]
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cubes = iris.cube.CubeList(
+        [
+            iris.cube.Cube(data, dim_coords_and_dims=dim_coords_and_dims)
+            for __ in range(3)
+        ]
+    )
+    flattened_cubes = misc.flatten(cubes)
+    assert len(flattened_cubes) == 3
+    for cube in flattened_cubes:
+        assert cube.shape == (12,)
+        assert np.allclose(cube.data, np.arange(12))
+
+
+def test_flatten_cube_nans_removed():
+    """Test misc.flatten with nans removed in Cube."""
+    data_shape = (3, 4)
+    data = np.arange(12, dtype=float).reshape(data_shape)
+    data[:, 0] = np.nan  # 3 nans are inserted
+    coords = [
+        iris.coords.DimCoord(np.arange(shape), long_name=f"test{shape}", units="1")
+        for shape in data_shape
+    ]
+    dim_coords_and_dims = [(coord, dim) for dim, coord in enumerate(coords)]
+    cube = iris.cube.Cube(data, dim_coords_and_dims=dim_coords_and_dims)
+    flattened_cube = misc.flatten(cube, remove_nans=True)
+    assert flattened_cube.shape == (9,)
