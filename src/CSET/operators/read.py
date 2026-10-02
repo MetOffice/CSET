@@ -50,6 +50,20 @@ class NoDataError(FileNotFoundError):
     """Error that no data has been loaded."""
 
 
+def probe_variables(file_paths: list[str] | str):
+    """Return variables in input data using CSET-normalised long names.
+
+    Files are loaded using the standard CSET loading callbacks, so UM STASH
+    codes are mapped to their corresponding LFRic names where possible.
+    """
+    # Use _load_model to make use of normalisation callbacks.
+    cubes = _load_model(file_paths, model_name=None, constraint=None)
+
+    variables = {cube.long_name for cube in cubes if cube.long_name is not None}
+
+    return sorted(variables)
+
+
 def read_cube(
     file_paths: list[str] | str,
     constraint: iris.Constraint | None = None,
