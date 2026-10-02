@@ -1,32 +1,64 @@
 category: Time series at Cardington
-title: "Time series of sensible heat flux at Cardington [52.10438N, -0.42286E]"
+title: "Time series of sensible heat flux at Cardington ($HEIGHT m) [52.10438N, -0.42286E]"
 description: "Plots a time series of sensible heat flux at gridpoint nearest to Cardington."
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names:
-      - Obs (30min)
+      - $OBS_NAME
       - $MODEL_NAME
-    constraint: [$CARDINGTON_VARNAMES, $VARNAME]
+    constraint:
+      - $WT_VARNAME
+      - $AIR_TEMP_VARNAME
+      - $PRESSURE_VARNAME
+      - $STASH
 
-  - operator: misc.mask_fill_values
-#  - operator: filters.apply_mask
-#    mask:
-#       operator: filters.generate_mask
-#       condition: 'lt'
-#       value: 1.0e+10
+  - operator: filters.apply_mask
+    mask:
+       operator: filters.generate_mask
+       condition: 'lt'
+       value: 1.0e+10
 
-  - operator: fluxes.sensible_heat_from_cardington_cubes
-    CARDINGTON_VARNAMES: $CARDINGTON_VARNAMES
+  - operator: misc.combine_cubes_into_cubelist
 
-  - operator: filters.filter_multiple_cubes
-    Cardington:
-      operator: constraints.generate_var_constraint
-      varname: surface_upward_sensible_heat_flux_cardington
+    first:
+      operator: misc.rename_cube
+      cubes:
+        operator: fluxes.sensible_heat_flux_from_covariance
 
-    $MODEL_NAME:
-      operator: constraints.generate_var_constraint
-      varname: surface_upward_sensible_heat_flux
+        wt_flux:
+          operator: filters.filter_multiple_cubes
+          constraint:
+            operator: constraints.generate_var_constraint
+            varname: $WT_VARNAME
+
+        air_temperature:
+          operator: filters.filter_multiple_cubes
+          constraint:
+            operator: constraints.generate_var_constraint
+            varname: $AIR_TEMP_VARNAME
+
+        pressure:
+          operator: filters.filter_multiple_cubes
+          constraint:
+            operator: constraints.generate_var_constraint
+            varname: $PRESSURE_VARNAME
+
+      name: surface_upward_sensible_heat_flux_obs
+
+    second:
+      operator: filters.filter_multiple_cubes
+      constraint:
+        operator: constraints.combine_constraints
+
+        varname_constraint:
+          operator: constraints.generate_var_constraint
+          varname: surface_upward_sensible_heat_flux
+
+        model_constraint:
+          operator: constraints.generate_attribute_constraint
+          attribute: model_name
+          value: $MODEL_NAME
 
   - operator: misc.remove_attribute
     attribute:
