@@ -73,9 +73,6 @@ instance/
 # Sphinx documentation
 docs/_build/
 
-# Docs from cset_restricted_files
-src/CSET/cset_workflow/docs/
-
 # PyBuilder
 target/
 
