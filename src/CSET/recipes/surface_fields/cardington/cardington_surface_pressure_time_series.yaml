@@ -5,10 +5,21 @@ steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names:
-      - Obs (05min)
-      - Obs (30min)
+      - $OBS_NAME
+      - $OBS_TWO_NAME
       - $MODEL_NAME
-    constraint: ['$OBS_VARNAME', '$VARNAME']
+    constraint:
+      - $OBS_VARNAME
+      - $VARNAME
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+  - operator: filters.apply_mask
+    mask:
+       operator: filters.generate_mask
+       condition: 'lt'
+       value: 1.0e+10
 
   - operator: filters.filter_multiple_cubes
 
@@ -21,7 +32,6 @@ steps:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
         varname: $OBS_VARNAME
-
 
     $MODEL_NAME:
       operator: constraints.combine_constraints
@@ -53,11 +63,9 @@ steps:
     method: "Nearest"
     boundary_margin: 0
 
-  - operator: misc.mask_fill_values
-
   # Make a single NetCDF with all the data inside it.
-  - operator: write.write_cube_to_nc
-    overwrite: True
+#  - operator: write.write_cube_to_nc
+#    overwrite: True
 
   # Plot the data.
   - operator: plot.plot_line_series
