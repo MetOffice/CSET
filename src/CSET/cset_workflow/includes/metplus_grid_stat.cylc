@@ -1,12 +1,53 @@
 {% if RUN_METPLUS_GRID_STAT|default(False) %}
 [scheduling]
     [[graph]]
-    {{CSET_CYCLE_PERIOD}} = """
-    metplus_grid_stat => housekeeping_full
-    """
+    {% macro metplus_grid_stat_graph() %}
+        {% for model in models %}
+            fetch_fcst_m{{model["id"]}} => metplus_prep_fcst_m{{model["id"]}}
+            metplus_prep_fcst_m{{model["id"]}} => metplus_grid_stat_m{{model["id"]}}
+            metplus_grid_stat_m{{model["id"]}} => verpy_metloader_grid_stat_m{{model["id"]}}
+            verpy_metloader_grid_stat_m{{model["id"]}} => cycle_complete
+        {% endfor %}
+    {% endmacro %}
+
+    {% if CSET_CYCLING_MODE == "case_study" %}
+        {% for date in CSET_CASE_DATES %}
+            R1/{{date}} = """
+                    {{metplus_grid_stat_graph()}}
+                """
+        {% endfor %}
+    {% elif CSET_CYCLING_MODE == "trial" %}
+        {{CSET_TRIAL_CYCLE_PERIOD}} = """
+                    {{metplus_grid_stat_graph()}}
+                """
+    {% endif %}
+    R1/$ = """
+        # TODO: Implement verpy_plot_grid_stat
+        # cycle_complete => verpy_plot_grid_stat => finish_website
+        """
 
 [runtime]
-    [[metplus_grid_stat]]
-    # Runs METplus wrappers for point stat calculations.
+    [[METPLUS_GRID_STAT]]
         inherit = METPLUS
+        [[[environment]]]
+            ROSE_TASK_APP = metplus_grid_stat
+    [[METPLUS_GRID_STAT_POSTPROC]]
+        inherit = METPLUS
+
+    {% for model in models %}
+    [[metplus_grid_stat_m{{model["id"]}}]]
+        inherit = METPLUS_GRID_STAT
+        [[[environment]]]
+            MODEL_ID = m{{model["id"]}}
+            MODEL_NAME = {{model["name"]}}
+            model_name = {{model["name"] | lower}}
+
+    [[verpy_metloader_grid_stat_m{{model["id"]}}]]
+        inherit = VERPY_METLOADER
+        [[[environment]]]
+            source = $CYLC_TASK_SHARE_CYCLE_DIR/Grid_Stat_{{model["name"]}}
+            STREAM = grid_stat
+            VER_METHOD = x
+            STAT_TYPE = cnt
+    {% endfor %}
 {% endif %}

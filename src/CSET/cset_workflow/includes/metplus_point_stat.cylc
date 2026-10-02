@@ -59,6 +59,7 @@
     # Runs METplus wrappers for point stat calculations.
         inherit = METPLUS_POINT_STAT
         [[[environment]]]
+            MODEL_ID = m{{model["id"]}}
             MODEL_NAME = {{model["name"]}}
             model_name = {{model["name"] | lower}}
 
@@ -80,12 +81,11 @@
     # Runs VerPy metloader utility to create the VerPy databases
         inherit = VERPY_METLOADER
         [[[environment]]]
-            VERPY_DIR = {{VERPY_DIR|default("")}}
             VER_METHOD = area
             STAT_TYPE = cnt
             STREAM = point_stat
             MODEL_NAME = {{model["name"]}}
-            METLOADER_CONF_FILE = metloader.conf
+            source=${CYLC_WORKFLOW_SHARE_DIR}/{{model["name"]}}_point_stat_area_tar
 {% endfor %}
 
     [[verpy_plot_pointstat]]

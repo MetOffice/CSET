@@ -34,10 +34,11 @@
             -q          = normal
             -l ncpus    = 1
             -l mem      = 4gb
-            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/ig2+scratch/dx2
+            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/ig2+scratch/dx2+gdata/rq0
             -W umask    = 0022
         [[[ environment ]]]
             ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
+            RAINFIELDS3_SITE = {{METPLUS_PRECIP_RAINFIELDS3_SITE | default(1)}}
 
     [[metplus_prep_obs]]
         [[[ environment ]]]
