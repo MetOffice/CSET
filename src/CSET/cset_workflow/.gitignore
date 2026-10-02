@@ -5,6 +5,9 @@
 *metdb*
 restricted*
 
+# Docs from cset_restricted_files
+docs/
+
 # Public site and opt files.
 !/opt/rose-suite-RAL3LFRIC.conf
 !/opt/rose-suite-nci_ral3lfric.conf
