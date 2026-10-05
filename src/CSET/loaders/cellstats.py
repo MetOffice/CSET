@@ -26,7 +26,7 @@ def load(conf: Config):
 
     FEATURE_TYPES = ["mean", "max", "size", "effective_diameter"]
 
-    if conf.RUN_CELL_TRACKING and conf.CALCULATE_CELL_STATS:
+    if conf.RUN_CELL_TRACKING:
         field = conf.CELLTRACK_SURFACE_FIELD
         for (ftype,) in itertools.product(FEATURE_TYPES):
             index = FEATURE_TYPES.index(ftype)
