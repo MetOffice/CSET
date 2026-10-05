@@ -373,7 +373,7 @@ def _get_common_stations(cubes: CubeList) -> list[str]:
 
 
 class StationLookup(NamedTuple):
-    """Station lookup data structure."""
+    """Station lookup data structure..."""
 
     subset_data: list[np.ma.MaskedArray | np.ndarray]
     frt_points: list[float]
