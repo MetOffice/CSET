@@ -337,9 +337,7 @@ def rolling_window_time_aggregation(
 
 
 def _get_common_stations(cubes: CubeList) -> list[str]:
-    # --------------------------------------------------------------
-    # Find stations common to all cubes with complete data
-    # --------------------------------------------------------------
+     """Find stations common to all cubes with complete data."""
     if len(cubes) < 2:
         raise ValueError(
             f"Need at least two cubes to find common stations, but got {len(cubes)}"
