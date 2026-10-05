@@ -104,7 +104,10 @@ def time_aggregate(
         # Add time categorisation overwriting hourly increment via lambda coord.
         # https://scitools-iris.readthedocs.io/en/latest/_modules/iris/coord_categorisation.html
         iris.coord_categorisation.add_categorised_coord(
-            cube, "interval", "time", lambda coord, cell: (cell - 1) // interval * interval
+            cube,
+            "interval",
+            "time",
+            lambda coord, cell: (cell - 1) // interval * interval,
         )
 
         # Aggregate cube using supplied method.
@@ -337,7 +340,7 @@ def rolling_window_time_aggregation(
 
 
 def _get_common_stations(cubes: CubeList) -> list[str]:
-     """Find stations common to all cubes with complete data."""
+    """Find stations common to all cubes with complete data."""
     if len(cubes) < 2:
         raise ValueError(
             f"Need at least two cubes to find common stations, but got {len(cubes)}"
@@ -373,7 +376,7 @@ def _get_common_stations(cubes: CubeList) -> list[str]:
 
 
 class StationLookup(NamedTuple):
-    """Station lookup data structure..."""
+    """Container for station data, forecast reference times and validity times."""
 
     subset_data: list[np.ma.MaskedArray | np.ndarray]
     frt_points: list[float]
@@ -382,8 +385,6 @@ class StationLookup(NamedTuple):
 
 def _build_station_lookup(cubes: CubeList, common_stations: list[str]) -> StationLookup:
     """Build station lookup for every cube."""
-
-
     subset_data = []
     frt_points = []
     time_points = []

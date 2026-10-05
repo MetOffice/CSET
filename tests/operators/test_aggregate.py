@@ -279,4 +279,14 @@ def test_make_aggregated_obs_cube(dummy_cubelist_obs_3_common_stations):
         common_stations,
         forecast_period,
     )
+
+    assert agg_obs_cube.shape == (2, 10, 3)
+
+
+def test_combine_obs_across_forecasts(dummy_cubelist_obs_3_common_stations):
+    """Test combine_obs_across_forecasts basic functionality."""
+    agg_obs_cube = aggregate.combine_obs_across_forecasts(
+        dummy_cubelist_obs_3_common_stations
+    )
+
     assert agg_obs_cube.shape == (2, 10, 3)
