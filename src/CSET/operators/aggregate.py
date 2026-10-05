@@ -522,10 +522,7 @@ def _make_aggregated_obs_cube(
 
         cube_out.add_aux_coord(aux, (2,))
 
-    # --------------------------------------------------------------
     # Add valid-time auxiliary coord
-    # --------------------------------------------------------------
-
     time_2d = np.vstack(station_lookup.time_points)
 
     cube_out.add_aux_coord(
