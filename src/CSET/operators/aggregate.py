@@ -89,6 +89,7 @@ def time_aggregate(
 
     timedelta = isodate.parse_duration(interval_iso)
 
+    # Return cubes unchanged if timedelta is specified as "0"
     if timedelta == "0":
         return cubes
 
