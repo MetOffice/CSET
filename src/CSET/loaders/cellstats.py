@@ -38,6 +38,8 @@ def load(conf: Config):
                         "VARNAME": field,
                         "MODEL_NAME": [model["name"] for model in models],
                         "CELLTRACK_THRESHOLD": conf.CELLTRACK_THRESHOLD,
+                        "CELLTRACK_MIN_SIZE": conf.CELLTRACK_MIN_SIZE,
+                        "CELLTRACK_UNDER_THRESHOLD": conf.CELLTRACK_UNDER_THRESHOLD,
                     },
                     model_ids=[model["id"] for model in models],
                     aggregation=False,

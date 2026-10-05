@@ -16,6 +16,8 @@ steps:
 
   - operator: feature.cell_stats
     threshold: $CELLTRACK_THRESHOLD
+    min_size: $CELLTRACK_MIN_SIZE
+    under_threshold: $CELLTRACK_UNDER_THRESHOLD
 
   # Filter tracking cubelist to one of "feature_mean", "feature_max", or "feature_size"
   - operator: filters.filter_multiple_cubes
