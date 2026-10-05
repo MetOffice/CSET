@@ -1412,34 +1412,37 @@ def _make_test_cube_stations(
     )
 
 
+def add_time_coords(cube, time_start, frt_dt, hour_step=1):
+    """Add time coordate to cube."""
+    time_units = cf_units.Unit("hours since 1970-01-01", calendar="360_day")
+    time_units = cf_units.Unit("hours since 1970-01-01", calendar="360_day")
+
+    """Add a per-row time coord (data_dims=0) and scalar frt coord to a cube, in place."""
+    n_times = cube.shape[0]
+    time_datetimes = [
+        time_start + datetime.timedelta(hours=hour_step * i) for i in range(n_times)
+    ]
+    cube.add_aux_coord(
+        AuxCoord(
+            points=time_units.date2num(time_datetimes),
+            standard_name="time",
+            units=time_units,
+        ),
+        data_dims=0,
+    )
+    cube.add_aux_coord(
+        AuxCoord(
+            points=time_units.date2num(frt_dt),
+            standard_name="forecast_reference_time",
+            units=time_units,
+        )
+    )
+    return cube
+
+
 @pytest.fixture
 def dummy_cubelist_obs_3_common_stations():
     """CubeList of [obs_cube1, obs_cube2] with time (per-row) and scalar forecast reference time coords."""
-    time_units = cf_units.Unit("hours since 1970-01-01", calendar="360_day")
-
-    def add_time_coords(cube, time_start, frt_dt, hour_step=1):
-        """Add a per-row time coord (data_dims=0) and scalar frt coord to a cube, in place."""
-        n_times = cube.shape[0]
-        time_datetimes = [
-            time_start + datetime.timedelta(hours=hour_step * i) for i in range(n_times)
-        ]
-        cube.add_aux_coord(
-            AuxCoord(
-                points=time_units.date2num(time_datetimes),
-                standard_name="time",
-                units=time_units,
-            ),
-            data_dims=0,
-        )
-        cube.add_aux_coord(
-            AuxCoord(
-                points=time_units.date2num(frt_dt),
-                standard_name="forecast_reference_time",
-                units=time_units,
-            )
-        )
-        return cube
-
     obs_cube1 = add_time_coords(
         _make_test_cube_stations(
             shape=(10, 3), seed=1, long_name="observed_temperature_at_screen_level"
@@ -1456,6 +1459,20 @@ def dummy_cubelist_obs_3_common_stations():
     )
 
     return CubeList([obs_cube1, obs_cube2])
+
+
+@pytest.fixture
+def dummy_cube_1_station():
+    """Cube with 1 station, 5 lead times."""
+    obs_cube = add_time_coords(
+        _make_test_cube_stations(
+            shape=(5, 3), seed=1, long_name="observed_temperature_at_screen_level"
+        ),
+        time_start=cftime.datetime(2024, 1, 1, 6, 0, calendar="360_day"),
+        frt_dt=cftime.datetime(2024, 1, 1, 0, 0, calendar="360_day"),
+    )
+
+    return obs_cube
 
 
 @pytest.fixture()
