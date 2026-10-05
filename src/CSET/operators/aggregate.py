@@ -381,9 +381,8 @@ class StationLookup(NamedTuple):
 
 
 def _build_station_lookup(cubes: CubeList, common_stations: list[str]) -> StationLookup:
-    # --------------------------------------------------------------
-    # Build station lookup for every cube
-    # --------------------------------------------------------------
+    """Build station lookup for every cube."""
+
 
     subset_data = []
     frt_points = []
