@@ -107,7 +107,6 @@ def _append_to_plot_index(plot_index: list) -> list:
 
 
 def _plot_archive_index(tar_path: Path, plot_names: list[str]) -> str:
-    """JSON [[name, offset, size], ...] for the {{plots}} template slot."""
     with tarfile.open(tar_path) as tf:
         members = {m.name: m for m in tf.getmembers()}
     return json.dumps(
@@ -3075,12 +3074,10 @@ def hinton_plot(
     ax.set_title(title)
     plt.tight_layout()
 
-    # Save plot.
-    _save_close_figure(fig, "hinton", filename)
-
     # Add file extension.
     plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
-
+    # Save plot
+    _save_close_figure(fig, "hinton", plot_filename)
     # Add list of plots to plot metadata.
     plot_index = _append_to_plot_index([plot_filename])
 
