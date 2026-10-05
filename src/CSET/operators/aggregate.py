@@ -104,7 +104,7 @@ def time_aggregate(
         # Add time categorisation overwriting hourly increment via lambda coord.
         # https://scitools-iris.readthedocs.io/en/latest/_modules/iris/coord_categorisation.html
         iris.coord_categorisation.add_categorised_coord(
-            cube, "interval", "time", lambda coord, cell: cell // interval * interval
+            cube, "interval", "time", lambda coord, cell: (cell - 1) // interval * interval
         )
 
         # Aggregate cube using supplied method.
