@@ -440,16 +440,8 @@ def _make_aggregated_obs_cube(
     # Stack data
     data = np.stack(station_lookup.subset_data, axis=0)
 
-    # shape:
-    #
-    # (forecast_reference_time,
-    #  forecast_period,
-    #  station)
-
-    # --------------------------------------------------------------
+    # shape (forecast_reference_time, forecast_period, station)
     # Output coordinates
-    # --------------------------------------------------------------
-
     frt_out = DimCoord(
         station_lookup.frt_points,
         standard_name="forecast_reference_time",
