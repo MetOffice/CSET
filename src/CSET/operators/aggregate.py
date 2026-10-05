@@ -473,10 +473,7 @@ def _make_aggregated_obs_cube(
         ],
     )
 
-    # --------------------------------------------------------------
     # Preserve station metadata coordinates
-    # --------------------------------------------------------------
-
     ref_cube = cubes[0]
 
     ref_names = ref_cube.coord("Station_Name").points
