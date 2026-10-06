@@ -50,12 +50,10 @@ def time_aggregate(
 
     Examples include generating hourly or 6-hourly precipitation accumulations for precipitation, or maximum screen level temperature every 3 hours.
 
-    We use the isodate class to convert ISO 8601 durations into time intervals
-    for creating a new time coordinate for aggregation.
+    resampled_cubes = iris.cube.CubeList()
 
-    We use the lambda function to pass coord and interval into the callable
-    category function in add_categorised to allow users to define their own
-    sub-daily intervals for the new time coordinate.
+    timedelta = isodate.parse_duration(interval_iso)
+    interval = int(timedelta.total_seconds() / 3600)
 
     Arguments
     ---------
@@ -88,38 +86,19 @@ def time_aggregate(
     resampled_cubes = iris.cube.CubeList()
 
     timedelta = isodate.parse_duration(interval_iso)
-
-    # Return cubes unchanged if timedelta is specified as "0"
-    if timedelta == "0":
-        return cubes
-
-    resampled_cubes = iris.cube.CubeList()
-
-    # Convert interval format to whole hours.
     interval = int(timedelta.total_seconds() / 3600)
 
-    cubes = iter_maybe(cubes)
-
     for cube in cubes:
-        # Add time categorisation overwriting hourly increment via lambda coord.
-        # https://scitools-iris.readthedocs.io/en/latest/_modules/iris/coord_categorisation.html
-        iris.coord_categorisation.add_categorised_coord(
-            cube,
-            "interval",
-            "time",
-            lambda coord, cell: (cell - 1) // interval * interval,
-        )
-
-        # Aggregate cube using supplied method.
-        aggregated_cube = cube.aggregated_by("interval", getattr(iris.analysis, method))
-        aggregated_cube.remove_coord("interval")
+        if cube.coord("forecast_reference_time").shape[0] > 1:
+            # Handle cubes with multiple forecast cycles.
+            aggregated_cube = _aggregate_in_time_multiple_frt(cube, method, interval)
+        else:
+            aggregated_cube = _aggregate_in_time_single_frt(cube, method, interval)
 
         resampled_cubes.append(aggregated_cube)
-
     if len(resampled_cubes) == 1:
         return resampled_cubes[0]
-    else:
-        return resampled_cubes
+    return resampled_cubes
 
 
 def ensure_aggregatable_across_cases(
