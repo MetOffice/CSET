@@ -1799,6 +1799,10 @@ def _plot_and_save_scatter_series(
         Flag to set output scatter generated as a hexbin frequency distribution plot of 2 cubes on single plot.
         Else scatter of all points, with potential to overplot many comparisons on same plot.
     """
+    if hexbin and len(cubes) != 2:
+        # Check cubes using same functionality as the difference operator.
+        raise ValueError("Cubes should contain exactly 2 cubes for hexbin plotting.")
+
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
 
@@ -3454,11 +3458,6 @@ def plot_scatter_series(
         )
 
         if hexbin:
-            # Check cubes using same functionality as the difference operator.
-            if len(cubes) != 2:
-                raise ValueError(
-                    "Cubes should contain exactly 2 cubes for hexbin plotting."
-                )
             plot_title = plot_title.replace("scatter", "hexbin")
             plot_filename = plot_filename.replace("scatter", "hexbin")
 
