@@ -110,7 +110,6 @@ def _plot_archive_index(tar_path: Path, plot_names: list[str]) -> str:
     if os.environ.get("CSET_GALLERY_PLOTS", "0") != "1":
         with tarfile.open(tar_path) as tf:
             members = {m.name: m for m in tf.getmembers()}
-
         return json.dumps(
             [[n, members[n].offset_data, members[n].size] for n in plot_names]
         )
@@ -194,12 +193,13 @@ def _save_close_figure(figure, plot_type: str, filename: str):
         )
         data = buf.getvalue()
         if os.environ.get("CSET_GALLERY_PLOTS", "0") != "1":
-            figure.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-            logger.info("Added %s plot to CSET gallert", plot_type)
-        else:
             tar_path = _plot_archive_path()
             _append_to_plot_archive(tar_path, path.name, data)
             logger.info("Added %s plot to archive %s", plot_type, tar_path)
+        else:
+            figure.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+            logger.info("Added %s plot to CSET gallery", plot_type)
+
         plt.close(figure)
 
 
