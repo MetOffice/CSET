@@ -1,15 +1,26 @@
-category: Time series of variables at Cardington single point
-title: "Time series of mean wind at Cardington [52.10438N, -0.42286E]"
-description: "Plots a time series of mean wind at gridpoint nearest to Cardington."
+category: Time series of $PLOT_VARNAME at Cardington single point
+title: "Time series of $HEIGHT m mean $PLOT_VARNAME at Cardington [52.10438N, -0.42286E]"
+description: "Plots a time series of mean $PLOT_VARNAME at gridpoint nearest to Cardington."
 
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names:
-      - Cardington 05min
-      - Cardington 30min
+      - $OBS_NAME
       - $MODEL_NAME
-    constraint: ['$OBS_VARNAME', '$UM_U_VARNAME', '$UM_V_VARNAME']
+    constraint:
+      - $OBS_WIND
+      - $U_VARNAME
+      - $V_VARNAME
+
+  - operator: filters.apply_mask
+    mask:
+      operator: filters.generate_mask
+      condition: 'lt'
+      value: 1.0e+10
+
+  - operator: misc.remove_attribute
+    attribute: [ 'time_coverage_end', 'time_coverage_start', 'valid_min', 'valid_max', 'date', 'date_created' ]
 
   - operator: misc.combine_cubes_into_cubelist
     first:
@@ -21,7 +32,7 @@ steps:
           operator: constraints.combine_constraints
           varname_constraint:
             operator: constraints.generate_var_constraint
-            varname: $OBS_VARNAME
+            varname: $OBS_WIND
           height_constraint:
             operator: constraints.generate_attribute_constraint
             attribute: height
@@ -30,17 +41,17 @@ steps:
     second:
       # --- UM: calculate vector wind from both components ---
       operator: wind.calculate_vector_wind
-      cubes:
+      u:
         operator: filters.filter_multiple_cubes
-        u_constraint:
+        constraints:
           operator: constraints.combine_constraints
           varname_constraint:
             operator: constraints.generate_var_constraint
-            varname: $UM_U_VARNAME
+            varname: $U_VARNAME
           cell_methods_constraint:
             operator: constraints.generate_cell_methods_constraint
             cell_methods: []
-            varname: $UM_U_VARNAME
+            varname: $U_VARNAME
           pressure_level_constraint:
             operator: constraints.generate_level_constraint
             levels: []
@@ -49,22 +60,27 @@ steps:
             operator: constraints.generate_attribute_constraint
             attribute: STASH
 
-        v_constraint:
-          operator: constraints.combine_constraints
-          varname_constraint:
-            operator: constraints.generate_var_constraint
-            varname: $UM_V_VARNAME
-          cell_methods_constraint:
-            operator: constraints.generate_cell_methods_constraint
-            cell_methods: []
-            varname: $UM_V_VARNAME
-          pressure_level_constraint:
-            operator: constraints.generate_level_constraint
-            levels: []
-            coordinate: "pressure"
-          stash_constraint:
-            operator: constraints.generate_attribute_constraint
-            attribute: STASH
+      v:
+        operator: filters.filter_multiple_cubes
+        constraints:
+           operator: constraints.combine_constraints
+           varname_constraint:
+             operator: constraints.generate_var_constraint
+             varname: $V_VARNAME
+           cell_methods_constraint:
+             operator: constraints.generate_cell_methods_constraint
+             cell_methods: []
+             varname: $V_VARNAME
+           pressure_level_constraint:
+             operator: constraints.generate_level_constraint
+             levels: []
+             coordinate: "pressure"
+           stash_constraint:
+             operator: constraints.generate_attribute_constraint
+             attribute: STASH
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
 
 # PLOT_VARNAME is used to constrain to either speed or direction
   - operator: filters.filter_multiple_cubes
@@ -72,22 +88,12 @@ steps:
       operator: constraints.generate_var_constraint
       varname: $PLOT_VARNAME
 
-  - operator: misc.remove_attribute
-    attribute: [ 'time_coverage_end', 'time_coverage_start', 'valid_min', 'valid_max', 'date', 'date_created' ]
-
   - operator: regrid.regrid_to_single_point
     lat_pt: 52.10438
     lon_pt: -0.42286
     latlon_in_type: "realworld"
     method: "Nearest"
     boundary_margin: 0
-
-  # RE‑MASK fill values AFTER vector wind + regrid
-  - operator: misc.mask_fill_values
-
-  # Make a single NetCDF with all the data inside it.
-  - operator: write.write_cube_to_nc
-    overwrite: True
 
   # Plot the data.
   - operator: plot.plot_line_series
