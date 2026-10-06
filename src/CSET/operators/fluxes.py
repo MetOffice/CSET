@@ -196,10 +196,10 @@ def net_radiative_flux(
     ):
         down_name = down_cube.name().lower()
         up_name = up_cube.name().lower()
-        if "shortwave" in down_name and "shortwave" not in up_name:
-            raise ValueError("Cannot combine shortwave and longwave fluxes")
-
-        if "longwave" in down_name and "longwave" not in up_name:
+        if (
+            ("shortwave" in down_name and "longwave" in up_name)
+            or ("longwave" in down_name and "shortwave" in up_name)
+        ):
             raise ValueError("Cannot combine shortwave and longwave fluxes")
 
         net_flux = down_cube - up_cube
