@@ -75,7 +75,7 @@ sphinx_gallery_conf = {
     "examples_dirs": "reference/gallery/examples",  # input scripts
     "gallery_dirs": "reference/gallery/generated",  # output pages
     "filename_pattern": r"\.py$",
-    "image_scrapers": ("matplotlib"),
+    "image_scrapers": ("matplotlib",),
     "thumbnail_size": (320, 224),
     "image_srcset": ["2x"],
     "capture_repr": (),  # disable capture of printed / returned output
