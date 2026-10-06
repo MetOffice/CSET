@@ -2278,6 +2278,7 @@ def plot_line_series(
 
     # Iterate over all cubes and extract coordinate to plot.
     cubes = iris.cube.CubeList(iter_maybe(cube))
+
     coords = []
     for model_cube in cubes:
         try:
