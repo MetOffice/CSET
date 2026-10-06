@@ -61,6 +61,10 @@ def probe_variables(file_paths: list[str] | str):
 
     variables = {cube.long_name for cube in cubes if cube.long_name is not None}
 
+    # Add 10m wind, if eastward and northward wind exist.
+    if "eastward_wind_at_10m" in variables and "northward_wind_at_10m" in variables:
+        variables.add("wind_speed_at_10m")
+
     return sorted(variables)
 
 
