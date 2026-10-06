@@ -205,11 +205,11 @@ def net_radiative_flux(
         net_flux = down_cube - up_cube
         name = down_cube.name().lower()
         if "shortwave" in name:
-            output_name = "surface_net_downward_shortwave_flux"
+            output_name = "net_downward_shortwave_flux"
         elif "longwave" in name:
-            output_name = "surface_net_downward_longwave_flux"
+            output_name = "net_downward_longwave_flux"
         else:
-            output_name = "surface_net_downward_radiative_flux"
+            output_name = "net_downward_radiative_flux"
 
         net_flux.rename(output_name)
         net_flux.units = down_cube.units
