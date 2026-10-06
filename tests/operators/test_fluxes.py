@@ -187,13 +187,13 @@ def test_net_radiative_flux_calculation():
     down = _make_scalar_cube(
         300.0,
         var_name="lwrad_down",
-        standard_name="surface_downwelling_longwave_flux_in_air",
+        standard_name="downwelling_longwave_flux_in_air",
         units="W m-2",
     )
     up = _make_scalar_cube(
         50.0,
         var_name="lwrad_up",
-        standard_name="surface_upwelling_longwave_flux_in_air",
+        standard_name="upwelling_longwave_flux_in_air",
         units="W m-2",
     )
     result = net_radiative_flux(down, up)
@@ -206,18 +206,18 @@ def test_net_shortwave_flux_name():
     down = _make_scalar_cube(
         np.array([300.0]),
         var_name="swrad_down",
-        standard_name="surface_downwelling_shortwave_flux_in_air",
+        standard_name="downwelling_shortwave_flux_in_air",
         units="W m-2",
     )
     up = _make_scalar_cube(
         np.array([100.0]),
         var_name="swrad_up",
-        standard_name="surface_upwelling_shortwave_flux_in_air",
+        standard_name="upwelling_shortwave_flux_in_air",
         units="W m-2",
     )
     result = net_radiative_flux(down, up)
-    assert result.name() == "surface_net_downward_shortwave_flux"
-    assert result.var_name == "surface_net_downward_shortwave_flux"
+    assert result.name() == "net_downward_shortwave_flux"
+    assert result.var_name == "net_downward_shortwave_flux"
 
 
 def test_net_longwave_flux_name():
@@ -225,18 +225,18 @@ def test_net_longwave_flux_name():
     down = _make_scalar_cube(
         np.array([300.0]),
         var_name="lwrad_down",
-        standard_name="surface_downwelling_longwave_flux_in_air",
+        standard_name="downwelling_longwave_flux_in_air",
         units="W m-2",
     )
     up = _make_scalar_cube(
         np.array([350.0]),
         var_name="lwrad_up",
-        standard_name="surface_upwelling_longwave_flux_in_air",
+        standard_name="upwelling_longwave_flux_in_air",
         units="W m-2",
     )
     result = net_radiative_flux(down, up)
-    assert result.name() == "surface_net_downward_longwave_flux"
-    assert result.var_name == "surface_net_downward_longwave_flux"
+    assert result.name() == "net_downward_longwave_flux"
+    assert result.var_name == "net_downward_longwave_flux"
 
 
 def test_mixed_shortwave_longwave_raises():
@@ -244,13 +244,13 @@ def test_mixed_shortwave_longwave_raises():
     down = _make_scalar_cube(
         np.array([300.0]),
         var_name="swrad_down",
-        standard_name="surface_downwelling_shortwave_flux_in_air",
+        standard_name="downwelling_shortwave_flux_in_air",
         units="W m-2",
     )
     up = _make_scalar_cube(
         np.array([100.0]),
         var_name="lwrad_up",
-        standard_name="surface_upwelling_longwave_flux_in_air",
+        standard_name="upwelling_longwave_flux_in_air",
         units="W m-2",
     )
     with pytest.raises(
@@ -267,13 +267,13 @@ def test_net_radiative_flux_cubelist():
             _make_scalar_cube(
                 np.array([300.0]),
                 var_name="lwrad_down",
-                standard_name="surface_downwelling_longwave_flux_in_air",
+                standard_name="downwelling_longwave_flux_in_air",
                 units="W m-2",
             ),
             _make_scalar_cube(
                 np.array([400.0]),
                 var_name="lwrad_down",
-                standard_name="surface_downwelling_longwave_flux_in_air",
+                standard_name="downwelling_longwave_flux_in_air",
                 units="W m-2",
             ),
         ]
@@ -283,13 +283,13 @@ def test_net_radiative_flux_cubelist():
             _make_scalar_cube(
                 np.array([100.0]),
                 var_name="lwrad_up",
-                standard_name="surface_upwelling_longwave_flux_in_air",
+                standard_name="upwelling_longwave_flux_in_air",
                 units="W m-2",
             ),
             _make_scalar_cube(
                 np.array([150.0]),
                 var_name="lwrad_up",
-                standard_name="surface_upwelling_longwave_flux_in_air",
+                standard_name="upwelling_longwave_flux_in_air",
                 units="W m-2",
             ),
         ]
