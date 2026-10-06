@@ -12,9 +12,6 @@ steps:
       - $OBS_VARNAME
       - $VARNAME
 
-  - operator: write.write_cube_to_nc
-    overwrite: True
-
   - operator: filters.apply_mask
     mask:
        operator: filters.generate_mask
@@ -64,8 +61,8 @@ steps:
     boundary_margin: 0
 
   # Make a single NetCDF with all the data inside it.
-#  - operator: write.write_cube_to_nc
-#    overwrite: True
+  - operator: write.write_cube_to_nc
+    overwrite: True
 
   # Plot the data.
   - operator: plot.plot_line_series

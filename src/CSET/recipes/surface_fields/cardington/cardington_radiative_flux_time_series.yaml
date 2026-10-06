@@ -1,6 +1,6 @@
-category: Time series of surface temperature at single point
-title: "Time series of surface temperature at Cardington [52.10438N, -0.42286E]"
-description: "Plots a time series of surface temperature at gridpoint nearest to Cardington."
+category: Time series of $PLOT_VARNAME radiative flux at single point
+title: "Time series of $PLOT_VARNAME radiative flux at Cardington [52.10438N, -0.42286E]"
+description: "Plots a time series of global $PLOT_VARNAME radiative flux at gridpoint nearest to Cardington."
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
@@ -56,9 +56,6 @@ steps:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
         varname: $VARNAME
-
-  - operator: misc.convert_units
-    units: 'Celsius'
 
   - operator: regrid.regrid_to_single_point
     lat_pt: 52.10438
