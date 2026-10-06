@@ -6,6 +6,7 @@ steps:
     file_paths: $INPUT_PATHS
     model_names:
       - $OBS_NAME
+      - $OBS_TWO_NAME
       - $MODEL_NAME
     constraint:
       - $OBS_VARNAME
@@ -47,11 +48,13 @@ steps:
       varname_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
+
       stash_constraint:
         operator: constraints.generate_attribute_constraint
         attribute: STASH
         values:
         - $STASH
+
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
