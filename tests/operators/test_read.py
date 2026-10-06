@@ -1551,6 +1551,29 @@ def test_probe_variables(tmp_path):
     ]
 
 
+def test_probe_variables_10mwind_added(tmp_path):
+    """Test 10m wind added if suitable."""
+    cube1 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="eastward_wind_at_10m",
+    )
+    cube2 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="northward_wind_at_10m",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save([cube1, cube2], input_file)
+
+    result = read.probe_variables(str(input_file))
+
+    assert result == [
+        "eastward_wind_at_10m",
+        "northward_wind_at_10m",
+        "wind_speed_at_10m",
+    ]
+
+
 def test_probe_variables_ignores_missing_long_names(tmp_path):
     """Test cubes without long names are not returned."""
     cube1 = iris.cube.Cube(
