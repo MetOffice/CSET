@@ -194,7 +194,7 @@ def _save_close_figure(figure, plot_type: str, filename: str):
         data = buf.getvalue()
 
         _append_to_plot_archive(tar_path, path.name, data)
-        logger.info("Saved %s plot to %s and %s", plot_type, filename, tar_path)
+        logger.info("Added %s plot to archive %s", plot_type, tar_path)
         plt.close(figure)
 
 

@@ -1188,14 +1188,12 @@ def test_scatter_plot_too_many_y_dimensions(
 def test_save_close_figure(tmp_working_dir, caplog):
     """Test saving and closing figure file."""
     fig = mpl.pyplot.figure()
-    message_match = False
     with caplog.at_level(logging.INFO):
         plot._save_close_figure(fig, "my test", "test_filename.png")
-        for _, _, message in caplog.record_tuples:
-            if message == "Saved my test plot to test_filename.png":
-                message_match = True
-        assert message_match
-    assert (tmp_working_dir / "test_filename.png").is_file()
+    tar_path = tmp_working_dir / "plots.tar"
+    assert f"Added my test plot to archive {tar_path}" in caplog.messages
+
+    assert_plot_in_archive("test_filename.png")
 
 
 def test_save_close_figure_in_gallery(tmp_working_dir, monkeypatch):
