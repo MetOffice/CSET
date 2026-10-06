@@ -107,8 +107,10 @@ def _append_to_plot_index(plot_index: list) -> list:
 
 
 def _plot_archive_index(tar_path: Path, plot_names: list[str]) -> str:
+
     with tarfile.open(tar_path) as tf:
         members = {m.name: m for m in tf.getmembers()}
+
     return json.dumps(
         [[n, members[n].offset_data, members[n].size] for n in plot_names]
     )
@@ -130,6 +132,7 @@ def _make_plot_html_page(plots: list):
 
     names = [Path(p).name for p in plots]
     tar_path = _plot_archive_path()
+
     plot_index = _plot_archive_index(Path(tar_path), names)
     # Prepare template variables.
     variables = {
@@ -151,6 +154,7 @@ def _append_to_plot_archive(tar_path: Path, name: str, data: bytes):
     info = tarfile.TarInfo(name)
     info.size = len(data)
     info.mtime = time.time()
+
     with tarfile.open(tar_path, "a") as tf:
         tf.addfile(info, io.BytesIO(data))
 
@@ -188,6 +192,7 @@ def _save_close_figure(figure, plot_type: str, filename: str):
             dpi=_get_plot_resolution(),
         )
         data = buf.getvalue()
+
         _append_to_plot_archive(tar_path, path.name, data)
         logger.info("Saved %s plot to %s and %s", plot_type, filename, tar_path)
         plt.close(figure)
@@ -1435,6 +1440,7 @@ def _plot_and_save_scatter_plot(
     ax.autoscale()
 
     # Save plot.
+
     _save_close_figure(fig, "scatter", filename)
 
 
@@ -1793,15 +1799,6 @@ def _plot_and_save_scatter_series(
         Flag to set output scatter generated as a hexbin frequency distribution plot of 2 cubes on single plot.
         Else scatter of all points, with potential to overplot many comparisons on same plot.
     """
-    if hexbin:
-        # Check cubes using same functionality as the difference operator.
-        if len(cubes) != 2:
-            raise ValueError(
-                "Cubes should contain exactly 2 cubes for hexbin plotting."
-            )
-        title = title.replace("scatter", "hexbin")
-        filename = filename.replace("scatter", "hexbin")
-
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
 
@@ -3456,6 +3453,15 @@ def plot_scatter_series(
             seq_coord, nplot, recipe_title, filename
         )
 
+        if hexbin:
+            # Check cubes using same functionality as the difference operator.
+            if len(cubes) != 2:
+                raise ValueError(
+                    "Cubes should contain exactly 2 cubes for hexbin plotting."
+                )
+            plot_title = plot_title.replace("scatter", "hexbin")
+            plot_filename = plot_filename.replace("scatter", "hexbin")
+
         # Do the actual plotting.
         plotting_func(
             cube_slice,
@@ -3470,7 +3476,6 @@ def plot_scatter_series(
 
     # Add list of plots to plot metadata.
     complete_plot_index = _append_to_plot_index(plot_index)
-
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
 
