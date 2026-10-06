@@ -391,10 +391,11 @@ def _build_station_lookup(cubes: CubeList, common_stations: list[str]) -> Statio
 
 
 def _generate_forecast_period(cubes) -> np.ndarray:
-    # --------------------------------------------------------------
-    # Generate forecast period
-    # --------------------------------------------------------------
+    """Generate forecast period values from time and forecast reference time.
 
+    Calculates the forecast period in hours for each time point, relative to
+    the first forecast reference time of the first cube.
+    """
     time_coord = cubes[0].coord("time")
     frt_coord = cubes[0].coord("forecast_reference_time")
 
