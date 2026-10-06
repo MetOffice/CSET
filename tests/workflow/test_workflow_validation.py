@@ -15,6 +15,7 @@
 """Workflow validation tests."""
 
 import subprocess
+from textwrap import dedent
 
 import pytest
 
@@ -43,7 +44,11 @@ def test_rose_macro_validation(workflow):
     """Check the rose configuration matches its metadata."""
     # Populate SITE setting.
     with open(workflow / "rose-suite.conf", "rt") as fp:
-        conf = fp.read().replace("SITE=", 'SITE="localhost"')
+        conf = fp.read()
+        conf += dedent("""\
+            [template variables]
+            SITE="localhost"
+        """)
     with open(workflow / "rose-suite.conf", "wt") as fp:
         fp.write(conf)
     # Validate the configuration against the metadata.
