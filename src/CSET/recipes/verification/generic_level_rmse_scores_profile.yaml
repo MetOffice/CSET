@@ -37,6 +37,8 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
+  - operator: misc.extract_common_time_points
+
   - operator: scoreswrappers.scores_rmse
     preserved_coordinates: $PRESERVED_COORDS
 
