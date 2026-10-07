@@ -395,3 +395,14 @@ def test_install_restricted_files(monkeypatch):
     )
     CSET.main(["cset", "install-restricted-files", location])
     assert ran_restricted
+
+
+def test_probe_parser():
+    """Test parsing probe command arguments."""
+    parser = CSET.setup_argument_parser()
+
+    args = parser.parse_args(["probe", "test1.nc", "test2.nc"])
+
+    assert args.subparser == "probe"
+    assert args.file_paths == ["test1.nc", "test2.nc"]
+    assert args.func == CSET._probe_command
