@@ -36,7 +36,7 @@ steps:
     coordinate: $VERTICAL_COORDINATE
 
 
-  - operator: misc.difference
+  - operator: misc.extract_common_time_points
 
   - operator: transect.calc_transect
     startcoords: $START_COORDS
