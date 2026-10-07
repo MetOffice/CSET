@@ -1,5 +1,5 @@
 category: Cellstats
-title: "Feature size $VARNAME over all times.\n Threshold $CELLTRACK_THRESHOLD"
+title: "Feature size $VARNAME over all times.\n Threshold $CELLTRACK_THRESHOLD" (under_threshold = $CELLTRACK_UNDER_THRESHOLD)
 description: |
   Uses the feature.cell_stats operator to calculate cell size (in gridboxes) for
   identified features.
