@@ -846,6 +846,18 @@
     "max": 1400,
     "min": -1400
   },
+  "surface_net_shortwave_flux_radiative_timestep": {
+    "cmap": "bwr",
+    "max": 1400,
+    "min": -1400,
+    "ymax": 850,
+    "ymin": 0
+  },
+  "surface_net_shortwave_flux_radiative_timestep_difference": {
+    "cmap": "PuOr",
+    "max": 1400,
+    "min": -1400
+  },
   "temperature_at_pressure_levels": {
     "cmap": "RdYlBu_r",
     "max": 320,
@@ -938,6 +950,16 @@
     "max": 2.0,
     "min": -2.0
   },
+  "toa_upward_clear_shortwave_flux_radiative_timestep": {
+    "cmap": "Greys",
+    "max": 500.0,
+    "min": 0.0
+  },
+  "toa_upward_clear_shortwave_flux_radiative_timestep_difference": {
+    "cmap": "PuOr",
+    "max": 100,
+    "min": -100
+  },
   "toa_upward_longwave_flux_radiative_timestep": {
     "cmap": "Greys",
     "max": 350.0,
@@ -956,6 +978,16 @@
     "min": 0.0
   },
   "toa_upward_shortwave_flux_difference": {
+    "cmap": "PuOr",
+    "max": 100,
+    "min": -100
+  },
+  "toa_upward_shortwave_flux_radiative_timestep": {
+    "cmap": "Greys",
+    "max": 500.0,
+    "min": 0.0
+  },
+  "toa_upward_shortwave_flux_radiative_timestep_difference": {
     "cmap": "PuOr",
     "max": 100,
     "min": -100
