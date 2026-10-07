@@ -273,22 +273,22 @@ def test_um_normalise_callback_missing_entry(cube, caplog):
     assert level == logging.WARNING
 
 
-def test_lfric_normalise_callback_remove_attrs(cube):
-    """Correctly remove unneeded attributes."""
-    cube.attributes["uuid"] = "87096862-89c3-4749-9c6c-0be91c2a7954"
-    cube.attributes["timeStamp"] = "2024-May-20 12:29:21 GMT"
-    read._lfric_normalise_callback(cube)
-    assert "uuid" not in cube.attributes
-    assert "timeStamp" not in cube.attributes
-
-
 def test_lfric_normalise_callback_sort_stash(cube):
     """Correctly sort STASH code lists."""
     cube.attributes["um_stash_source"] = "['m01s03i025', 'm01s00i025']"
-    read._lfric_normalise_callback(cube)
+    read._lfric_stash_source_callback(cube)
     actual = cube.attributes["um_stash_source"]
     expected = "['m01s00i025', 'm01s03i025']"
     assert actual == expected
+
+
+def test_read_cubes_no_unwanted_attrs(cube):
+    """Correctly remove unneeded attributes."""
+    cube.attributes["uuid"] = "87096862-89c3-4749-9c6c-0be91c2a7954"
+    cube.attributes["timeStamp"] = "2024-May-20 12:29:21 GMT"
+    read._clean_unwanted_cube_attributes(cube)
+    assert "uuid" not in cube.attributes
+    assert "timeStamp" not in cube.attributes
 
 
 def test_lfric_time_coord_fix_callback():
