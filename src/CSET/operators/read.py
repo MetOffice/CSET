@@ -50,7 +50,7 @@ class NoDataError(FileNotFoundError):
     """Error that no data has been loaded."""
 
 
-def probe_variables(file_paths: list[str] | str):
+def _probe_variables(file_paths: list[str] | str):
     """Return variables in input data using CSET-normalised long names.
 
     Files are loaded using the standard CSET loading callbacks, so UM STASH

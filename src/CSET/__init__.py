@@ -274,9 +274,9 @@ def _bake_command(args, unparsed_args):
 
 
 def _probe_command(args, unparsed_args):
-    from CSET.operators.read import probe_variables
+    from CSET.operators.read import _probe_variables
 
-    variables = probe_variables(args.file_paths)
+    variables = _probe_variables(args.file_paths)
 
     print("Valid variables...")
     print([name for name in variables])

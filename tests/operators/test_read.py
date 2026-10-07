@@ -1543,7 +1543,7 @@ def test_probe_variables(tmp_path):
     input_file = tmp_path / "test.nc"
     iris.save([cube1, cube2], input_file)
 
-    result = read.probe_variables(str(input_file))
+    result = read._probe_variables(str(input_file))
 
     assert result == [
         "eastward_wind_at_10m",
@@ -1565,7 +1565,7 @@ def test_probe_variables_10mwind_added(tmp_path):
     input_file = tmp_path / "test.nc"
     iris.save([cube1, cube2], input_file)
 
-    result = read.probe_variables(str(input_file))
+    result = read._probe_variables(str(input_file))
 
     assert result == [
         "eastward_wind_at_10m",
@@ -1588,7 +1588,7 @@ def test_probe_variables_ignores_missing_long_names(tmp_path):
     input_file = tmp_path / "test.nc"
     iris.save([cube1, cube2], input_file)
 
-    result = read.probe_variables(str(input_file))
+    result = read._probe_variables(str(input_file))
 
     assert result == ["temperature_at_screen_level"]
 
@@ -1603,4 +1603,4 @@ def test_probe_variables_no_long_names(tmp_path):
     input_file = tmp_path / "test.nc"
     iris.save(cube, input_file)
 
-    assert read.probe_variables(str(input_file)) == []
+    assert read._probe_variables(str(input_file)) == []
