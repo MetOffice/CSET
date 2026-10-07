@@ -115,6 +115,18 @@ def setup_argument_parser() -> argparse.ArgumentParser:
     )
     parser_bake.set_defaults(func=_bake_command)
 
+    parser_probe = subparsers.add_parser(
+        "probe",
+        help="list variables in input data understood by CSET",
+    )
+    parser_probe.add_argument(
+        "file_paths",
+        type=str,
+        nargs="+",
+        help="input files, directories, or glob patterns",
+    )
+    parser_probe.set_defaults(func=_probe_command)
+
     parser_graph = subparsers.add_parser("graph", help="visualise a recipe file")
     parser_graph.add_argument(
         "-d",
@@ -259,6 +271,15 @@ def _bake_command(args, unparsed_args):
         args.plot_resolution,
         args.skip_write,
     )
+
+
+def _probe_command(args, unparsed_args):
+    from CSET.operators.read import _probe_variables
+
+    variables = _probe_variables(args.file_paths)
+
+    print("Valid variables...")
+    print([name for name in variables])
 
 
 def _graph_command(args, unparsed_args):
