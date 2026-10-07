@@ -1,5 +1,5 @@
 category: Cellstats
-title: "Feature effective diameter $VARNAME over all times.\n Threshold $CELLTRACK_THRESHOLD" (under_threshold = $CELLTRACK_UNDER_THRESHOLD)
+title: "Feature effective diameter $VARNAME over all times.\n Threshold $CELLTRACK_THRESHOLD (under_threshold = $CELLTRACK_UNDER_THRESHOLD)"
 description: |
   Uses the feature.cell_stats operator to calculate effective diameter for
   identified features.
@@ -11,7 +11,7 @@ steps:
 
   - operator: filters.filter_multiple_cubes
     constraint:
-     operator: constraints.combine_constraints
+      operator: constraints.combine_constraints
       variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
