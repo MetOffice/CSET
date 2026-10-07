@@ -29,6 +29,8 @@ steps:
   - operator: collapse.collapse_by_validity_time
     method: MEAN
 
+  - operator: misc.extract_common_time_points
+
   - operator: misc.difference
 
   - operator: plot.spatial_pcolormesh_plot

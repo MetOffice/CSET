@@ -26,6 +26,8 @@ steps:
     coordinate: time
     method: $METHOD
 
+  - operator: misc.extract_common_time_points
+
   - operator: misc.difference
 
   - operator: plot.spatial_pcolormesh_plot
