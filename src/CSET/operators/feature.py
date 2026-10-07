@@ -214,10 +214,8 @@ def cell_stats(
         analysed. Cube must have horizontal coordinates on a regular grid.
         The cube must also have a time coordinate, which is used to identify features in
         each timestep.
-    threshold: float | list[float]
-        The threshold value(s) for feature detection. If a list is provided, each value
-        is used to identify features in the corresponding cube in the cubelist. Therefore,
-        the list should match the number of models.
+    threshold: float
+        The threshold value for feature detection.
     under_threshold: bool, optional
         If set to True, features are identified where the data is below the threshold.
         If set to False, features are identified where the data is above the threshold.
@@ -265,24 +263,13 @@ def cell_stats(
     # Setup containing cube list
     cell_stats_cubelist = iris.cube.CubeList()
 
-    # If threshold is a list, check that it matches the number of cubes
-    if isinstance(threshold, list):
-        if len(threshold) != len(cubes):
-            raise ValueError(
-                f"Length of threshold list ({len(threshold)}) does not match "
-                f"number of cubes ({len(cubes)})."
-            )
-    # else, make it iterable by repeating the same value for each cube
-    else:
-        threshold = [threshold] * len(cubes)
-
     # Run tracking on all input data
-    for cube, thresh in zip(cubes, threshold, strict=True):
+    for cube in cubes:
         model_name = cube.attributes.get("model_name", None)
         # Setup config
         tracker_config = {
             "FEATURE": {
-                "threshold": thresh,
+                "threshold": threshold,
                 "under_threshold": under_threshold,
                 "min_size": min_size,
             },
