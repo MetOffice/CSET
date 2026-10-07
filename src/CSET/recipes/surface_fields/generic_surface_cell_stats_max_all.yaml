@@ -11,8 +11,15 @@ steps:
 
   - operator: filters.filter_multiple_cubes
     constraint:
-      operator: constraints.generate_var_constraint
-      varname: $VARNAME
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+
 
   - operator: feature.cell_stats
     threshold: $CELLTRACK_THRESHOLD
