@@ -409,8 +409,16 @@ def _set_title_and_filename(
             plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
 
     if model_name:
-        plot_filename = f"{model_name}_{plot_filename}"
-        plot_title = f"{model_name}_{plot_title}"
+        if "the comparison model" in plot_title:
+            plot_title = plot_title.replace(
+                "the comparison model", model_name or "the comparison model"
+            )
+            plot_filename = plot_filename.replace(
+                "the comparison model", model_name or "the comparison model"
+            )
+        else:
+            plot_filename = f"{model_name}_{plot_filename}"
+            plot_title = f"{model_name}_{plot_title}"
 
     return plot_title, plot_filename
 
