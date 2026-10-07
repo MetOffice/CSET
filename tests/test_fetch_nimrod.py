@@ -105,8 +105,8 @@ def test_retrieve_nimrod_saves_observation_and_weights(tmp_path, monkeypatch):
     monkeypatch.setenv("NIMROD_COMP_2KM", "False")
     monkeypatch.setenv("NIMROD_COMP_5MIN", "False")
     monkeypatch.setenv("NIMROD_WEIGHTS", "True")
-    monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "2026-05-07T12:00:00")
-    monkeypatch.setenv("ANALYSIS_LENGTH", "PT00H")
+    monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "2026-04-07T12:00:00")
+    monkeypatch.setenv("ANALYSIS_LENGTH", "PT01H")
     rose_datac = tmp_path / "rose_datac"
     monkeypatch.setenv("ROSE_DATAC", str(rose_datac))
 
@@ -144,13 +144,13 @@ def test_retrieve_nimrod_saves_observation_and_weights(tmp_path, monkeypatch):
     fetch_nimrod.apply_radar_weights.assert_called_once_with(obs_cube, weights_cube)
 
     expected_obs_file = str(
-        Path(rose_datac) / "data" / "nimrod_xkm" / "202605071200_nimrod_xkm.nc"
+        Path(rose_datac) / "data" / "nimrod_xkm" / "202604071300_nimrod_xkm.nc"
     )
     expected_weight_file = str(
         Path(rose_datac)
         / "data"
         / "nimrod_xkm_weights"
-        / "202605071200_nimrod_xkm_weights.nc"
+        / "202604071300_nimrod_xkm_weights.nc"
     )
 
     saved_paths = [path for _, path in save_calls]
