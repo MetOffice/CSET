@@ -442,9 +442,6 @@ def difference(cubes: CubeList):
     if base_lat_direction != other_lat_direction:
         other.data = np.flip(other.data, other.coord(other_lat_name).cube_dims(other))
 
-    # Extract just common time points.
-    base, other = _extract_common_time_points(base, other)
-
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])
     logger.debug("Base: %s\nOther: %s", base, other)
@@ -468,9 +465,12 @@ def difference(cubes: CubeList):
     return difference
 
 
-def _extract_common_time_points(base: Cube, other: Cube) -> tuple[Cube, Cube]:
+def extract_common_time_points(cubes: CubeList) -> CubeList:
     """Extract common time points from cubes to allow comparison."""
-    # Get the name of the first non-scalar time coordinate.
+    base = cubes[0]
+    others = cubes[1:]
+    list_shared_times: list[set[int]] = []
+
     time_coord = next(
         (
             coord.name()
@@ -483,7 +483,37 @@ def _extract_common_time_points(base: Cube, other: Cube) -> tuple[Cube, Cube]:
     )
     if not time_coord:
         logger.debug("No time coord, skipping equalisation.")
-        return (base, other)
+        return cubes
+
+    for other in iter_maybe(others):
+        list_shared_times.append(_get_shared_times(base, other, time_coord))
+
+    shared_times_all = reduce(lambda x, y: x.union(y), list_shared_times)
+
+    logger.debug("Shared times: %s", shared_times_all)
+
+    time_constraint = iris.Constraint(
+        coord_values={
+            time_coord: lambda cell, shared_times=shared_times_all: (
+                cell.point in shared_times
+            )
+        }
+    )
+
+    # Extract points matching the shared times.
+
+    for cube in cubes:
+        cube.extract(time_constraint)
+        if cube is None:
+            raise ValueError("No common time points found!")
+
+    return cubes
+
+
+def _get_shared_times(base: Cube, other: Cube, time_coord) -> set[int]:
+    """Extract common time points from cubes to allow comparison."""
+    # Get the name of the first non-scalar time coordinate.
+
     base_time_coord = base.coord(time_coord)
     other_time_coord = other.coord(time_coord)
     logger.debug("Base: %s\nOther: %s", base_time_coord, other_time_coord)
@@ -501,19 +531,35 @@ def _extract_common_time_points(base: Cube, other: Cube) -> tuple[Cube, Cube]:
         other_times = other_time_coord.units.num2date(other_time_coord.points)
         shared_times = set.intersection(set(base_times), set(other_times))
     logger.debug("Shared times: %s", shared_times)
-    time_constraint = iris.Constraint(
-        coord_values={
-            time_coord: lambda cell, shared_times=shared_times: (
-                cell.point in shared_times
-            )
-        }
-    )
-    # Extract points matching the shared times.
-    base = base.extract(time_constraint)
-    other = other.extract(time_constraint)
-    if base is None or other is None:
-        raise ValueError("No common time points found!")
-    return (base, other)
+    return shared_times
+
+
+def _extract_common_time_points_multiplecubes(
+    cubes: iris.cube.CubeList,
+) -> iris.cube.CubeList:
+    """Equalise forecast periods across all cubes."""
+    if len(cubes) < 2:
+        return cubes
+
+    # Check all cubes have identical forecast reference times.
+    try:
+        reference_frts = cubes[0].coord("forecast_reference_time").points
+
+        for cube in cubes[1:]:
+            cube_frts = cube.coord("forecast_reference_time").points
+
+            if not np.array_equal(reference_frts, cube_frts):
+                raise ValueError(
+                    "Cubes do not share the same forecast_reference_time values."
+                )
+
+    except iris.exceptions.CoordinateNotFoundError as err:
+        raise ValueError(
+            "All cubes must have a forecast_reference_time coordinate."
+        ) from err
+
+    # Keep only forecast periods shared by all cubes.
+    return extract_common_points(cubes, "forecast_period")
 
 
 def convert_units(cubes: iris.cube.Cube | iris.cube.CubeList, units: str):

@@ -21,6 +21,8 @@ steps:
 
   - operator: wind.convert_to_beaufort_scale
 
+  - operator: misc.extract_common_time_points
+
   - operator: misc.difference
 
   - operator: plot.spatial_pcolormesh_plot
