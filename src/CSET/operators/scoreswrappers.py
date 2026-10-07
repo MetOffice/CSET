@@ -705,7 +705,7 @@ def _make_scores_cube(
 
 
 def _fix_spatial_coord(base_cube: Cube, scores_cube: Cube):
-    if not (scores_cube.coords("grid_latitude") or base_cube.coords("grid_latitude")):
+    if not scores_cube.coords("grid_latitude") or not base_cube.coords("grid_latitude"):
         return
     if not scores_cube.coord("grid_latitude").coord_system:
         for xy_name in ("grid_latitude", "grid_longitude"):
