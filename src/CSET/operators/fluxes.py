@@ -164,7 +164,7 @@ def net_radiative_flux(
     upwelling_flux: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """
-    Calculate net downward radiative flux. 
+    Calculate net downward radiative flux.
 
     Computes:
 
@@ -172,7 +172,7 @@ def net_radiative_flux(
 
     where positive values indicate a net downward flux.
     Will work for a pair of downwelling and upwelling fluxes at any atmospheric level.
-    
+
     Parameters
     ----------
     downwelling_flux : iris.cube.Cube or iris.cube.CubeList
@@ -196,14 +196,14 @@ def net_radiative_flux(
         strict=True,
     ):
         down_name = down_cube.name().lower()
-        up_name   = up_cube.name().lower()
+        up_name = up_cube.name().lower()
         if ("shortwave" in down_name and "longwave" in up_name) or (
             "longwave" in down_name and "shortwave" in up_name
         ):
             raise ValueError("Cannot combine shortwave and longwave fluxes")
 
         net_flux = down_cube - up_cube
-        name     = down_cube.name().lower()
+        name = down_cube.name().lower()
         if "shortwave" in name:
             output_name = "net_downward_shortwave_flux"
         elif "longwave" in name:
@@ -212,7 +212,7 @@ def net_radiative_flux(
             output_name = "net_downward_radiative_flux"
 
         net_flux.rename(output_name)
-        net_flux.units    = down_cube.units
+        net_flux.units = down_cube.units
         net_flux.var_name = output_name
 
         out.append(net_flux)
