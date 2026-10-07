@@ -33,8 +33,5 @@ steps:
       # varname: feature_max
       # varname: feature_effective_diameter
 
-  # Flatten data across case study period
-  - operator: misc.flatten
-    remove_nans: True
-
   - operator: plot.plot_histogram_series
+    sequence_coordinate: realization # plots a single histogram across all times in input data
