@@ -16,13 +16,14 @@
 
 import iris
 import iris.cube
+import isodate
 import numpy as np
 import pytest
 
 from CSET.operators import aggregate
 
 
-def test_aggregate(cube):
+def test_aggregate(cube, long_forecast_multi_day):
     """Aggregate time to 2 hour intervals."""
     # Set test interval to 2 hours.
     interval = "PT2H"
@@ -39,6 +40,52 @@ def test_aggregate(cube):
     assert len(aggregated_cube.coords()) == len(cube.coords()), (
         "aggregated cube does not have additional aux coordinate"
     )
+
+
+def test_aggregate_multi_frt(long_forecast_multi_day):
+    """Aggregate time to 1 hour intervals."""
+    # Set test interval to 1 hours.
+
+    interval = "PT1H"
+
+    aggregated_cube = aggregate.time_aggregate(
+        long_forecast_multi_day.copy(), method="SUM", interval_iso=interval
+    )
+    # Check if number of coords on aggregated cube one less than original cube,
+    # as the time aux coord is removed.
+    assert len(aggregated_cube.coords()) + 1 == len(long_forecast_multi_day.coords())
+
+
+def test_aggregate_in_time_single_frt(cube):
+    """Aggregate time to 2 hour intervals."""
+    # Set test interval to 2 hours.
+    interval_iso = "PT2H"
+    timedelta = isodate.parse_duration(interval_iso)
+    interval = int(timedelta.total_seconds() / 3600)
+
+    aggregated_cube = aggregate._aggregate_in_time_single_frt(
+        cube.copy(), method="SUM", interval=interval
+    )
+
+    # Check if number of coords on aggregated cube is same as original cube.
+    assert len(aggregated_cube.coords()) == len(cube.coords()), (
+        "aggregated cube does not have additional aux coordinate"
+    )
+
+
+def test_aggregate_in_time_multi_frt(long_forecast_multi_day):
+    """Aggregate time to 1 hour intervals."""
+    # Set test interval to 1 hour.
+    interval_iso = "PT1H"
+    timedelta = isodate.parse_duration(interval_iso)
+    interval = int(timedelta.total_seconds() / 3600)
+
+    aggregated_cube = aggregate._aggregate_in_time_multiple_frt(
+        long_forecast_multi_day.copy(), method="SUM", interval=interval
+    )
+    # Check if number of coords on aggregated cube one less than original cube,
+    # as the time aux coord is removed.
+    assert len(aggregated_cube.coords()) + 1 == len(long_forecast_multi_day.coords())
 
 
 def test_ensure_aggregatable_across_cases_true_aggregatable_cube(

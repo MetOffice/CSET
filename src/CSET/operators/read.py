@@ -20,6 +20,7 @@ import functools
 import glob
 import itertools
 import logging
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Literal
 
@@ -31,6 +32,7 @@ import iris.cube
 import iris.exceptions
 import iris.util
 import numpy as np
+from iris._constraints import ConstraintCombination
 from iris.analysis.cartography import rotate_pole, rotate_winds
 
 from CSET._common import iter_maybe
@@ -46,6 +48,24 @@ logger = logging.getLogger(__name__)
 
 class NoDataError(FileNotFoundError):
     """Error that no data has been loaded."""
+
+
+def _probe_variables(file_paths: list[str] | str):
+    """Return variables in input data using CSET-normalised long names.
+
+    Files are loaded using the standard CSET loading callbacks, so UM STASH
+    codes are mapped to their corresponding LFRic names where possible.
+    """
+    # Use _load_model to make use of normalisation callbacks.
+    cubes = _load_model(file_paths, model_name=None, constraint=None)
+
+    variables = {cube.long_name for cube in cubes if cube.long_name is not None}
+
+    # Add 10m wind, if eastward and northward wind exist.
+    if "eastward_wind_at_10m" in variables and "northward_wind_at_10m" in variables:
+        variables.add("wind_speed_at_10m")
+
+    return sorted(variables)
 
 
 def read_cube(
@@ -909,7 +929,8 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
 
 
 def _compute_winds(
-    cubes: iris.cube.CubeList, constraint: iris.Constraint | None = None
+    cubes: iris.cube.CubeList,
+    constraint: iris.Constraint | ConstraintCombination | None = None,
 ):
     """To compute wind_speed from vector components if not available as diagnostic.
 
@@ -928,8 +949,12 @@ def _compute_winds(
 
     if constraint is None:
         return cubes
-
-    filter_windspeed = getattr(constraint, "varname", None)
+    filter_windspeed = None
+    for constr in _flatten_combined_constraint(constraint):
+        filter_windspeed = getattr(constr, "varname", None)
+        if filter_windspeed:
+            constraint = constr
+            break
 
     u_constr = iris.Constraint("eastward_wind_at_10m")
     v_constr = iris.Constraint("northward_wind_at_10m")
@@ -960,6 +985,17 @@ def _compute_winds(
     return cubes
 
 
+def _flatten_combined_constraint(
+    con: iris.Constraint | ConstraintCombination,
+) -> Iterator[iris.Constraint]:
+    # yields constraints of a possibly nested constraint combination
+    if isinstance(con, ConstraintCombination):
+        yield from _flatten_combined_constraint(con.lhs)
+        yield from _flatten_combined_constraint(con.rhs)
+    else:
+        yield con
+
+
 def _add_wind_speed_um(cubes: iris.cube.CubeList):
     """Add windspeeds to cubes from components."""
     u_wind = cubes.extract_cube(iris.Constraint("eastward_wind_at_10m"))
@@ -968,7 +1004,7 @@ def _add_wind_speed_um(cubes: iris.cube.CubeList):
     wspd10.attributes["STASH"] = "m01s03i227"
     wspd10.standard_name = "wind_speed"
     wspd10.long_name = "wind_speed_at_10m"
-    wspd10.units = "ms-1"
+    wspd10.units = "m s-1"
     cubes.append(wspd10)
 
 

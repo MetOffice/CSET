@@ -789,6 +789,17 @@ def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube
 
     base, other = _extract_common_time_points(base, other)
 
+    if base.coords("pressure") and other.coords("pressure"):
+        common_pressure = np.intersect1d(
+            base.coord("pressure").points,
+            other.coord("pressure").points,
+        )
+
+        pressure_constraint = iris.Constraint(pressure=common_pressure.tolist())
+
+        base = base.extract(pressure_constraint)
+        other = other.extract(pressure_constraint)
+
     # Get spatial coord names.
     base_lat_name, base_lon_name = get_cube_yxcoordname(base)
     other_lat_name, other_lon_name = get_cube_yxcoordname(other)

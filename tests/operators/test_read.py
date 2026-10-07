@@ -1320,7 +1320,9 @@ def test_compute_winds(vector_cubes, tmp_working_dir):
     output_cubes = read._compute_winds(vector_cubes, constraint=constraint)
     assert len(output_cubes) == 1
     assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))
-    assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))[0].units == "ms-1"
+    assert (
+        output_cubes.extract(iris.Constraint("wind_speed_at_10m"))[0].units == "m s-1"
+    )
     u = vector_cubes[0].data
     v = vector_cubes[1].data
     expected_wind = (u**2 + v**2) ** 0.5
@@ -1504,3 +1506,101 @@ def test_wind_observed(wind_cubelist_observed):
     assert len(cubes) == 1
     observed_speed = cubes.extract_cube(iris.Constraint("observed_wind_speed_at_10m"))
     assert observed_speed
+
+
+def test_wind_combined_constraint(wind_cubelist_um):
+    """UM cubes filtered to wind speed only."""
+    cubes = wind_cubelist_um.copy()
+    var_constraint = constraints.generate_var_constraint("wind_speed_at_10m")
+    constraint_1 = iris.Constraint(name="air_potential_temperature")
+    constraint_2 = iris.Constraint(name="temperature_at_screen_level")
+    combined_constraint_1 = var_constraint & constraint_1
+    combined_constraint_2 = combined_constraint_1 & constraint_2
+    cubes = read._compute_winds(cubes, constraint=combined_constraint_2)
+    assert len(cubes) == 1
+    speed = cubes.extract_cube(iris.Constraint("wind_speed_at_10m"))
+    assert speed.standard_name == "wind_speed"
+
+
+def test_flatten_single_constraint():
+    """A single constraint is returned unchanged."""
+    constraint = iris.Constraint(name="wind_speed_at_10m")
+    flattened = list(read._flatten_combined_constraint(constraint))
+    assert flattened == [constraint]
+
+
+def test_probe_variables(tmp_path):
+    """Test probing variables from a file."""
+    cube1 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="temperature_at_screen_level",
+    )
+    cube2 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="eastward_wind_at_10m",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save([cube1, cube2], input_file)
+
+    result = read._probe_variables(str(input_file))
+
+    assert result == [
+        "eastward_wind_at_10m",
+        "temperature_at_screen_level",
+    ]
+
+
+def test_probe_variables_10mwind_added(tmp_path):
+    """Test 10m wind added if suitable."""
+    cube1 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="eastward_wind_at_10m",
+    )
+    cube2 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="northward_wind_at_10m",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save([cube1, cube2], input_file)
+
+    result = read._probe_variables(str(input_file))
+
+    assert result == [
+        "eastward_wind_at_10m",
+        "northward_wind_at_10m",
+        "wind_speed_at_10m",
+    ]
+
+
+def test_probe_variables_ignores_missing_long_names(tmp_path):
+    """Test cubes without long names are not returned."""
+    cube1 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="temperature_at_screen_level",
+    )
+    cube2 = iris.cube.Cube(
+        np.ones((2, 2)),
+        standard_name="air_temperature",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save([cube1, cube2], input_file)
+
+    result = read._probe_variables(str(input_file))
+
+    assert result == ["temperature_at_screen_level"]
+
+
+def test_probe_variables_no_long_names(tmp_path):
+    """Test probing cubes with no long names returns an empty list."""
+    cube = iris.cube.Cube(
+        np.ones((2, 2)),
+        standard_name="air_temperature",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save(cube, input_file)
+
+    assert read._probe_variables(str(input_file)) == []
