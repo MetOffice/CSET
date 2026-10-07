@@ -843,8 +843,8 @@
   },
   "surface_net_shortwave_flux_difference": {
     "cmap": "PuOr",
-    "max": 1400,
-    "min": -1400
+    "max": 80,
+    "min": -80
   },
   "surface_net_shortwave_flux_radiative_timestep": {
     "cmap": "bwr",
@@ -855,8 +855,8 @@
   },
   "surface_net_shortwave_flux_radiative_timestep_difference": {
     "cmap": "PuOr",
-    "max": 1400,
-    "min": -1400
+    "max": 80,
+    "min": -80
   },
   "temperature_at_pressure_levels": {
     "cmap": "RdYlBu_r",
