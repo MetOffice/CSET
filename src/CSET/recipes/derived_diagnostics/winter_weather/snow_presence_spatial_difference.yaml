@@ -25,6 +25,8 @@ steps:
     condition: 'gt'
     value: 0.0
 
+  - operator: misc.extract_common_time_points
+
   - operator: misc.difference
 
   - operator: plot.spatial_pcolormesh_plot

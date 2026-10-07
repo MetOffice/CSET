@@ -35,6 +35,8 @@ steps:
   - operator: misc.extract_common_points
     coordinate: $VERTICAL_COORDINATE
 
+  - operator: misc.extract_common_time_points
+
   - operator: misc.difference
 
   - operator: transect.calc_transect
