@@ -1,0 +1,81 @@
+category: Hinton
+title: ('temperature_at_screen_level',) scores rmse Hinton for model vs 
+  observation points UK_domain
+description: TODO experimental
+steps:
+  - operator: read.read_cubes
+    file_paths:
+      - $DATADIR/CSET_testdata/UM_LFRic_OBS/*.nc
+      - $DATADIR/CSET_testdata/UM_LFRic_OBS/um/*
+      - $DATADIR/CSET_testdata/UM_LFRic_OBS/lf/*
+    model_names: &id002
+      - OBS
+      - UM
+      - LF
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname:
+          - temperature_at_screen_level
+          - observed_temperature_at_screen_level
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: pressure
+        levels: []
+    subarea_type: realworld
+    subarea_extent: &id003
+      - 50
+      - 55
+      - -6
+      - 2
+
+  - operator: misc.combine_cubes_into_cubelist
+    first:
+      operator: aggregate.combine_obs_across_forecasts
+      cubes:
+        operator: filters.filter_multiple_cubes
+        constraint:
+          operator: constraints.generate_var_constraint
+          varname: observed_temperature_at_screen_level
+    second:
+      operator: regrid.interpolate_to_point_cube
+      fld:     
+        operator: aggregate.ensure_aggregatable_across_cases
+        cubes:
+          operator: filters.filter_multiple_cubes
+          constraint:
+            operator: constraints.generate_var_constraint
+            varname: temperature_at_screen_level
+
+      point_cube:
+        operator: aggregate.combine_obs_across_forecasts
+        cubes:
+          operator: filters.filter_multiple_cubes
+          constraint:
+            operator: constraints.generate_var_constraint
+            varname: observed_temperature_at_screen_level
+
+  - operator: scoreswrappers.scores_rmse_model_obs
+    preserved_coordinates: [forecast_period]
+
+  - operator: collapse.collapse
+    coordinate: "forecast_reference_time"
+    method: MEAN
+
+    # Plot the data.
+  - operator: plot.hinton_plot
+    base: UM
+    other: LF
+    magnitudes: True
+ 
+
+  # - operator: write.write_cube_to_nc
+  #   overwrite: true
+
+
+
+#Run with cset -vv bake --recipe test_hinton.yaml --output-dir $DATADIR/2408_csettesting --plot-resolution=100 --DATADIR=$DATADIR
