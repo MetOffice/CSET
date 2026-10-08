@@ -11,7 +11,7 @@ steps:
 
   - operator: filters.filter_multiple_cubes
     constraint:
-     operator: constraints.combine_constraints
+      operator: constraints.combine_constraints
       variable_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
