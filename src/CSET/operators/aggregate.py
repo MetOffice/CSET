@@ -15,6 +15,7 @@
 """Operators to aggregate across either 1 or 2 dimensions."""
 
 import logging
+from typing import NamedTuple
 
 import iris
 import iris.analysis
@@ -24,6 +25,8 @@ import iris.exceptions
 import iris.util
 import isodate
 import numpy as np
+from iris.coords import AuxCoord, DimCoord
+from iris.cube import Cube, CubeList
 
 from CSET._common import iter_maybe
 from CSET.operators._utils import is_time_aggregatable
@@ -47,12 +50,10 @@ def time_aggregate(
 
     Examples include generating hourly or 6-hourly precipitation accumulations for precipitation, or maximum screen level temperature every 3 hours.
 
-    We use the isodate class to convert ISO 8601 durations into time intervals
-    for creating a new time coordinate for aggregation.
+    resampled_cubes = iris.cube.CubeList()
 
-    We use the lambda function to pass coord and interval into the callable
-    category function in add_categorised to allow users to define their own
-    sub-daily intervals for the new time coordinate.
+    timedelta = isodate.parse_duration(interval_iso)
+    interval = int(timedelta.total_seconds() / 3600)
 
     Arguments
     ---------
@@ -203,6 +204,42 @@ def ensure_aggregatable_across_cases(
     return aggregatable_cubes
 
 
+def combine_obs_across_forecasts(cubes: CubeList) -> Cube:
+    """
+    Combine observation cubes from multiple forecast_reference_times.
+
+    Input:
+        CubeList of cubes with dimensions
+
+            (time, station)
+
+    Output:
+        Cube with dimensions
+
+            (forecast_reference_time,
+             forecast_period,
+             station)
+
+    where
+
+        time
+
+    becomes a 2D auxiliary coordinate attached to
+
+        (forecast_reference_time, forecast_period)
+
+    Only stations present in every forecast are retained.
+    All station metadata coordinates are preserved.
+    """
+    if len(cubes) < 2:
+        raise ValueError("Need at least two cubes")
+
+    common_stations = _get_common_stations(cubes)
+    station_lookup = _build_station_lookup(cubes, common_stations)
+    fp_hours = _generate_forecast_period(cubes)
+    return _make_aggregated_obs_cube(cubes, station_lookup, common_stations, fp_hours)
+
+
 def add_hour_coordinate(
     cubes: iris.cube.Cube | iris.cube.CubeList,
 ) -> iris.cube.Cube | iris.cube.CubeList:
@@ -279,6 +316,203 @@ def rolling_window_time_aggregation(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def _get_common_stations(cubes: CubeList) -> list[str]:
+    """Find stations common to all cubes with complete data."""
+    if len(cubes) < 2:
+        raise ValueError(
+            f"Need at least two cubes to find common stations, but got {len(cubes)}"
+        )
+
+    valid_station_sets = []
+
+    for cb in cubes:
+        names = cb.coord("Station_Name").points
+        data = cb.data
+
+        # Handle masked and unmasked arrays
+        if np.ma.isMaskedArray(data):
+            mask = np.ma.getmaskarray(data)
+            station_valid = ~np.any(mask, axis=0) & np.all(
+                np.isfinite(data.filled(np.nan)), axis=0
+            )
+        else:
+            station_valid = np.all(np.isfinite(data), axis=0)
+        valid_station_sets.append(set(names[station_valid]))
+
+    common_stations = sorted(set.intersection(*valid_station_sets))
+
+    logger.info(
+        "Retaining %s stations with complete observations", len(common_stations)
+    )
+
+    if not common_stations:
+        raise ValueError(
+            "No stations with complete data in all forecast_reference_times"
+        )
+    return common_stations
+
+
+class StationLookup(NamedTuple):
+    """Container for station data, forecast reference times and validity times."""
+
+    subset_data: list[np.ma.MaskedArray | np.ndarray]
+    frt_points: list[float]
+    time_points: list[np.ndarray]
+
+
+def _build_station_lookup(cubes: CubeList, common_stations: list[str]) -> StationLookup:
+    """Build station lookup for every cube."""
+    subset_data = []
+    frt_points = []
+    time_points = []
+
+    for cube in cubes:
+        names = cube.coord("Station_Name").points
+        lookup = {name: idx for idx, name in enumerate(names)}
+        station_indices = [lookup[name] for name in common_stations]
+        subcube = cube[:, station_indices]
+        subset_data.append(subcube.data)
+        frt_points.append(cube.coord("forecast_reference_time").points[0])
+        time_points.append(cube.coord("time").points)
+
+    # --------------------------------------------------------------
+    # Check all cubes have same time axis length
+    # --------------------------------------------------------------
+
+    ntime = len(time_points[0])
+
+    for t in time_points[1:]:
+        if len(t) != ntime:
+            raise ValueError("Forecasts have different numbers of lead times")
+
+    return StationLookup(subset_data, frt_points, time_points)
+
+
+def _generate_forecast_period(cubes) -> np.ndarray:
+    """Generate forecast period values from time and forecast reference time.
+
+    Calculates the forecast period in hours for each time point, relative to
+    the first forecast reference time of the first cube.
+    """
+    time_coord = cubes[0].coord("time")
+    frt_coord = cubes[0].coord("forecast_reference_time")
+
+    frt_date = frt_coord.units.num2date(frt_coord.points[0])
+
+    fp_hours = []
+    for dt in time_coord.units.num2date(time_coord.points):
+        fp_hours.append((dt - frt_date).total_seconds() / 3600)
+
+    fp_hours = np.asarray(fp_hours)
+
+    return fp_hours
+
+
+def _make_aggregated_obs_cube(
+    cubes: CubeList,
+    station_lookup: StationLookup,
+    common_stations: list[str],
+    fp_hours: np.ndarray,
+) -> Cube:
+    time_coord = cubes[0].coord("time")
+
+    # Stack data
+    data = np.stack(station_lookup.subset_data, axis=0)
+
+    # shape (forecast_reference_time, forecast_period, station)
+    # Output coordinates
+    frt_out = DimCoord(
+        station_lookup.frt_points,
+        standard_name="forecast_reference_time",
+        units=cubes[0].coord("forecast_reference_time").units,
+    )
+
+    fp_out = DimCoord(
+        fp_hours,
+        standard_name="forecast_period",
+        units="hours",
+    )
+
+    station_out = DimCoord(
+        np.arange(len(common_stations)),
+        long_name="station",
+    )
+
+    cube_out = Cube(
+        data,
+        standard_name=cubes[0].standard_name,
+        long_name=cubes[0].long_name,
+        var_name=cubes[0].var_name,
+        units=cubes[0].units,
+        attributes=cubes[0].attributes.copy(),
+        dim_coords_and_dims=[
+            (frt_out, 0),
+            (fp_out, 1),
+            (station_out, 2),
+        ],
+    )
+
+    # Preserve station metadata coordinates
+    ref_cube = cubes[0]
+
+    ref_names = ref_cube.coord("Station_Name").points
+
+    ref_lookup = {name: idx for idx, name in enumerate(ref_names)}
+
+    common_idx = [ref_lookup[name] for name in common_stations]
+
+    # skip coords as we have awkward station and station_0 arbitrary monotonic arrays.
+    for coord in ref_cube.aux_coords:
+        dims = ref_cube.coord_dims(coord)
+
+        # only coords attached solely to station axis
+        if dims != (1,):
+            continue
+
+        values = coord.points[common_idx]
+
+        # verify same in every cube
+        for cube in cubes[1:]:
+            cube_names = cube.coord("Station_Name").points
+
+            cube_lookup = {name: idx for idx, name in enumerate(cube_names)}
+
+            idx = [cube_lookup[name] for name in common_stations]
+
+            other_values = cube.coord(coord.name()).points[idx]
+
+            if not np.array_equal(
+                values,
+                other_values,
+            ):
+                raise ValueError(f"Station metadata differs for coord '{coord.name()}'")
+
+        aux = AuxCoord(
+            values,
+            standard_name=coord.standard_name,
+            long_name=coord.long_name,
+            var_name=coord.var_name,
+            units=coord.units,
+            attributes=coord.attributes.copy(),
+        )
+
+        cube_out.add_aux_coord(aux, (2,))
+
+    # Add valid-time auxiliary coord
+    time_2d = np.vstack(station_lookup.time_points)
+
+    cube_out.add_aux_coord(
+        AuxCoord(
+            time_2d,
+            standard_name="time",
+            units=time_coord.units,
+        ),
+        (0, 1),
+    )
+
+    return cube_out
 
 
 def _add_nref(cube: iris.cube.Cube):
