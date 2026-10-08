@@ -410,15 +410,13 @@ def _set_title_and_filename(
 
     if model_name:
         if "the comparison model" in plot_title:
-            plot_title = plot_title.replace(
-                "the comparison model", model_name or "the comparison model"
-            )
-            plot_filename = plot_filename.replace(
-                "the comparison model", model_name or "the comparison model"
+            plot_title = plot_title.replace("the comparison model", model_name)
+            plot_filename = slugify(
+                plot_filename.replace("the comparison model", model_name)
             )
         else:
-            plot_filename = f"{model_name}_{plot_filename}"
             plot_title = f"{model_name}_{plot_title}"
+            plot_filename = slugify(f"{model_name}_{plot_filename}")
 
     return plot_title, plot_filename
 
