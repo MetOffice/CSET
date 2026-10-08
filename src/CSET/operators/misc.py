@@ -465,8 +465,7 @@ def difference(cubes: CubeList):
     return difference
 
 
-def extract_common_time_points(cubes: CubeList) -> CubeList:
-    """Extract common time points from cubes to allow comparison."""
+def _extract_common_time_points_one_frt(cubes: CubeList) -> CubeList:
     base = cubes[0]
     others = cubes[1:]
     list_shared_times: list[set[int]] = []
@@ -508,6 +507,19 @@ def extract_common_time_points(cubes: CubeList) -> CubeList:
             raise ValueError("No common time points found!")
 
     return cubes
+
+
+def _extract_common_time_points_multiple_frt(cubes):
+
+    pass
+
+
+def extract_common_time_points(cubes: CubeList) -> CubeList:
+    """Extract common time points from cubes to allow comparison."""
+    if cubes[0].coord("forecast_reference_time"):
+        return _extract_common_time_points_multiple_frt()
+    else:
+        return _extract_common_time_points_one_frt(cubes)
 
 
 def _get_shared_times(base: Cube, other: Cube, time_coord) -> set[int]:
