@@ -14,6 +14,7 @@
 
 """Tests transect operator."""
 
+import tarfile
 from pathlib import Path
 
 import iris
@@ -23,6 +24,14 @@ import numpy as np
 import pytest
 
 from CSET.operators import plot, read, transect
+
+
+def assert_plot_in_archive(name: str, archive: str | Path = "plots.tar"):
+    """Assert a plot exists in the archive and is a valid PNG."""
+    with tarfile.open(archive) as tar:
+        assert name in tar.getnames(), f"{name} not in {tar.getnames()}"
+        data = tar.extractfile(name).read()
+    assert data.startswith(b"\x89PNG\r\n\x1a\n")
 
 
 # Session scope fixtures, so the test data only has to be loaded once.
@@ -186,8 +195,8 @@ def test_transect_plotasfuncoflongitude(transect_source_cube):
 def test_transect_model_level_spatial_contour_plot(load_cube_ml_out, tmp_working_dir):
     """Plot a contour plot of the transect model level data."""
     plot.spatial_contour_plot(load_cube_ml_out, filename="plot")
-    assert Path("plot_20210422070000.png").is_file()
-    assert Path("plot_20210422080000.png").is_file()
+    assert_plot_in_archive("plot_20210422070000.png")
+    assert_plot_in_archive("plot_20210422080000.png")
 
 
 def test_transect_model_level_spatial_pcolormesh_plot(
@@ -195,8 +204,8 @@ def test_transect_model_level_spatial_pcolormesh_plot(
 ):
     """Plot a pcolormesh plot of the transect model level data."""
     plot.spatial_pcolormesh_plot(load_cube_ml_out, filename="plot")
-    assert Path("plot_20210422070000.png").is_file()
-    assert Path("plot_20210422080000.png").is_file()
+    assert_plot_in_archive("plot_20210422070000.png")
+    assert_plot_in_archive("plot_20210422080000.png")
 
 
 def test_transect_pressure_spatial_contour_plot(
@@ -204,8 +213,8 @@ def test_transect_pressure_spatial_contour_plot(
 ):
     """Plot a contour plot of the transect pressure data."""
     plot.spatial_contour_plot(transect_source_cube_out, filename="plot")
-    assert Path("plot_20210410210000.png").is_file()
-    assert Path("plot_20210411000000.png").is_file()
+    assert_plot_in_archive("plot_20210410210000.png")
+    assert_plot_in_archive("plot_20210411000000.png")
 
 
 def test_transect_pressure_spatial_pcolormesh_plot(
@@ -213,5 +222,5 @@ def test_transect_pressure_spatial_pcolormesh_plot(
 ):
     """Plot a pcolormesh plot of the transect pressure data."""
     plot.spatial_pcolormesh_plot(transect_source_cube_out, filename="plot")
-    assert Path("plot_20210410210000.png").is_file()
-    assert Path("plot_20210411000000.png").is_file()
+    assert_plot_in_archive("plot_20210410210000.png")
+    assert_plot_in_archive("plot_20210411000000.png")

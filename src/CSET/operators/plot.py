@@ -16,12 +16,16 @@
 
 import fcntl
 import importlib.resources
+import io
 import itertools
 import json
 import logging
 import math
 import os
 import sys
+import tarfile
+import time
+from pathlib import Path
 from typing import Literal
 
 import cartopy.crs as ccrs
@@ -102,6 +106,17 @@ def _append_to_plot_index(plot_index: list) -> list:
     return complete_plot_index
 
 
+def _plot_archive_index(tar_path: Path, plot_names: list[str]) -> str:
+    if os.environ.get("CSET_GALLERY_PLOTS", "0") != "1":
+        with tarfile.open(tar_path) as tf:
+            members = {m.name: m for m in tf.getmembers()}
+        return json.dumps(
+            [[n, members[n].offset_data, members[n].size] for n in plot_names]
+        )
+    else:
+        return "tar_not_here"
+
+
 def _make_plot_html_page(plots: list):
     """Create a HTML page to display a plot image."""
     # Debug check that plots actually contains some strings.
@@ -116,15 +131,17 @@ def _make_plot_html_page(plots: list):
     title = meta.get("title", "Untitled")
     description = MarkdownIt().render(meta.get("description", "*No description.*"))
 
+    names = [Path(p).name for p in plots]
+    tar_path = _plot_archive_path()
+
+    plot_index = _plot_archive_index(Path(tar_path), names)
     # Prepare template variables.
     variables = {
         "title": title,
         "description": description,
-        "initial_plot": plots[0],
-        "plots": plots,
+        "plots": plot_index,
         "title_slug": slugify(title),
     }
-
     # Render template.
     html = render_file(template_file, **variables)
 
@@ -133,8 +150,24 @@ def _make_plot_html_page(plots: list):
         fp.write(html)
 
 
+def _append_to_plot_archive(tar_path: Path, name: str, data: bytes):
+    """Append a file's bytes to a tar, creating it if needed."""
+    info = tarfile.TarInfo(name)
+    info.size = len(data)
+    info.mtime = time.time()
+
+    with tarfile.open(tar_path, "a") as tf:
+        tf.addfile(info, io.BytesIO(data))
+
+
+def _plot_archive_path() -> Path:
+    """Tar with the .png files."""
+    cwd = Path.cwd()
+    return cwd / "plots.tar"
+
+
 def _save_close_figure(figure, plot_type: str, filename: str):
-    """Save generated plot figure file and close figure.
+    """Save generated plot figure to file and plot archive, then close figure.
 
     If running documentation gallery generation, avoid saving to file.
 
@@ -145,11 +178,28 @@ def _save_close_figure(figure, plot_type: str, filename: str):
     plot_type: str
         String identifier for plot type for logging information.
     filename: str
-        Filename for saved figure.
+        Filename for saved figure. The figure is also appended to
+        plots.tar in the same directory, under its basename.
     """
     if not in_sphinx_gallery():
-        figure.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
-        logger.info("Saved %s plot to %s", plot_type, filename)
+        path = Path(filename)
+
+        buf = io.BytesIO()
+        figure.savefig(
+            buf,
+            format=path.suffix.lstrip(".") or "png",
+            bbox_inches="tight",
+            dpi=_get_plot_resolution(),
+        )
+        data = buf.getvalue()
+        if os.environ.get("CSET_GALLERY_PLOTS", "0") != "1":
+            tar_path = _plot_archive_path()
+            _append_to_plot_archive(tar_path, path.name, data)
+            logger.info("Added %s plot to archive %s", plot_type, tar_path)
+        else:
+            figure.savefig(filename, bbox_inches="tight", dpi=_get_plot_resolution())
+            logger.info("Added %s plot to CSET gallery", plot_type)
+
         plt.close(figure)
 
 
@@ -1395,6 +1445,7 @@ def _plot_and_save_scatter_plot(
     ax.autoscale()
 
     # Save plot.
+
     _save_close_figure(fig, "scatter", filename)
 
 
@@ -1753,14 +1804,9 @@ def _plot_and_save_scatter_series(
         Flag to set output scatter generated as a hexbin frequency distribution plot of 2 cubes on single plot.
         Else scatter of all points, with potential to overplot many comparisons on same plot.
     """
-    if hexbin:
+    if hexbin and len(cubes) != 2:
         # Check cubes using same functionality as the difference operator.
-        if len(cubes) != 2:
-            raise ValueError(
-                "Cubes should contain exactly 2 cubes for hexbin plotting."
-            )
-        title = title.replace("scatter", "hexbin")
-        filename = filename.replace("scatter", "hexbin")
+        raise ValueError("Cubes should contain exactly 2 cubes for hexbin plotting.")
 
     fig = plt.figure(figsize=(10, 10), facecolor="w", edgecolor="k")
     ax = plt.gca()
@@ -3034,12 +3080,10 @@ def hinton_plot(
     ax.set_title(title)
     plt.tight_layout()
 
-    # Save plot.
-    _save_close_figure(fig, "hinton", filename)
-
     # Add file extension.
     plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
-
+    # Save plot
+    _save_close_figure(fig, "hinton", plot_filename)
     # Add list of plots to plot metadata.
     plot_index = _append_to_plot_index([plot_filename])
 
@@ -3418,6 +3462,10 @@ def plot_scatter_series(
             seq_coord, nplot, recipe_title, filename
         )
 
+        if hexbin:
+            plot_title = plot_title.replace("scatter", "hexbin")
+            plot_filename = plot_filename.replace("scatter", "hexbin")
+
         # Do the actual plotting.
         plotting_func(
             cube_slice,
@@ -3432,7 +3480,6 @@ def plot_scatter_series(
 
     # Add list of plots to plot metadata.
     complete_plot_index = _append_to_plot_index(plot_index)
-
     # Make a page to display the plots.
     _make_plot_html_page(complete_plot_index)
 

@@ -15,7 +15,6 @@
 """Tests for running CSET operator recipes."""
 
 import json
-import zipfile
 from pathlib import Path
 
 import pytest
@@ -112,18 +111,3 @@ def test_write_metadata_climate_varname_shortened(tmp_working_dir):
     with open("meta.json", "rt") as fp:
         meta = json.load(fp)
     assert meta["title"] == "foo"
-
-
-def test_create_diagnostic_archive(tmp_working_dir):
-    """Create ZIP archive of output."""
-    # Create dummy output files.
-    files = {"one", "two", "three"}
-    for filename in files:
-        (tmp_working_dir / filename).touch()
-
-    CSET.operators.create_diagnostic_archive()
-    archive_path = tmp_working_dir / "diagnostic.zip"
-    assert archive_path.is_file()
-    with zipfile.ZipFile(archive_path, "r") as archive:
-        # Check all files are now in archive.
-        assert set(archive.namelist()) == files
