@@ -60,6 +60,7 @@
         inherit = METPLUS_POINT_STAT
         [[[environment]]]
             MODEL_NAME = {{model["name"]}}
+	    MODEL_ID = m{{model["id"]}}
             model_name = {{model["name"] | lower}}
 
     [[metplus_point_stat_postproc_m{{model["id"]}}]]

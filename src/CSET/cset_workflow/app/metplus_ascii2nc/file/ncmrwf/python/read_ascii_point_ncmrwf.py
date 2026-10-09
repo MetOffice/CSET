@@ -130,6 +130,7 @@ try:
         converters={
             "TT": t_converter,
         },
+        on_bad_lines="skip",
     )
     p1["vld"] = pd.to_datetime(
         {
