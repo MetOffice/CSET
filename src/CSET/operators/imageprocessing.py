@@ -22,8 +22,8 @@ import numpy as np
 from skimage.metrics import structural_similarity
 
 from CSET._common import is_increasing
+from CSET.operators import misc
 from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
-from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.regrid import regrid_onto_cube
 
 logger = logging.getLogger(__name__)
@@ -103,25 +103,13 @@ def _SSIM_cube_preparation(
         other.data = np.flip(other.data, other.coord(other_lat_name).cube_dims(other))
 
     # Extract just common time points.
-    base, other = _extract_common_time_points(base, other)
-
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])
     logger.debug("Base: %s\nOther: %s", base, other)
 
-    # Get the name of the first non-scalar time coordinate.
-    time_coord = next(
-        (
-            coord.name()
-            for coord in filter(
-                lambda coord: coord.shape > (1,) and coord.name() in ["time", "hour"],
-                base.coords(),
-            )
-        ),
-        None,
-    )
-
-    if time_coord is None:
+    # will raise if not common times
+    time_coord = misc._ensure_common_time_points(base, other)
+    if not time_coord:
         raise ValueError("Cubes should contain a time coordinate.")
     # Create and empty CubeList for storing the time or realization data.
     return base, other, time_coord

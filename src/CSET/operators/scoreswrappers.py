@@ -30,6 +30,7 @@ from iris.cube import Cube, CubeList
 from iris.util import reverse
 
 from CSET._common import is_increasing
+from CSET.operators import misc
 from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
 from CSET.operators.constraints import (
     generate_realization_constraint,
@@ -781,6 +782,9 @@ def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube
     is likely going to need to be refactored out of CSET and perhaps moved into
     `CSET._utils` given common code between here and `misc.difference`.
     """
+    # raises value error if cube time points don't match
+    misc._ensure_common_time_points(base, other)
+
     # Set cubes into correct format using code from difference operator
 
     other_model_name = other.attributes["model_name"]

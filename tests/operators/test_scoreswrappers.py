@@ -232,10 +232,8 @@ def test_difference_flip_pressure_order(transect_source_cube_readonly):
     flipped.attributes["model_name"] = "model1"
     transect_source_cube_readonly.attributes["model_name"] = "model2"
     cubes = CubeList([transect_source_cube_readonly, flipped])
-
     # Take rmse.
     rmse_cube = scoreswrappers.scores_rmse(cubes)
-
     assert isinstance(rmse_cube, Cube)
     # As both cubes use the same data, check the difference is zero.
     assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)

@@ -461,25 +461,59 @@ def difference(cubes: CubeList):
     elif base.standard_name:
         difference.var_name = base.standard_name + "_difference"
 
+    # will raise if not common times
+    _ensure_common_time_points(base, other)
+
     difference.data = other.data - base.data
     return difference
 
 
+def _get_time_coord(cube):
+    cube = cube[0] if isinstance(cube, CubeList) else cube
+    for name in ("time", "hour"):
+        coords = cube.coords(name)
+        if coords and len(coords[0].points) > 1:
+            return name
+    return None
+
+
+def extract_common_time_points(cubes):
+    """Return cubes with common time points."""
+    coords = cubes[0].coords("forecast_reference_time")
+
+    if bool(coords) and len(coords[0].points) > 1:
+        try:
+            reference_frts = cubes[0].coord("forecast_reference_time").points
+            for cube in cubes[1:]:
+                cube_frts = cube.coord("forecast_reference_time").points
+
+                if not np.array_equal(reference_frts, cube_frts):
+                    raise ValueError(
+                        "Cubes do not share the same forecast_reference_time values."
+                    )
+
+        except iris.exceptions.CoordinateNotFoundError as err:
+            raise ValueError(
+                "All cubes must have a forecast_reference_time coordinate."
+            ) from err
+
+        return extract_common_points(cubes, "forecast_period")
+    else:
+        return _extract_common_time_points_one_frt(cubes)
+
+
 def _extract_common_time_points_one_frt(cubes: CubeList) -> CubeList:
-    base = cubes[0]
-    others = cubes[1:]
+
+    obs: Cube | None
+    models: CubeList
+    obs, models = split_obs_and_models(cubes)
+
+    base = models[0]
+    others = models[1:]
     list_shared_times: list[set[int]] = []
 
-    time_coord = next(
-        (
-            coord.name()
-            for coord in filter(
-                lambda coord: coord.shape > (1,) and coord.name() in ["time", "hour"],
-                base.coords(),
-            )
-        ),
-        None,
-    )
+    time_coord = _get_time_coord(cubes)
+
     if not time_coord:
         logger.debug("No time coord, skipping equalisation.")
         return cubes
@@ -487,7 +521,7 @@ def _extract_common_time_points_one_frt(cubes: CubeList) -> CubeList:
     for other in iter_maybe(others):
         list_shared_times.append(_get_shared_times(base, other, time_coord))
 
-    shared_times_all = reduce(lambda x, y: x.union(y), list_shared_times)
+    shared_times_all = reduce(lambda x, y: x.intersection(y), list_shared_times)
 
     logger.debug("Shared times: %s", shared_times_all)
 
@@ -500,32 +534,16 @@ def _extract_common_time_points_one_frt(cubes: CubeList) -> CubeList:
     )
 
     # Extract points matching the shared times.
-
+    cubes_common_time = CubeList()
     for cube in cubes:
-        cube.extract(time_constraint)
-        if cube is None:
-            raise ValueError("No common time points found!")
+        cubes_common_time.append(cube.extract(time_constraint))
 
-    return cubes
-
-
-def _extract_common_time_points_multiple_frt(cubes):
-
-    pass
-
-
-def extract_common_time_points(cubes: CubeList) -> CubeList:
-    """Extract common time points from cubes to allow comparison."""
-    if cubes[0].coord("forecast_reference_time"):
-        return _extract_common_time_points_multiple_frt()
-    else:
-        return _extract_common_time_points_one_frt(cubes)
+    return cubes_common_time
 
 
 def _get_shared_times(base: Cube, other: Cube, time_coord) -> set[int]:
     """Extract common time points from cubes to allow comparison."""
     # Get the name of the first non-scalar time coordinate.
-
     base_time_coord = base.coord(time_coord)
     other_time_coord = other.coord(time_coord)
     logger.debug("Base: %s\nOther: %s", base_time_coord, other_time_coord)
@@ -537,41 +555,34 @@ def _get_shared_times(base: Cube, other: Cube, time_coord) -> set[int]:
         base_times = base_time_coord.points
         other_times = other_time_coord.points
         shared_times = set.intersection(set(base_times), set(other_times))
-    else:
+    elif time_coord == "time":
         # Units don't match, so converting to datetimes for comparison.
         base_times = base_time_coord.units.num2date(base_time_coord.points)
         other_times = other_time_coord.units.num2date(other_time_coord.points)
         shared_times = set.intersection(set(base_times), set(other_times))
+
     logger.debug("Shared times: %s", shared_times)
+
+    if not shared_times:
+        raise ValueError("No common time points found!")
     return shared_times
 
 
-def _extract_common_time_points_multiplecubes(
-    cubes: iris.cube.CubeList,
-) -> iris.cube.CubeList:
-    """Equalise forecast periods across all cubes."""
-    if len(cubes) < 2:
-        return cubes
+def _ensure_common_time_points(base, other):
+    time_coord = _get_time_coord(base)
 
-    # Check all cubes have identical forecast reference times.
-    try:
-        reference_frts = cubes[0].coord("forecast_reference_time").points
+    if not time_coord:
+        return None
 
-        for cube in cubes[1:]:
-            cube_frts = cube.coord("forecast_reference_time").points
+    _get_shared_times(base, other, time_coord)
+    base_time_coord = base.coord(time_coord)
+    other_time_coord = other.coord(time_coord)
+    base_times = base_time_coord.points
+    other_times = other_time_coord.points
 
-            if not np.array_equal(reference_frts, cube_frts):
-                raise ValueError(
-                    "Cubes do not share the same forecast_reference_time values."
-                )
-
-    except iris.exceptions.CoordinateNotFoundError as err:
-        raise ValueError(
-            "All cubes must have a forecast_reference_time coordinate."
-        ) from err
-
-    # Keep only forecast periods shared by all cubes.
-    return extract_common_points(cubes, "forecast_period")
+    if not np.array_equal(base_times, other_times):
+        raise ValueError("Base and other times do not share the same time.")
+    return time_coord
 
 
 def convert_units(cubes: iris.cube.Cube | iris.cube.CubeList, units: str):
@@ -761,3 +772,16 @@ def differentiate(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def split_obs_and_models(cubes: CubeList) -> tuple[Cube | None, CubeList]:
+    """Return (obs_cube or None, CubeList of model cubes)."""
+    obs = [cb for cb in cubes if "observed" in (cb.long_name or "")]
+
+    if len(obs) > 1:
+        raise ValueError(f"Expected at most one 'observed' cube, found {len(obs)}")
+    if not obs:
+        return None, CubeList(cubes)
+
+    base = obs[0]
+    return base, CubeList(cb for cb in cubes if cb is not base)
