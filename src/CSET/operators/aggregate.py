@@ -377,10 +377,7 @@ def _build_station_lookup(cubes: CubeList, common_stations: list[str]) -> Statio
         frt_points.append(cube.coord("forecast_reference_time").points[0])
         time_points.append(cube.coord("time").points)
 
-    # --------------------------------------------------------------
     # Check all cubes have same time axis length
-    # --------------------------------------------------------------
-
     ntime = len(time_points[0])
 
     for t in time_points[1:]:
