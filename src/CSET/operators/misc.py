@@ -468,15 +468,6 @@ def difference(cubes: CubeList):
     return difference
 
 
-def _get_time_coord(cube):
-    cube = cube[0] if isinstance(cube, CubeList) else cube
-    for name in ("time", "hour"):
-        coords = cube.coords(name)
-        if coords and len(coords[0].points) > 1:
-            return name
-    return None
-
-
 def extract_common_time_points(cubes):
     """Return cubes with common time points."""
     coords = cubes[0].coords("forecast_reference_time")
@@ -541,6 +532,16 @@ def _extract_common_time_points_one_frt(cubes: CubeList) -> CubeList:
     return cubes_common_time
 
 
+def _get_time_coord(cube: Cube) -> str | None:
+    """Return the time coordinate name or None if no time coordinate is found."""
+    cube = cube[0] if isinstance(cube, CubeList) else cube
+    for name in ("time", "hour"):
+        coords = cube.coords(name)
+        if coords and len(coords[0].points) > 1:
+            return name
+    return None
+
+
 def _get_shared_times(base: Cube, other: Cube, time_coord) -> set[int]:
     """Extract common time points from cubes to allow comparison."""
     # Get the name of the first non-scalar time coordinate.
@@ -569,7 +570,7 @@ def _get_shared_times(base: Cube, other: Cube, time_coord) -> set[int]:
 
 
 def _ensure_common_time_points(base, other):
-
+    """If a time coordinate is present, raise if base and other don't have the same time points."""
     time_coord = _get_time_coord(base)
     if time_coord:
         _get_shared_times(base, other, time_coord)
