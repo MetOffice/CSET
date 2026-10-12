@@ -108,9 +108,11 @@ def _SSIM_cube_preparation(
     logger.debug("Base: %s\nOther: %s", base, other)
 
     # will raise if not common times
-    time_coord = misc._ensure_common_time_points(base, other)
+    time_coord = misc._get_time_coord(base)
     if not time_coord:
         raise ValueError("Cubes should contain a time coordinate.")
+    misc._ensure_common_time_points(base, other)
+
     # Create and empty CubeList for storing the time or realization data.
     return base, other, time_coord
 
