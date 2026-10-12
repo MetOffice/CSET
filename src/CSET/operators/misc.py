@@ -569,20 +569,17 @@ def _get_shared_times(base: Cube, other: Cube, time_coord) -> set[int]:
 
 
 def _ensure_common_time_points(base, other):
+
     time_coord = _get_time_coord(base)
+    if time_coord:
+        _get_shared_times(base, other, time_coord)
+        base_time_coord = base.coord(time_coord)
+        other_time_coord = other.coord(time_coord)
+        base_times = base_time_coord.points
+        other_times = other_time_coord.points
 
-    if not time_coord:
-        return None
-
-    _get_shared_times(base, other, time_coord)
-    base_time_coord = base.coord(time_coord)
-    other_time_coord = other.coord(time_coord)
-    base_times = base_time_coord.points
-    other_times = other_time_coord.points
-
-    if not np.array_equal(base_times, other_times):
-        raise ValueError("Base and other times do not share the same time.")
-    return time_coord
+        if not np.array_equal(base_times, other_times):
+            raise ValueError("Base and other times do not share the same time.")
 
 
 def convert_units(cubes: iris.cube.Cube | iris.cube.CubeList, units: str):
