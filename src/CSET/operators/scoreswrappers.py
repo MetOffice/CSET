@@ -789,8 +789,6 @@ def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube
 
     other_model_name = other.attributes["model_name"]
 
-    base, other = _extract_common_time_points(base, other)
-
     if base.coords("pressure") and other.coords("pressure"):
         common_pressure = np.intersect1d(
             base.coord("pressure").points,
