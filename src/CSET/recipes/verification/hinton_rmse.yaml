@@ -9,11 +9,11 @@ steps:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: [$VARNAME1, observed_$VARNAME1,
-                  $VARNAME2, observed_$VARNAME2,
-                  $VARNAME3, observed_$VARNAME3,
-                  $VARNAME4, observed_$VARNAME4,
-                  $VARNAME5, observed_$VARNAME5]
+        varname: [temperature_at_screen_level, observed_temperature_at_screen_level,
+                  air_pressure_at_mean_sea_level, observed_air_pressure_at_mean_sea_level,
+                  wind_speed_at_10m, observed_wind_speed_at_10m,
+                  visibility_in_air, observed_visibility_in_air,
+                  dew_point_temperature_at_screen_level, observed_dew_point_temperature_at_screen_level]
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
@@ -36,8 +36,8 @@ steps:
         preserved_coordinates: [forecast_period]
         cubes:
           operator: aggregate.time_aggregate
-          method: $METHOD1
-          interval_iso: $TIMEFREQ1
+          method: MEAN
+          interval_iso: PT6H
           cubes:
             operator: misc.combine_cubes_into_cubelist
             first:
@@ -46,7 +46,7 @@ steps:
                 operator: filters.filter_multiple_cubes
                 constraint:
                   operator: constraints.generate_var_constraint
-                  varname: observed_$VARNAME1
+                  varname: observed_temperature_at_screen_level
             second:
               operator: regrid.interpolate_to_point_cube
               fld:
@@ -55,14 +55,14 @@ steps:
                   operator: filters.filter_multiple_cubes
                   constraint:
                     operator: constraints.generate_var_constraint
-                    varname: $VARNAME1
+                    varname: temperature_at_screen_level
               point_cube:
                 operator: aggregate.combine_obs_across_forecasts
                 cubes:
                   operator: filters.filter_multiple_cubes
                   constraint:
                     operator: constraints.generate_var_constraint
-                    varname: observed_$VARNAME1
+                    varname: observed_temperature_at_screen_level
 
     second:
       operator: collapse.collapse
@@ -73,8 +73,8 @@ steps:
         preserved_coordinates: [forecast_period]
         cubes:
           operator: aggregate.time_aggregate
-          method: $METHOD2
-          interval_iso: $TIMEFREQ2
+          method: MEAN
+          interval_iso: PT6H
           cubes:
             operator: misc.combine_cubes_into_cubelist
             first:
@@ -83,7 +83,7 @@ steps:
                 operator: filters.filter_multiple_cubes
                 constraint:
                   operator: constraints.generate_var_constraint
-                  varname: observed_$VARNAME2
+                  varname: observed_air_pressure_at_mean_sea_level
             second:
               operator: regrid.interpolate_to_point_cube
               fld:
@@ -92,14 +92,14 @@ steps:
                   operator: filters.filter_multiple_cubes
                   constraint:
                     operator: constraints.generate_var_constraint
-                    varname: $VARNAME2
+                    varname: air_pressure_at_mean_sea_level
               point_cube:
                 operator: aggregate.combine_obs_across_forecasts
                 cubes:
                   operator: filters.filter_multiple_cubes
                   constraint:
                     operator: constraints.generate_var_constraint
-                    varname: observed_$VARNAME2
+                    varname: observed_air_pressure_at_mean_sea_level
 
     third:
       operator: collapse.collapse
@@ -110,8 +110,8 @@ steps:
         preserved_coordinates: [forecast_period]
         cubes:
           operator: aggregate.time_aggregate
-          method: $METHOD3
-          interval_iso: $TIMEFREQ3
+          method: MEAN
+          interval_iso: PT6H
           cubes:
             operator: misc.combine_cubes_into_cubelist
             first:
@@ -120,7 +120,7 @@ steps:
                 operator: filters.filter_multiple_cubes
                 constraint:
                   operator: constraints.generate_var_constraint
-                  varname: observed_$VARNAME3
+                  varname: observed_wind_speed_at_10m
             second:
               operator: regrid.interpolate_to_point_cube
               fld:
@@ -129,14 +129,14 @@ steps:
                   operator: filters.filter_multiple_cubes
                   constraint:
                     operator: constraints.generate_var_constraint
-                    varname: $VARNAME3
+                    varname: wind_speed_at_10m
               point_cube:
                 operator: aggregate.combine_obs_across_forecasts
                 cubes:
                   operator: filters.filter_multiple_cubes
                   constraint:
                     operator: constraints.generate_var_constraint
-                    varname: observed_$VARNAME3
+                    varname: observed_wind_speed_at_10m
 
     fourth:
       operator: collapse.collapse
@@ -147,8 +147,8 @@ steps:
         preserved_coordinates: [forecast_period]
         cubes:
           operator: aggregate.time_aggregate
-          method: $METHOD4
-          interval_iso: $TIMEFREQ4
+          method: MEAN
+          interval_iso: PT6H
           cubes:
             operator: misc.combine_cubes_into_cubelist
             first:
@@ -157,7 +157,7 @@ steps:
                 operator: filters.filter_multiple_cubes
                 constraint:
                   operator: constraints.generate_var_constraint
-                  varname: observed_$VARNAME4
+                  varname: observed_visibility_in_air
             second:
               operator: regrid.interpolate_to_point_cube
               fld:
@@ -166,14 +166,14 @@ steps:
                   operator: filters.filter_multiple_cubes
                   constraint:
                     operator: constraints.generate_var_constraint
-                    varname: $VARNAME4
+                    varname: visibility_in_air
               point_cube:
                 operator: aggregate.combine_obs_across_forecasts
                 cubes:
                   operator: filters.filter_multiple_cubes
                   constraint:
                     operator: constraints.generate_var_constraint
-                    varname: observed_$VARNAME4
+                    varname: observed_visibility_in_air
 
 
     fifth:
@@ -185,8 +185,8 @@ steps:
         preserved_coordinates: [forecast_period]
         cubes:
           operator: aggregate.time_aggregate
-          method: $METHOD5
-          interval_iso: $TIMEFREQ5
+          method: MEAN
+          interval_iso: PT6H
           cubes:
             operator: misc.combine_cubes_into_cubelist
             first:
@@ -195,7 +195,7 @@ steps:
                 operator: filters.filter_multiple_cubes
                 constraint:
                   operator: constraints.generate_var_constraint
-                  varname: observed_$VARNAME5
+                  varname: observed_dew_point_temperature_at_screen_level
             second:
               operator: regrid.interpolate_to_point_cube
               fld:
@@ -204,14 +204,14 @@ steps:
                   operator: filters.filter_multiple_cubes
                   constraint:
                     operator: constraints.generate_var_constraint
-                    varname: $VARNAME5
+                    varname: dew_point_temperature_at_screen_level
               point_cube:
                 operator: aggregate.combine_obs_across_forecasts
                 cubes:
                   operator: filters.filter_multiple_cubes
                   constraint:
                     operator: constraints.generate_var_constraint
-                    varname: observed_$VARNAME5
+                    varname: observed_dew_point_temperature_at_screen_level
 
 
     # Plot the data.
