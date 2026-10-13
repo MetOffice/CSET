@@ -46,7 +46,6 @@ from CSET._common import (
     render_file,
     slugify,
 )
-from CSET.operators import misc
 from CSET.operators._colormaps import (
     colorbar_map_levels,
     get_model_colors_map,
@@ -56,6 +55,7 @@ from CSET.operators._utils import (
     check_sequence_coordinate,
     check_single_cube,
     check_stamp_coordinate,
+    ensure_common_time_points,
     fully_equalise_attributes,
     get_cube_yxcoordname,
     get_num_models,
@@ -2733,7 +2733,7 @@ def qq_plot(
 
     # Extract just common time points.
     # raise value error if no shared time
-    misc._ensure_common_time_points(base, other)
+    ensure_common_time_points(base, other)
 
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])
