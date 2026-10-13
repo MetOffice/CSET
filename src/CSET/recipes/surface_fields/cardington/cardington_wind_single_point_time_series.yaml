@@ -1,6 +1,6 @@
-category: Time series of $PLOT_VARNAME at Cardington single point
-title: "Time series of $HEIGHT m mean $PLOT_VARNAME at Cardington [52.10438N, -0.42286E]"
-description: "Plots a time series of mean $PLOT_VARNAME at gridpoint nearest to Cardington."
+category: Time series of mean wind at Cardington single point
+title: "Time series of mean wind at Cardington [52.10438N, -0.42286E]"
+description: "Plots a time series of mean wind at gridpoint nearest to Cardington."
 
 steps:
   - operator: read.read_cubes
@@ -37,6 +37,7 @@ steps:
             operator: constraints.generate_attribute_constraint
             attribute: height
             value: $HEIGHT
+
 
     second:
       # --- UM: calculate vector wind from both components ---
