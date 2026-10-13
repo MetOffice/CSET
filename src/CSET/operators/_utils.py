@@ -620,18 +620,18 @@ def get_time_coord(cube: Cube) -> str | None:
     return None
 
 
-def ensure_common_time_points(base, other):
+def ensure_common_time_points(base: Cube, other: Cube):
     """If a time coordinate is present, raise if base and other don't have the same time points."""
     time_coord = get_time_coord(base)
-    if time_coord:
-        get_shared_times(base, other, time_coord)  # raises if no shared times
-        # base_time_coord = base.coord(time_coord)
-        # other_time_coord = other.coord(time_coord)
-        # base_times = base_time_coord.points
-        # other_times = other_time_coord.points
-        #
-        # if not np.array_equal(base_times, other_times):
-        #     raise ValueError("Base and other times do not share the same time.")
+    if not time_coord:
+        return
+    shared_times = get_shared_times(
+        base, other, time_coord
+    )  # raises if no shared times
+    n_base = len(base.coord(time_coord).points)
+    n_other = len(other.coord(time_coord).points)
+    if not len(shared_times) == n_base == n_other:
+        raise ValueError("Base and other cubes have different time points.")
 
 
 def get_shared_times(base: Cube, other: Cube, time_coord) -> set[int]:
