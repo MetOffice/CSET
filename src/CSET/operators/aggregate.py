@@ -403,7 +403,7 @@ def _build_station_lookup(cubes: CubeList, common_stations: list[str]) -> Statio
         # get the time points
         time_points.append(cube.coord("time").points)
 
-    # Check all cubes have same time axis length
+    # Get the time axis length
     ntime = len(time_points[0])
 
     for t in time_points[1:]:
