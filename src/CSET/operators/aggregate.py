@@ -357,24 +357,50 @@ def _get_common_stations(cubes: CubeList) -> list[str]:
 class StationLookup(NamedTuple):
     """Container for station data, forecast reference times and validity times."""
 
-    subset_data: list[np.ma.MaskedArray | np.ndarray]
+    data: list[np.ma.MaskedArray | np.ndarray]
     frt_points: list[float]
     time_points: list[np.ndarray]
 
 
 def _build_station_lookup(cubes: CubeList, common_stations: list[str]) -> StationLookup:
-    """Build station lookup for every cube."""
-    subset_data = []
+    """Build station lookup table.
+
+    This makes a data structure which contains
+
+    data_common_stations:
+        the data, for example observed_temperature_at_screen_level, but only from the common stations.
+
+    frt_points:
+        the forecast reference times.
+
+    time_points:
+        the time points.
+
+    """
+    data_common_stations = []
     frt_points = []
     time_points = []
 
     for cube in cubes:
-        names = cube.coord("Station_Name").points
-        lookup = {name: idx for idx, name in enumerate(names)}
+        # get the station names
+        station_names = cube.coord("Station_Name").points
+
+        # dict where {station_name0: idx0, station_name1: idx1, ... }
+        lookup = {station_name: idx for idx, station_name in enumerate(station_names)}
+
+        # the station indices of the common stations
         station_indices = [lookup[name] for name in common_stations]
-        subcube = cube[:, station_indices]
-        subset_data.append(subcube.data)
+
+        # get cube with only the common stations
+        cube_common_stations = cube[:, station_indices]
+
+        # get only the data from common stations cube
+        data_common_stations.append(cube_common_stations.data)
+
+        # get the forecast reference times
         frt_points.append(cube.coord("forecast_reference_time").points[0])
+
+        # get the time points
         time_points.append(cube.coord("time").points)
 
     # Check all cubes have same time axis length
@@ -383,8 +409,7 @@ def _build_station_lookup(cubes: CubeList, common_stations: list[str]) -> Statio
     for t in time_points[1:]:
         if len(t) != ntime:
             raise ValueError("Forecasts have different numbers of lead times")
-
-    return StationLookup(subset_data, frt_points, time_points)
+    return StationLookup(data_common_stations, frt_points, time_points)
 
 
 def _generate_forecast_period(cubes) -> np.ndarray:
