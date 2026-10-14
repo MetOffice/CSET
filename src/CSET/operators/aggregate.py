@@ -441,7 +441,7 @@ def _make_aggregated_obs_cube(
     time_coord = cubes[0].coord("time")
 
     # Stack data
-    data = np.stack(station_lookup.subset_data, axis=0)
+    data = np.stack(station_lookup.data, axis=0)
 
     # shape (forecast_reference_time, forecast_period, station)
     # Output coordinates
