@@ -439,7 +439,7 @@ def _make_aggregated_obs_cube(
     fp_hours: np.ndarray,
 ) -> Cube:
     time_coord = cubes[0].coord("time")
-"""Create new aggregated obs cube by rebuilding."""
+    """Create new aggregated obs cube by rebuilding."""
     # Stack data
     data = np.stack(station_lookup.data, axis=0)
 
