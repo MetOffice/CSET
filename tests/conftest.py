@@ -1314,10 +1314,10 @@ def dummy_cubelist_model_obs():
 
 
 @pytest.fixture()
-def make_cube_categorical_testing() -> iris.cube.Cube:
+def make_cube_categorical_testing() -> Callable[[np.ndarray, str, str], Cube]:
     """Create test cube."""
 
-    def _make_cube(data, long_name, model_name=None):
+    def _make_cube(data: np.ndarray, long_name: str, model_name: str):
         """Create basic 2D iris cube for testing functionality."""
         cube = iris.cube.Cube(
             np.array(data, dtype=float),
@@ -1336,10 +1336,10 @@ def make_cube_categorical_testing() -> iris.cube.Cube:
 
 
 @pytest.fixture()
-def make_cube_categorical_testing_with_time() -> iris.cube.Cube:
+def make_cube_categorical_testing_with_time() -> Callable[[np.ndarray, str, str], Cube]:
     """Create test cube."""
 
-    def _make_cube(data, long_name, model_name=None):
+    def _make_cube(data: np.ndarray, long_name: str, model_name: str):
         """Create basic 2D iris cube for testing functionality."""
         cube = iris.cube.Cube(
             np.array(data, dtype=float),
