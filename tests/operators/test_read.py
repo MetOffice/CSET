@@ -1527,3 +1527,80 @@ def test_flatten_single_constraint():
     constraint = iris.Constraint(name="wind_speed_at_10m")
     flattened = list(read._flatten_combined_constraint(constraint))
     assert flattened == [constraint]
+
+
+def test_probe_variables(tmp_path):
+    """Test probing variables from a file."""
+    cube1 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="temperature_at_screen_level",
+    )
+    cube2 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="eastward_wind_at_10m",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save([cube1, cube2], input_file)
+
+    result = read._probe_variables(str(input_file))
+
+    assert result == [
+        "eastward_wind_at_10m",
+        "temperature_at_screen_level",
+    ]
+
+
+def test_probe_variables_10mwind_added(tmp_path):
+    """Test 10m wind added if suitable."""
+    cube1 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="eastward_wind_at_10m",
+    )
+    cube2 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="northward_wind_at_10m",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save([cube1, cube2], input_file)
+
+    result = read._probe_variables(str(input_file))
+
+    assert result == [
+        "eastward_wind_at_10m",
+        "northward_wind_at_10m",
+        "wind_speed_at_10m",
+    ]
+
+
+def test_probe_variables_ignores_missing_long_names(tmp_path):
+    """Test cubes without long names are not returned."""
+    cube1 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="temperature_at_screen_level",
+    )
+    cube2 = iris.cube.Cube(
+        np.ones((2, 2)),
+        standard_name="air_temperature",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save([cube1, cube2], input_file)
+
+    result = read._probe_variables(str(input_file))
+
+    assert result == ["temperature_at_screen_level"]
+
+
+def test_probe_variables_no_long_names(tmp_path):
+    """Test probing cubes with no long names returns an empty list."""
+    cube = iris.cube.Cube(
+        np.ones((2, 2)),
+        standard_name="air_temperature",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save(cube, input_file)
+
+    assert read._probe_variables(str(input_file)) == []
