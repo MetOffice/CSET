@@ -55,6 +55,7 @@ from CSET.operators._utils import (
     check_sequence_coordinate,
     check_single_cube,
     check_stamp_coordinate,
+    ensure_common_time_points,
     fully_equalise_attributes,
     get_cube_yxcoordname,
     get_num_models,
@@ -64,7 +65,6 @@ from CSET.operators._utils import (
     validate_cubes_coords,
 )
 from CSET.operators.collapse import collapse
-from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.regrid import regrid_onto_cube
 
 logger = logging.getLogger(__name__)
@@ -2732,7 +2732,8 @@ def qq_plot(
         base = regrid_onto_cube(base, other, method="Linear")
 
     # Extract just common time points.
-    base, other = _extract_common_time_points(base, other)
+    # raise value error if no shared time
+    ensure_common_time_points(base, other)
 
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])

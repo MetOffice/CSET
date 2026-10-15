@@ -30,12 +30,15 @@ from iris.cube import Cube, CubeList
 from iris.util import reverse
 
 from CSET._common import is_increasing
-from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
+from CSET.operators._utils import (
+    ensure_common_time_points,
+    fully_equalise_attributes,
+    get_cube_yxcoordname,
+)
 from CSET.operators.constraints import (
     generate_realization_constraint,
     generate_remove_single_ensemble_member_constraint,
 )
-from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.read import _realization_callback
 from CSET.operators.regrid import regrid_onto_cube
 
@@ -787,12 +790,12 @@ def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube
     is likely going to need to be refactored out of CSET and perhaps moved into
     `CSET._utils` given common code between here and `misc.difference`.
     """
+    # raises value error if cube time points don't match
+    ensure_common_time_points(base, other)
+
     # Set cubes into correct format using code from difference operator
 
-    # Extract just common time points.
     other_model_name = other.attributes["model_name"]
-
-    base, other = _extract_common_time_points(base, other)
 
     if base.coords("pressure") and other.coords("pressure"):
         common_pressure = np.intersect1d(
