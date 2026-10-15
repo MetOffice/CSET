@@ -234,6 +234,7 @@ def combine_obs_across_forecasts(cubes: CubeList) -> Cube:
     if len(cubes) < 2:
         raise ValueError("Need at least two cubes")
 
+    _normalise_station_metadata(cubes)
     common_stations = _get_common_stations(cubes)
     station_lookup = _build_station_lookup(cubes, common_stations)
     fp_hours = _generate_forecast_period(cubes)
@@ -316,6 +317,14 @@ def rolling_window_time_aggregation(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def _normalise_station_metadata(cubes):
+    """Normalise station metadata."""
+    normalised_coords = ["latitude", "longitude"]
+    for cb in cubes:
+        for coord in normalised_coords:
+            cb.coord(coord).points = np.float32(np.round(cb.coord(coord).points, 3))
 
 
 def _get_common_stations(cubes: CubeList) -> list[str]:
