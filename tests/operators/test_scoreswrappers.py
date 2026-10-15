@@ -15,6 +15,7 @@
 """Test miscellaneous operators."""
 
 import datetime
+import re
 
 import iris
 import iris.coords
@@ -320,16 +321,22 @@ def test_crps_control_member_out_of_bounds(feature_cube):
 def test_crps_one_time_coord(feature_cube):
     """Test handling of only one time point in cube provided."""
     feature_cube_one_time = feature_cube[:, 0, :, :]
-    with pytest.raises(ValueError, match=r"Cube has only one time point."):
+    model_name = feature_cube.attributes["model_name"]
+    with pytest.raises(
+        ValueError, match=re.escape(f"Cube ({model_name}) has only one time point.")
+    ):
         scoreswrappers.scores_crps_for_ensemble(feature_cube_one_time)
 
 
 def test_crps_less_than_3_realizations(feature_cube):
     """Test handling of less than 3 realizations in cube provided."""
     feature_cube_one_realization = feature_cube[0:1, :, :, :]
+    model_name = feature_cube.attributes["model_name"]
     with pytest.raises(
         ValueError,
-        match=r"Cube should have one control member and at least two members",
+        match=re.escape(
+            f"Cube ({model_name}) should have one control member and at least two members"
+        ),
     ):
         scoreswrappers.scores_crps_for_ensemble(feature_cube_one_realization)
 

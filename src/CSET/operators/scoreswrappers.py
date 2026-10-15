@@ -16,6 +16,7 @@
 
 import logging
 import operator
+from typing import Literal
 
 import iris
 import iris.coords
@@ -29,7 +30,7 @@ import xarray as xr
 from iris.cube import Cube, CubeList
 from iris.util import reverse
 
-from CSET._common import is_increasing
+from CSET._common import is_increasing, iter_maybe
 from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
 from CSET.operators.constraints import (
     generate_realization_constraint,
@@ -201,7 +202,10 @@ def scores_correlation_pearsonr(
 
 
 def scores_crps_for_ensemble(
-    cubes: Cube | CubeList, method: str = "ecdf", control_member: int = 0
+    cubes: Cube | CubeList,
+    method: Literal["ecdf", "fair"] = "ecdf",
+    control_member: int = 0,
+    include_control_member: bool = False,
 ) -> Cube:
     r"""Calculate the CRPS for an ensemble.
 
@@ -217,7 +221,7 @@ def scores_crps_for_ensemble(
 
     Parameters
     ----------
-    cubes: iris.cube.Cube
+    cubes: iris.cube.Cube | CubeList
         A Cube containing ensembles data
 
     method: str ["ecfd" or "fair"]
@@ -228,51 +232,73 @@ def scores_crps_for_ensemble(
 
     Returns
     -------
-    crps: iris.cube.Cube
+    crps: Cube | CubeList
         A cube containing the crps between the ensemble members and the control
     """
     if control_member != 0:
-        logger.warning("control member is usual 0")
-
-    if control_member not in cubes.coords("realization")[0].points:
-        new_control_member = cubes.coords("realization")[0].points[0]
         logger.warning(
-            f"control member value {control_member} out of bounds, defaulting to control member={new_control_member}"
+            f"Control has been set to {control_member}, but control member is usual 0."
         )
-        control_member = new_control_member
 
-    if cubes.coord("time").shape[0] == 1:
-        raise ValueError("Cube has only one time point.")
+    cubes = iter_maybe(cubes)
 
-    if cubes.coord("realization").shape[0] < 3:
-        raise ValueError("Cube should have one control member and at least two members")
+    models = CubeList()
+    crps = CubeList()
+    observed = None
+    for cb in cubes:
+        if "observed" in cb.long_name:
+            observed = cb
+        else:
+            models.append(cb)
 
-    ctrl = cubes.extract(generate_realization_constraint([control_member]))
-    ens_mem = cubes.extract(
-        generate_remove_single_ensemble_member_constraint(control_member)
-    )
+    for model in models:
+        model_name = model.attributes["model_name"]
+        if control_member not in model.coords("realization")[0].points:
+            new_control_member = model.coords("realization")[0].points[0]
+            logger.warning(
+                f"control member value {control_member} out of bounds for {model_name}, defaulting to control member={new_control_member}"
+            )
+            control_member = new_control_member
 
-    # Realising the data in advance provides a large speedup
-    _ = ctrl.data
-    _ = ens_mem.data
-    del _
+        if model.coord("time").shape[0] == 1:
+            raise ValueError(f"Cube ({model_name}) has only one time point.")
 
-    ctrl = xr.DataArray.from_iris(ctrl)
-    ens_mem = xr.DataArray.from_iris(ens_mem)
+        if model.coord("realization").shape[0] < 3:
+            raise ValueError(
+                f"Cube ({model_name}) should have one control member and at least two members"
+            )
 
-    crps = xr.DataArray.to_iris(
-        scores.probability.crps_for_ensemble(
-            ens_mem,
-            ctrl,
-            ensemble_member_dim="realization",
-            method=method,
-            preserve_dims="time",
+        remove_ctrl = generate_remove_single_ensemble_member_constraint(control_member)
+
+        if not observed:
+            ctrl = model.extract(generate_realization_constraint([control_member]))
+            ens_mem = model.extract(remove_ctrl)
+        else:
+            ctrl = observed
+            ens_mem = model if include_control_member else model.extract(remove_ctrl)
+        # Realising the data in advance provides a large speedup
+        _ = ctrl.data
+        _ = ens_mem.data
+        del _
+
+        ctrl = xr.DataArray.from_iris(ctrl)
+        ens_mem = xr.DataArray.from_iris(ens_mem)
+
+        model_crps = xr.DataArray.to_iris(
+            scores.probability.crps_for_ensemble(
+                ens_mem,
+                ctrl,
+                ensemble_member_dim="realization",
+                method=method,
+                preserve_dims="time",
+            )
         )
-    )
 
-    crps.rename(f"CRPS_of_{cubes[0].name()}")
-    _realization_callback(crps)
-    return crps
+        model_crps.rename(f"CRPS_of_{model_name}")
+        model_crps.attributes["model_name"] = model_name
+        _realization_callback(model_crps)
+        crps.append(model_crps)
+    return crps[0] if len(crps) == 1 else crps
 
 
 def _scores_categorical_metric(

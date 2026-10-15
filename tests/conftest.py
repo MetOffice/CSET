@@ -1104,6 +1104,9 @@ def feature_cube() -> iris.cube.Cube:
         dim_coords_and_dims=dim_coords_and_dims,
         long_name="crps test",
     )
+
+    cube.attributes["model_name"] = "model1"
+
     return cube
 
 
