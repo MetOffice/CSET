@@ -248,7 +248,7 @@ def radar_mask(
     nimrod_field: iris.cube.Cube | iris.cube.CubeList,
     nimrod_mask: iris.cube.Cube | iris.cube.CubeList,
     boundary_margin: int = 8,
-    outputs: str = "radar",
+    required_outputs: str = "radar",
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Apply a mask to given fields using a masked array.
 
@@ -263,7 +263,7 @@ def radar_mask(
     boundary_margin: int, optional
         Number of grid points from the domain boundary considered "unreliable".
         Defaults to 8.
-    outputs: str, optional
+    required_outputs: str, optional
         Specifies which outputs are required:
            "radar" outputs masked Nimrod rainfall field(s)
            "model" outputs masked model field(s)
@@ -277,7 +277,7 @@ def radar_mask(
     Examples
     --------
     To mask both model and Nimrod fields using the Nimrod weights in nimrod_wts:
-    >>> masked_fields = radar_mask( model_fields, nimrod_fields, nimrod_wts, outputs="all")
+    >>> masked_fields = radar_mask( model_fields, nimrod_fields, nimrod_wts, required_outputs="all")
 
     """
     # Create an empty cubelist to hold the filtered fields.
@@ -311,13 +311,14 @@ def radar_mask(
         filtered_radar.append(masked_nimrod_field)
 
     # Return either the masked model or Nimrod fields, or both.
-    if outputs == "radar":
-        filtered_fields.append(filtered_radar.merge_cube())
-    if outputs == "model":
-        filtered_fields.append(filtered_model.merge_cube())
-    if outputs == "all":
-        filtered_fields.append(filtered_model.merge_cube())
-        filtered_fields.append(filtered_radar.merge_cube())
+    match required_outputs:
+        case "radar":
+            filtered_fields.append(filtered_radar.merge_cube())
+        case "model":
+            filtered_fields.append(filtered_model.merge_cube())
+        case "all":
+            filtered_fields.append(filtered_model.merge_cube())
+            filtered_fields.append(filtered_radar.merge_cube())
 
     # Return either a single cube or a cubelist.
     if len(filtered_fields) == 1:
@@ -377,7 +378,7 @@ def radar_mask_loop(
             use_nimrod_field,
             use_nimrod_mask,
             boundary_margin=boundary_margin,
-            outputs="model",
+            required_outputs="model",
         )
         filtered_cubes.append(filtered_model)
 
@@ -388,7 +389,7 @@ def radar_mask_loop(
             use_nimrod_field,
             use_nimrod_mask,
             boundary_margin=boundary_margin,
-            outputs="radar",
+            required_outputs="radar",
         )
     else:
         filtered_radar = radar_mask(
@@ -396,7 +397,7 @@ def radar_mask_loop(
             use_nimrod_field,
             use_nimrod_mask,
             boundary_margin=boundary_margin,
-            outputs="radar",
+            required_outputs="radar",
         )
     filtered_cubes.append(filtered_radar)
 
