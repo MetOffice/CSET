@@ -140,7 +140,7 @@ def load(conf: Config):
     # Surface (2D) fields for Nimrod radar rainfall.
     #
     # These loaders produce 2D plots of both the Nimrod
-    # surface rainfall and the Nimrod weights field.
+    # surface rainfall amount in [mm] and the Nimrod weights field, which gives an indication of data quality.
     #
     # The different sources of Nimrod rainfall accumulation have
     # different spatial grids. So each source requires its own
