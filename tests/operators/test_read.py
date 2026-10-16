@@ -273,22 +273,22 @@ def test_um_normalise_callback_missing_entry(cube, caplog):
     assert level == logging.WARNING
 
 
-def test_lfric_normalise_callback_remove_attrs(cube):
-    """Correctly remove unneeded attributes."""
-    cube.attributes["uuid"] = "87096862-89c3-4749-9c6c-0be91c2a7954"
-    cube.attributes["timeStamp"] = "2024-May-20 12:29:21 GMT"
-    read._lfric_normalise_callback(cube)
-    assert "uuid" not in cube.attributes
-    assert "timeStamp" not in cube.attributes
-
-
 def test_lfric_normalise_callback_sort_stash(cube):
     """Correctly sort STASH code lists."""
     cube.attributes["um_stash_source"] = "['m01s03i025', 'm01s00i025']"
-    read._lfric_normalise_callback(cube)
+    read._lfric_stash_source_callback(cube)
     actual = cube.attributes["um_stash_source"]
     expected = "['m01s00i025', 'm01s03i025']"
     assert actual == expected
+
+
+def test_read_cubes_no_unwanted_attrs(cube):
+    """Correctly remove unneeded attributes."""
+    cube.attributes["uuid"] = "87096862-89c3-4749-9c6c-0be91c2a7954"
+    cube.attributes["timeStamp"] = "2024-May-20 12:29:21 GMT"
+    read._clean_unwanted_cube_attributes(cube)
+    assert "uuid" not in cube.attributes
+    assert "timeStamp" not in cube.attributes
 
 
 def test_lfric_time_coord_fix_callback():
@@ -1527,3 +1527,80 @@ def test_flatten_single_constraint():
     constraint = iris.Constraint(name="wind_speed_at_10m")
     flattened = list(read._flatten_combined_constraint(constraint))
     assert flattened == [constraint]
+
+
+def test_probe_variables(tmp_path):
+    """Test probing variables from a file."""
+    cube1 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="temperature_at_screen_level",
+    )
+    cube2 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="eastward_wind_at_10m",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save([cube1, cube2], input_file)
+
+    result = read._probe_variables(str(input_file))
+
+    assert result == [
+        "eastward_wind_at_10m",
+        "temperature_at_screen_level",
+    ]
+
+
+def test_probe_variables_10mwind_added(tmp_path):
+    """Test 10m wind added if suitable."""
+    cube1 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="eastward_wind_at_10m",
+    )
+    cube2 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="northward_wind_at_10m",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save([cube1, cube2], input_file)
+
+    result = read._probe_variables(str(input_file))
+
+    assert result == [
+        "eastward_wind_at_10m",
+        "northward_wind_at_10m",
+        "wind_speed_at_10m",
+    ]
+
+
+def test_probe_variables_ignores_missing_long_names(tmp_path):
+    """Test cubes without long names are not returned."""
+    cube1 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="temperature_at_screen_level",
+    )
+    cube2 = iris.cube.Cube(
+        np.ones((2, 2)),
+        standard_name="air_temperature",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save([cube1, cube2], input_file)
+
+    result = read._probe_variables(str(input_file))
+
+    assert result == ["temperature_at_screen_level"]
+
+
+def test_probe_variables_no_long_names(tmp_path):
+    """Test probing cubes with no long names returns an empty list."""
+    cube = iris.cube.Cube(
+        np.ones((2, 2)),
+        standard_name="air_temperature",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save(cube, input_file)
+
+    assert read._probe_variables(str(input_file)) == []

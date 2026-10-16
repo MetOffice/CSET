@@ -219,10 +219,9 @@ def install_restricted_files(workflow_dir: Path, alternative_url: str | None = N
         # Delete unwanted top-level README.
         (Path(tempdir) / "README.md").unlink(missing_ok=True)
 
-        # HACK: This prevents copystat (as used inside copytree) from
-        # overwriting permission of the target directory.
-        _original_copystat = shutil.copystat
-        shutil.copystat = lambda *args, **kwargs: None
+        # Preserve the existing workflow directory permissions.
+        workflow_mode = stat.S_IMODE(workflow_dir.stat().st_mode)
+
         # Copy remaining files, skipping hidden files.
         shutil.copytree(
             tempdir,
@@ -231,8 +230,8 @@ def install_restricted_files(workflow_dir: Path, alternative_url: str | None = N
             symlinks=True,
             dirs_exist_ok=True,
         )
-        # Put copystat back so we don't break other code.
-        # This is by no means threadsafe.
-        shutil.copystat = _original_copystat
+
+        # Restore the workflow directory permissions.
+        workflow_dir.chmod(workflow_mode)
 
         print(f"Installed site-specific restricted files into {workflow_dir}.")
