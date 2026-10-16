@@ -229,50 +229,27 @@ def load(conf: Config):
         # Select the radar source to use.
         radar_source = select_radar_source([source["id"] for source in accum_radars])
         names_ids = _model_and_radar_names_ids(models, radar_source, accum_radars)
-        yield RawRecipe(
-            recipe="radar_common_domain_histogram.yaml",
-            variables={
-                "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
-                "RADAR_VARNAME": "Hourly rain accumulation",
-                "RADAR_WTS_VARNAME": "Hourly wts accumulation",
-                "ALL_LABEL": names_ids["combined_names"],
-                "SEQUENCE": "time",
-                "OUTPUTS": "all",
-                "BOUNDARY_MARGIN": boundary_margin,
-                "TITLE_STRING": "sequence plots",
-                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
-                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-            },
-            model_ids=names_ids["combined_ids"],
-            aggregation=False,
-        )
-
-    # Histogram case study rainfall using common domain between
-    # model and Nimrod radar observations.
-    if (
-        conf.NIMROD_RADAR_OBS
-        and conf.PROCESS_RADAR_HISTOGRAMS
-        and (len(accum_radars) > 0)
-    ):
-        # Select the radar source to use.
-        radar_source = select_radar_source([source["id"] for source in accum_radars])
-        names_ids = _model_and_radar_names_ids(models, radar_source, accum_radars)
-        yield RawRecipe(
-            recipe="radar_common_domain_histogram.yaml",
-            variables={
-                "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
-                "RADAR_VARNAME": "Hourly rain accumulation",
-                "RADAR_WTS_VARNAME": "Hourly wts accumulation",
-                "ALL_LABEL": names_ids["combined_names"],
-                "SEQUENCE": "realization",
-                "OUTPUTS": "all",
-                "BOUNDARY_MARGIN": boundary_margin,
-                "TITLE_STRING": "case study",
-                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
-                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-            },
-            model_ids=names_ids["combined_ids"],
-            aggregation=False,
-        )
+        for sequence, title in (
+            ("time", "sequence plots"),
+            ("realization", "case study"),
+        ):
+            yield RawRecipe(
+                recipe="radar_common_domain_histogram.yaml",
+                variables={
+                    "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
+                    "RADAR_VARNAME": "Hourly rain accumulation",
+                    "RADAR_WTS_VARNAME": "Hourly wts accumulation",
+                    "ALL_LABEL": names_ids["combined_names"],
+                    "SEQUENCE": sequence,
+                    "OUTPUTS": "all",
+                    "BOUNDARY_MARGIN": boundary_margin,
+                    "TITLE_STRING": title,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                },
+                model_ids=names_ids["combined_ids"],
+                aggregation=False,
+            )
