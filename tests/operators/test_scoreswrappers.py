@@ -224,14 +224,15 @@ def test_difference_different_model_types(cube):
     assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
 
 
-def test_difference_flip_pressure_order(transect_source_cube_readonly):
+def test_difference_flip_pressure_order(transect_source_cube):
     """Test that pressure coord is flipped if decreasing."""
-    flipped = transect_source_cube_readonly.copy()
+    cb = transect_source_cube.copy()
+    flipped = transect_source_cube.copy()
     reverse(flipped, "pressure")
     del flipped.attributes["cset_comparison_base"]
     flipped.attributes["model_name"] = "model1"
-    transect_source_cube_readonly.attributes["model_name"] = "model2"
-    cubes = CubeList([transect_source_cube_readonly, flipped])
+    cb.attributes["model_name"] = "model2"
+    cubes = CubeList([cb, flipped])
 
     # Take rmse.
     rmse_cube = scoreswrappers.scores_rmse(cubes)
@@ -242,12 +243,13 @@ def test_difference_flip_pressure_order(transect_source_cube_readonly):
 
 
 def test_process_cubes_for_verification_equalise_pressure(
-    transect_source_cube_readonly,
+    transect_source_cube,
 ):
     """Test that pressure is equalised for two cubes."""
-    cube1 = transect_source_cube_readonly.copy()
-    cube2 = transect_source_cube_readonly.copy()
-
+    cube1 = transect_source_cube.copy()
+    cube2 = transect_source_cube.copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2.attributes["model_name"] = "model2"
     out = scoreswrappers._process_cubes_for_verification(cube1, cube2)
 
     assert np.allclose(
