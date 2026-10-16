@@ -126,7 +126,7 @@ class TestRadarMask:
         mask = make_cube(np.ones((1, 10, 12), dtype=float), "nimrod_mask")
 
         result = radar_filter.radar_mask(
-            model_field, radar_field, mask, boundary_margin=2, outputs="radar"
+            model_field, radar_field, mask, boundary_margin=2, required_outputs="radar"
         )
 
         assert isinstance(result, iris.cube.Cube)
@@ -145,7 +145,7 @@ class TestRadarMask:
         mask = make_cube(np.ones((1, 10, 12), dtype=float), "nimrod_mask")
 
         result = radar_filter.radar_mask(
-            model_field, radar_field, mask, boundary_margin=2, outputs="all"
+            model_field, radar_field, mask, boundary_margin=2, required_outputs="all"
         )
 
         assert isinstance(result, iris.cube.CubeList)
@@ -185,7 +185,7 @@ def test_returns_masked_model_cube_when_output_is_model():
     mask = make_cube(np.ones((1, 10, 12), dtype=float), "nimrod_mask")
 
     result = radar_filter.radar_mask(
-        model_field, radar_field, mask, boundary_margin=2, outputs="model"
+        model_field, radar_field, mask, boundary_margin=2, required_outputs="model"
     )
 
     assert isinstance(result, iris.cube.Cube)
@@ -209,7 +209,7 @@ def test_radar_mask_loop_returns_model_and_radar_outputs():
         radar_field,
         mask,
         boundary_margin=0,
-        outputs="radar",
+        required_outputs="radar",
     )
 
     assert isinstance(result, iris.cube.CubeList)
