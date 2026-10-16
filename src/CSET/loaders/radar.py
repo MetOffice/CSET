@@ -96,7 +96,7 @@ def get_radar_sources(conf) -> list[dict]:
     return radar_sources
 
 
-def _model_and_radar_names_ids(models, radar_source, accum_radars):
+def _model_and_radar_names_ids(models, accum_radars):
     """Select the model and radar names and ids."""
     # Model and radar names and ids.
     model_names_list = [model["name"] for model in models]
@@ -165,8 +165,7 @@ def load(conf: Config):
 
     # Radar 2D plots using a common domain between model and radar network.
     if conf.NIMROD_RADAR_OBS and conf.PROCESS_RADAR_2D and (len(accum_radars) > 0):
-        radar_source = select_radar_source([source["id"] for source in accum_radars])
-        names_ids = _model_and_radar_names_ids(models, radar_source, accum_radars)
+        names_ids = _model_and_radar_names_ids(models, accum_radars)
         yield RawRecipe(
             recipe="model_radar_common_domain_2d_radar.yaml",
             variables={
@@ -191,8 +190,7 @@ def load(conf: Config):
 
     # Model rainfall 2D plots using a common domain between model and radar network.
     if conf.NIMROD_RADAR_OBS and conf.PROCESS_RADAR_2D and (len(accum_radars) > 0):
-        radar_source = select_radar_source([source["id"] for source in accum_radars])
-        names_ids = _model_and_radar_names_ids(models, radar_source, accum_radars)
+        names_ids = _model_and_radar_names_ids(models, accum_radars)
         # Loop over the model names.
         for idx, model_use in enumerate(names_ids["model_names_list"]):
             yield RawRecipe(
@@ -226,9 +224,7 @@ def load(conf: Config):
         and conf.PROCESS_RADAR_HISTOGRAMS
         and (len(accum_radars) > 0)
     ):
-        # Select the radar source to use.
-        radar_source = select_radar_source([source["id"] for source in accum_radars])
-        names_ids = _model_and_radar_names_ids(models, radar_source, accum_radars)
+        names_ids = _model_and_radar_names_ids(models, accum_radars)
         for sequence, title in (
             ("time", "sequence plots"),
             ("realization", "case study"),
