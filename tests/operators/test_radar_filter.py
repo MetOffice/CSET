@@ -425,6 +425,46 @@ def test_match_varname_and_units_single_cube_in_cubelist(cube_model):
     assert cubes_matched[0].units == cube_model.units
 
 
+def test_mask_boundary_zero_margin_leaves_data_unchanged():
+    """Test the mask_boundary function with boundary_margin set to 0."""
+    data = np.zeros((2, 5, 6))
+    radar_filter._mask_boundary(data, 0)
+    assert not np.isnan(data).any()
+
+
+def test_mask_boundary_blanks_edges_only():
+    """Test the mask_boundary function with boundary_margin set to 1."""
+    data = np.zeros((5, 6))
+    radar_filter._mask_boundary(data, 1)
+    expected_nan = np.ones((5, 6), dtype=bool)
+    expected_nan[1:-1, 1:-1] = False
+    np.testing.assert_array_equal(np.isnan(data), expected_nan)
+
+
+def test_mask_boundary_is_symmetric():
+    """Test the mask_boundary function with boundary_margin set to 3."""
+    data = np.zeros((11, 11))
+    radar_filter._mask_boundary(data, 3)
+    nan_rows = np.isnan(data[:, 5])
+    np.testing.assert_array_equal(np.flatnonzero(nan_rows), [0, 1, 2, 8, 9, 10])
+
+
+def test_mask_boundary_applies_to_all_leading_dims():
+    """Test the mask_boundary function with boundary_margin set to 1 and with time + realisation coords."""
+    data = np.zeros((3, 2, 5, 5))  # e.g. (time, realization, y, x)
+    radar_filter._mask_boundary(data, 1)
+    for t in range(3):
+        for r in range(2):
+            assert np.isnan(data[t, r, 0, :]).all()
+            assert not np.isnan(data[t, r, 2, 2])
+
+
+def test_mask_boundary_negative_margin_raises():
+    """Test bad boundary margin raises."""
+    with pytest.raises(ValueError):
+        radar_filter._mask_boundary(np.zeros((4, 4)), -1)
+
+
 # def test_radar_apply_mask():
 #    """Test the radar_apply_mask function."""
 #    obs = Cube([0,[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]])
