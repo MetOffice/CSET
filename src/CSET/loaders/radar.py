@@ -17,7 +17,7 @@
 from CSET.recipes import Config, RawRecipe, get_models
 
 
-def select_radar_source(input_source_list):
+def select_radar_source(input_source_list: list[str]) -> str:
     """Select the preferred radar source from a list of sources."""
     # Preference list for Nimrod sources, with most preferred heading the list.
     nimrod_preference = ["Nimrod2km", "Nimrodxkm", "Nimrod1km"]
