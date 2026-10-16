@@ -213,12 +213,12 @@ def radar_apply_mask(
 
         # Set the model perimeter to NaN as these gridpoints contain no useful data.
         # c.f. boundary_margin in regrid.py
-        margin_width = boundary_margin
-        if margin_width > 0:
-            masked_field.data[:, -margin_width - 1 :, :] = np.nan
-            masked_field.data[:, :, -margin_width - 1 :] = np.nan
-            masked_field.data[:, :, 0:margin_width] = np.nan
-            masked_field.data[:, 0:margin_width, :] = np.nan
+        if boundary_margin > 0:
+            # Nan a strip of width boundary_margin around all four edges
+            masked_field.data[:, -boundary_margin:, :] = np.nan
+            masked_field.data[:, :, :boundary_margin] = np.nan
+            masked_field.data[:, :, -boundary_margin:] = np.nan
+            masked_field.data[:, :boundary_margin, :] = np.nan
 
         # If the field and mask are on different grids, then regrid the field.
         if M[0].shape != masked_field[0].shape:
