@@ -106,6 +106,7 @@ def test_set_title_and_filename_filename_single_sequence(cube):
     plot_title, plot_filename = plot._set_title_and_filename(
         seq_coord, nplot, "recipe", "filename"
     )
+
     assert plot_filename == "filename.png"
     assert plot_title == "recipe\n [2022-09-21 03:00:00 to 2022-09-21 05:00:00]"
 
@@ -631,6 +632,32 @@ def test_plot_line_series_too_many_dimensions(cube, tmp_working_dir):
     """Error when cube has more than one dimension."""
     with pytest.raises(ValueError):
         plot.plot_line_series(cube)
+
+
+def test_plot_and_save_line_series_failure(dfss_cubelist):
+    """Test failing plot_and_save_line_series with dfss cube."""
+    coords = [dfss_cubelist[0].coord("time"), dfss_cubelist[0].coord("neighbourhoods")]
+
+    with pytest.raises(
+        ValueError,
+        match="Exactly one of ensemble_coord and sequence_coord must be provided",
+    ):
+        plot._plot_and_save_line_series(
+            dfss_cubelist,
+            coords,
+            "test_filename",
+            "test_plot_title",
+            sequence_coord="time",
+            ensemble_coord="realization",
+        )
+
+    with pytest.raises(
+        ValueError,
+        match="Exactly one of ensemble_coord and sequence_coord must be provided",
+    ):
+        plot._plot_and_save_line_series(
+            dfss_cubelist, coords, "test_filename", "test_plot_title"
+        )
 
 
 def test_plot_line_series_different_coord_lengths(tmp_working_dir):
@@ -1425,7 +1452,6 @@ def test_hinton_plot_raises_when_models_have_different_variable_counts(
             or cube.attributes["model_name"] != "LF"
         ]
     )
-
     with pytest.raises(
         ValueError,
         match="are not same number as",
@@ -1612,3 +1638,39 @@ def test_hinton_plot_raises_for_wrong_dimension_name(
             base_name="UM",
             other_name="LF",
         )
+
+
+def test_dfss_contour(dfss_cubelist, tmp_working_dir):
+    """Test dfss_contour."""
+    for cube in dfss_cubelist:
+        cube.attributes["method"] = "centile"
+        cube.attributes["centile"] = 0.9
+
+    plot.plot_dfss_contour(dfss_cubelist, "centile")
+    assert Path("centile.png").is_file()
+    for cube in dfss_cubelist:
+        cube.attributes["method"] = "threshold"
+        cube.attributes["threshold"] = 2
+
+    plot.plot_dfss_contour(dfss_cubelist, "threshold")
+    assert Path("threshold.png").is_file()
+
+
+def test_dfss_line_series_sequence(dfss_cubelist, tmp_working_dir):
+    """Test dfss_contour."""
+    for cube in dfss_cubelist:
+        cube.attributes["method"] = "centile"
+        cube.attributes["centile"] = 0.9
+
+    plot.plot_dfss_line_series_sequence(dfss_cubelist, "centile")
+    assert Path("centile_3.png").is_file()
+    assert Path("centile_5.png").is_file()
+    assert Path("centile_7.png").is_file()
+    for cube in dfss_cubelist:
+        cube.attributes["method"] = "threshold"
+        cube.attributes["threshold"] = 2
+
+    plot.plot_dfss_line_series_sequence(dfss_cubelist, "threshold")
+    assert Path("threshold_3.png").is_file()
+    assert Path("threshold_5.png").is_file()
+    assert Path("threshold_7.png").is_file()
