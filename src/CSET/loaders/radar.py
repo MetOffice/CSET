@@ -134,7 +134,7 @@ def load(conf: Config):
         if radar["varname"] == "Hourly rain accumulation"
     ]
 
-    # Specify the boundary margin width to use when trimming model fields.
+    # Specify the lateral boundary margin width to use when trimming model fields.
     boundary_margin = 16
 
     # Surface (2D) fields for Nimrod radar rainfall.
