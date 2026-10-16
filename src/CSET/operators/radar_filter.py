@@ -94,7 +94,7 @@ def mask_list(model_names: list[str]) -> list[str]:
         # Loop over the input model_names.
         for model in model_names:
             if any(model in nimrod for nimrod in nimrod_preference):
-                nimrod_mask = model + wei
+                nimrod_mask = f"{model}{wei}"
             else:
                 nimrod_mask = preferred_nimrod + wei
             mask_names_list.append(nimrod_mask)
