@@ -1,0 +1,100 @@
+category: Time series of mean wind at Cardington single point
+title: "Time series of mean wind at Cardington [52.10438N, -0.42286E]"
+description: "Plots a time series of mean wind at gridpoint nearest to Cardington."
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names:
+      - $OBS_NAME
+      - $MODEL_NAME
+    constraint:
+      - $OBS_WIND
+      - $U_VARNAME
+      - $V_VARNAME
+
+  - operator: filters.apply_mask
+    mask:
+      operator: filters.generate_mask
+      condition: 'lt'
+      value: 1.0e+10
+
+  - operator: misc.remove_attribute
+    attribute: [ 'time_coverage_end', 'time_coverage_start', 'valid_min', 'valid_max', 'date', 'date_created' ]
+
+  - operator: misc.combine_cubes_into_cubelist
+    first:
+      operator: misc.rename_cube
+      name: $PLOT_VARNAME
+      cubes:
+        operator: filters.filter_multiple_cubes
+        constraints:
+          operator: constraints.combine_constraints
+          varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: $OBS_WIND
+          height_constraint:
+            operator: constraints.generate_attribute_constraint
+            attribute: height
+            value: $HEIGHT
+
+
+    second:
+      # --- UM: calculate vector wind from both components ---
+      operator: wind.calculate_vector_wind
+      u:
+        operator: filters.filter_multiple_cubes
+        constraints:
+          operator: constraints.combine_constraints
+          varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: $U_VARNAME
+          cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+            varname: $U_VARNAME
+          pressure_level_constraint:
+            operator: constraints.generate_level_constraint
+            levels: []
+            coordinate: "pressure"
+          stash_constraint:
+            operator: constraints.generate_attribute_constraint
+            attribute: STASH
+
+      v:
+        operator: filters.filter_multiple_cubes
+        constraints:
+           operator: constraints.combine_constraints
+           varname_constraint:
+             operator: constraints.generate_var_constraint
+             varname: $V_VARNAME
+           cell_methods_constraint:
+             operator: constraints.generate_cell_methods_constraint
+             cell_methods: []
+             varname: $V_VARNAME
+           pressure_level_constraint:
+             operator: constraints.generate_level_constraint
+             levels: []
+             coordinate: "pressure"
+           stash_constraint:
+             operator: constraints.generate_attribute_constraint
+             attribute: STASH
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+# PLOT_VARNAME is used to constrain to either speed or direction
+  - operator: filters.filter_multiple_cubes
+    to_plot:
+      operator: constraints.generate_var_constraint
+      varname: $PLOT_VARNAME
+
+  - operator: regrid.regrid_to_single_point
+    lat_pt: 52.10438
+    lon_pt: -0.42286
+    latlon_in_type: "realworld"
+    method: "Nearest"
+    boundary_margin: 0
+
+  # Plot the data.
+  - operator: plot.plot_line_series
