@@ -474,8 +474,32 @@ def difference(cubes: CubeList):
     return difference
 
 
-def extract_common_time_points(cubes: Cube | CubeList) -> CubeList:
-    """Return cubes with common time points."""
+def extract_common_time_points(cubes: CubeList) -> CubeList:
+    """Return cubes restricted to their common time points.
+
+    If the first cube has more than one FRT point, every cube must have identical
+    FRT points. The cubes are then trimmed to their shared
+    forecast_period values, so lead times line up across cubes.
+    Otherwise (no FRT coordinate, or a single FRT), the cubes are
+    trimmed to their shared times.
+
+    Parameters
+    ----------
+    cubes: CubeList
+        Cubes to align in time. The first cube is used as the reference.
+
+    Returns
+    -------
+    CubeList
+        Cubes containing only the time points common to all inputs.
+
+    Raises
+    ------
+    ValueError
+        If the first cube has multiple FRT points and any other cube either
+        lacks a forecast_reference_time coordinate or has different FRT
+        values (compared element-wise, so order matters).
+    """
     coords = cubes[0].coords("forecast_reference_time")
 
     if bool(coords) and len(coords[0].points) > 1:
