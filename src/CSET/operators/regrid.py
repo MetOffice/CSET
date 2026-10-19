@@ -546,9 +546,7 @@ def interpolate_to_point_cube(
                     coord.copy(),
                 )
 
-        #
         # Copy observation auxiliary coordinates.
-        #
         for coord in point_cube.coords():
             if coord.name() in (
                 "station",
