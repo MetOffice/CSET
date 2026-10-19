@@ -610,7 +610,7 @@ def calc_array_stats(
     return array_min, array_max, array_mean
 
 
-def get_time_coord(cube: Cube) -> str | None:
+def get_time_coord(cube: Cube | CubeList) -> str | None:
     """Return the time coordinate name or None if no time coordinate is found."""
     cube = cube[0] if isinstance(cube, CubeList) else cube
     for name in ("time", "hour"):
