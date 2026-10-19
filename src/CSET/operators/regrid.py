@@ -509,9 +509,7 @@ def interpolate_to_point_cube(
 
             out_dim += 1
 
-        #
         # Station dimension is always last.
-        #
         station_dim = out_dim
 
         fv_cube.add_dim_coord(
