@@ -61,7 +61,7 @@ def test_get_models():
 
 
 def test_get_models_includes_model_20():
-    """Check the final supported model ID is included."""
+    """验证最后一个受支持的模型编号会被包含."""
     rose_suite_variables = {
         "m19_name": "model nineteen",
         "m20_name": "model twenty",
