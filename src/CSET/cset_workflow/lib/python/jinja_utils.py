@@ -25,7 +25,7 @@ def get_models(rose_variables: dict) -> list[dict]:
     configuration.
     """
     models = []
-    for model in range(1, 20):
+    for model in range(1, 21):
         model_prefix = f"m{model}_"
         model_vars = {
             key.removeprefix(model_prefix): value
