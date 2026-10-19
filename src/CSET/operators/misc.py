@@ -500,23 +500,21 @@ def extract_common_time_points(cubes: CubeList) -> CubeList:
         lacks a forecast_reference_time coordinate or has different FRT
         values (compared element-wise, so order matters).
     """
-    coords = cubes[0].coords("forecast_reference_time")
+    frt_coord = cubes[0].coords("forecast_reference_time")
 
-    if bool(coords) and len(coords[0].points) > 1:
-        try:
+    if frt_coord and len(frt_coord[0].points) > 1:
+        for cb in cubes[1:]:
             reference_frts = cubes[0].coord("forecast_reference_time").points
-            for cube in cubes[1:]:
-                cube_frts = cube.coord("forecast_reference_time").points
-
-                if not np.array_equal(reference_frts, cube_frts):
-                    raise ValueError(
-                        "Cubes do not share the same forecast_reference_time values."
-                    )
-
-        except iris.exceptions.CoordinateNotFoundError as err:
-            raise ValueError(
-                "All cubes must have a forecast_reference_time coordinate."
-            ) from err
+            cb_frt_coord = cb.coords("forecast_reference_time")
+            if not cb_frt_coord:
+                raise ValueError(
+                    "All cubes must have a forecast_reference_time coordinate."
+                )
+            cube_frts = cb.coord("forecast_reference_time").points
+            if not np.array_equal(reference_frts, cube_frts):
+                raise ValueError(
+                    "Cubes do not share the same forecast_reference_time values."
+                )
 
         return extract_common_points(cubes, "forecast_period")
     else:

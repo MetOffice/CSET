@@ -650,3 +650,81 @@ def test_multiple_frt_common_time_coords(long_forecast_many_cubes):
     assert list_common_fp[0].coord("forecast_period") == list_common_fp[2].coord(
         "forecast_period"
     )
+
+
+def test_multiple_frt_common_time_coords_bad_frt(long_forecast_many_cubes):
+    """Test different forecast periods failure due to different frt between model cubes."""
+    period_1 = range(0, 50, 2)
+    period_2 = range(0, 50, 2)
+    period_3 = range(0, 50, 2)
+
+    cube_list_1 = CubeList()
+    cube_list_2 = CubeList()
+    cube_list_3 = CubeList()
+    for long_forecast_many_cube in long_forecast_many_cubes:
+        cube_list_1.append(
+            long_forecast_many_cube.extract(
+                iris.Constraint(forecast_period=lambda fp: fp.point in period_1)
+            )
+        )
+        cube_list_2.append(
+            long_forecast_many_cube.extract(
+                iris.Constraint(forecast_period=lambda fp: fp.point in period_2)
+            )
+        )
+        cube_list_3.append(
+            long_forecast_many_cube.extract(
+                iris.Constraint(forecast_period=lambda fp: fp.point in period_3)
+            )
+        )
+
+    cube_1 = aggregate.ensure_aggregatable_across_cases(cube_list_1)[0]
+    cube_2 = aggregate.ensure_aggregatable_across_cases(cube_list_2)[0]
+    cube_3 = aggregate.ensure_aggregatable_across_cases(cube_list_3)[0]
+
+    cube_list_all = CubeList([cube_1, cube_2, cube_3])
+    cube_list_all[0].coord("forecast_reference_time").points = (
+        cube_list_all[0].coord("forecast_reference_time").points + 1
+    )
+    with pytest.raises(
+        ValueError, match="Cubes do not share the same forecast_reference_time values."
+    ):
+        misc.extract_common_time_points(cube_list_all)
+
+
+def test_multiple_frt_common_time_coords_one_cube_no_frt(long_forecast_many_cubes):
+    """Test different forecast periods failure due to one cube not having a frt."""
+    period_1 = range(0, 50, 2)
+    period_2 = range(0, 50, 2)
+    period_3 = range(0, 50, 2)
+
+    cube_list_1 = CubeList()
+    cube_list_2 = CubeList()
+    cube_list_3 = CubeList()
+    for long_forecast_many_cube in long_forecast_many_cubes:
+        cube_list_1.append(
+            long_forecast_many_cube.extract(
+                iris.Constraint(forecast_period=lambda fp: fp.point in period_1)
+            )
+        )
+        cube_list_2.append(
+            long_forecast_many_cube.extract(
+                iris.Constraint(forecast_period=lambda fp: fp.point in period_2)
+            )
+        )
+        cube_list_3.append(
+            long_forecast_many_cube.extract(
+                iris.Constraint(forecast_period=lambda fp: fp.point in period_3)
+            )
+        )
+
+    cube_1 = aggregate.ensure_aggregatable_across_cases(cube_list_1)[0]
+    cube_2 = aggregate.ensure_aggregatable_across_cases(cube_list_2)[0]
+    cube_3 = aggregate.ensure_aggregatable_across_cases(cube_list_3)[0]
+
+    cube_list_all = CubeList([cube_1, cube_2, cube_3])
+    cube_list_all[1].remove_coord("forecast_reference_time")
+    with pytest.raises(
+        ValueError, match="All cubes must have a forecast_reference_time coordinate."
+    ):
+        misc.extract_common_time_points(cube_list_all)
