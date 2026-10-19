@@ -519,9 +519,7 @@ def interpolate_to_point_cube(
             station_dim,
         )
 
-        #
         # Copy forecast auxiliary coordinates.
-        #
         for coord in cube.coords():
             if coord.name() in (
                 "latitude",
