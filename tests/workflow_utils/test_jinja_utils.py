@@ -58,3 +58,18 @@ def test_get_models():
     ]
     assert isinstance(models, list)
     assert models == expected_models
+
+
+def test_get_models_includes_model_20():
+    """Check the final supported model ID is included."""
+    rose_suite_variables = {
+        "m19_name": "model nineteen",
+        "m20_name": "model twenty",
+    }
+
+    models = jinja_utils.get_models(rose_suite_variables)
+
+    assert models == [
+        {"id": 19, "name": "model nineteen"},
+        {"id": 20, "name": "model twenty"},
+    ]
