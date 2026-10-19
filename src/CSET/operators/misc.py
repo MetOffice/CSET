@@ -474,7 +474,7 @@ def difference(cubes: CubeList):
     return difference
 
 
-def extract_common_time_points(cubes):
+def extract_common_time_points(cubes: Cube | CubeList) -> CubeList:
     """Return cubes with common time points."""
     coords = cubes[0].coords("forecast_reference_time")
 
