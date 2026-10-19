@@ -487,10 +487,8 @@ def interpolate_to_point_cube(
             units=cube.units,
         )
 
-        #
         # Add all non-horizontal dimension coordinates
         # from the forecast cube.
-        #
         out_dim = 0
 
         for coord in cube.coords(dim_coords=True):
