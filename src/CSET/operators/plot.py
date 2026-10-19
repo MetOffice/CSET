@@ -2777,7 +2777,7 @@ def qq_plot(
 
 
 def hinton_plot(
-    cubes: iris.cube.CubeList, base_name: str, other_name: str, magnitude: bool = False
+    cubes: iris.cube.CubeList, models: list, magnitude: bool = False
 ) -> None:
     """
     Plot a Hinton style triangle/scorecard plot.
@@ -2804,6 +2804,10 @@ def hinton_plot(
         Option bool when if True, then plot the numerical value difference in two values under each
         triangle.
     """
+
+    # Ignore first entry, as this will always be OBS.
+    base_name, other_name = models[1], models[2]
+
     # Check that all cubes only have one dimension called forecast_period
     for cube in cubes:
         if len(cube.dim_coords) > 1:
