@@ -501,6 +501,7 @@ def extract_common_time_points(cubes):
 
 def _extract_common_time_points_one_frt(cubes: CubeList) -> CubeList:
 
+    # typehints
     obs: Cube | None
     models: CubeList
     obs, models = split_obs_and_models(cubes)
