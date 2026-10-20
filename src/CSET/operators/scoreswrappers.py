@@ -1118,12 +1118,12 @@ def _split_base_and_other(cubes: CubeList):
 #     else:
 #         return rmse_cubes
 
+
 def scores_rmse_model_obs(
     cubes: CubeList,
     preserved_coordinates: list[str] | str | None = None,
 ):
     """Calculate RMSE between observations and model cubes."""
-
     rmse_cubes = CubeList()
     model_list = CubeList()
 
@@ -1135,12 +1135,12 @@ def scores_rmse_model_obs(
             model_list.append(cb)
 
     for model in model_list:
-
-        input_cubelist = CubeList([
-            observed,
-            model,
-        ])
-
+        input_cubelist = CubeList(
+            [
+                observed,
+                model,
+            ]
+        )
 
         for cube in input_cubelist:
             for coord_name in ["forecast_reference_time", "forecast_period"]:
@@ -1148,7 +1148,8 @@ def scores_rmse_model_obs(
                     cube.coord(coord_name).bounds = None
 
         input_cubelist = input_cubelist.extract_overlapping(
-                         ["forecast_reference_time", "forecast_period"])
+            ["forecast_reference_time", "forecast_period"]
+        )
 
         rmse = scores_rmse(
             input_cubelist,
@@ -1169,15 +1170,20 @@ def scores_rmse_model_obs(
     return rmse_cubes
 
 
-from CSET.operators.aggregate import combine_obs_across_forecasts
-from CSET.operators.aggregate import time_aggregate, _add_nref
-from CSET.operators.aggregate import ensure_aggregatable_across_cases
-from CSET.operators.collapse import collapse
+from CSET.operators.aggregate import (
+    _add_nref,
+    combine_obs_across_forecasts,
+    ensure_aggregatable_across_cases,
+    time_aggregate,
+)
 from CSET.operators.constraints import generate_var_constraint
 from CSET.operators.filters import filter_multiple_cubes
+from CSET.operators.misc import (
+    _extract_common_time_points_multiplecubes,
+    combine_cubes_into_cubelist,
+)
 from CSET.operators.regrid import interpolate_to_point_cube
-from CSET.operators.misc import combine_cubes_into_cubelist
-from CSET.operators.misc import _extract_common_time_points_multiplecubes
+
 
 def hinton_rmse_model_vs_baseline(
     source_cubes,
@@ -1194,11 +1200,9 @@ def hinton_rmse_model_vs_baseline(
             "air_pressure_at_mean_sea_level/mean/6",
         ]
     """
-
     output = iris.cube.CubeList()
 
     for entry in entries:
-
         varname, method, timefreq = entry.split("/")
 
         obs_varname = f"observed_{varname}"
@@ -1206,9 +1210,7 @@ def hinton_rmse_model_vs_baseline(
         obs_cube = combine_obs_across_forecasts(
             cubes=filter_multiple_cubes(
                 source_cubes,
-                constraint=generate_var_constraint(
-                    obs_varname
-                ),
+                constraint=generate_var_constraint(obs_varname),
             )
         )
 
@@ -1216,9 +1218,7 @@ def hinton_rmse_model_vs_baseline(
             fld=ensure_aggregatable_across_cases(
                 cubes=filter_multiple_cubes(
                     source_cubes,
-                    constraint=generate_var_constraint(
-                        varname
-                    ),
+                    constraint=generate_var_constraint(varname),
                 )
             ),
             point_cube=obs_cube,
@@ -1226,15 +1226,13 @@ def hinton_rmse_model_vs_baseline(
 
         cubes = combine_cubes_into_cubelist(first=obs_cube, second=model_cubes)
 
-
         cubes = _extract_common_time_points_multiplecubes(cubes)
- 
 
         cubes = time_aggregate(
             cubes=cubes,
             method=method,
             interval_iso=timefreq,
-            coordinate='forecast_period'
+            coordinate="forecast_period",
         )
 
         for cube in cubes:
