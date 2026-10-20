@@ -2777,7 +2777,7 @@ def qq_plot(
 
 
 def hinton_plot(
-    cubes: iris.cube.CubeList, base_name: str, other_name: str, magnitude: bool = False
+    cubes: iris.cube.CubeList, models: list, magnitude: bool = False
 ) -> None:
     """
     Plot a Hinton style triangle/scorecard plot.
@@ -2804,10 +2804,9 @@ def hinton_plot(
         Option bool when if True, then plot the numerical value difference in two values under each
         triangle.
     """
-    # Ensure we have a name for the plot file.
-    recipe_title = get_recipe_metadata().get("title", "Hinton")
-    title = f"{recipe_title}"
-    filename = slugify(recipe_title)
+
+    # Ignore first entry, as this will always be OBS.
+    base_name, other_name = models[1], models[2]
 
     # Check that all cubes only have one dimension called forecast_period
     for cube in cubes:
@@ -3037,11 +3036,24 @@ def hinton_plot(
                         zorder=4,
                     )
 
+    # Ensure we have a name for the plot file.
+    recipe_title = get_recipe_metadata().get("title", "Hinton")
+
+    try:
+        ncase = base_cube.attributes["number_reference_times"]
+        recipe_title = f"{recipe_title} for {ncase} cases"
+    except:
+        pass
+
+    title = f"{recipe_title}"
+    filename = slugify(recipe_title)
+
     ax.set_title(title)
+    ax.set_xlabel("Forecast Period (hours)")
     plt.tight_layout()
 
     # Save plot.
-    _save_close_figure(fig, "hinton", filename)
+    _save_close_figure(fig, "Hinton", filename)
 
     # Add file extension.
     plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
