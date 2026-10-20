@@ -1099,29 +1099,29 @@ def _plot_and_save_line_power_spectrum_series(
     line_width = 1
 
     for cube in iter_maybe(cubes):
-        # next 2 lines replace chunk of code.
         xcoord = _select_series_coord(cube, series_coordinate)
         xname = xcoord.points
-
-        yfield = cube.data  # power spectrum
-
-        # If data from power spectra is all np.nans (like T+0h rainfall field which
-        # might be full of zeros), then set yfield to zeros so it doesn't crash the
-        # plotting.
-        if np.all(np.isnan(yfield)):
-            yfield = np.zeros_like(yfield)
 
         label = None
         color = "black"
         if model_colors_map:
             label = cube.attributes.get("model_name")
             color = model_colors_map.get(label)
+
         for cube_slice in cube.slices_over(ensemble_coord):
-            # Label with (control) if part of an ensemble or not otherwise.
+            yfield = cube_slice.data
+
+            # If data from power spectra is all np.nans (like T+0h rainfall field which
+            # might be full of zeros), then set yfield to zeros so it doesn't crash the
+            # plotting.
+            if np.all(np.isnan(yfield)):
+                yfield = np.zeros_like(yfield)
+
             if cube_slice.coord(ensemble_coord).points == [0]:
+                # Label with (control) if part of an ensemble or not otherwise.
                 ax.plot(
                     xname,
-                    yfield,
+                    np.squeeze(yfield),
                     color=color,
                     marker=line_marker,
                     ls="-",
@@ -1130,8 +1130,8 @@ def _plot_and_save_line_power_spectrum_series(
                     if len(cube.coord(ensemble_coord).points) > 1
                     else label,
                 )
-                # Label with (perturbed) if part of an ensemble and not the control.
             else:
+                # Label with (perturbed) if part of an ensemble and not the control.
                 ax.plot(
                     xname,
                     yfield,
