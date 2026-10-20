@@ -527,9 +527,12 @@ def _extract_common_time_points_one_frt(cubes: CubeList) -> CubeList:
     obs: Cube | None
     models: CubeList
     obs, models = split_obs_and_models(cubes)
-
-    base = models[0]
-    others = models[1:]
+    if obs is not None:
+        base = obs
+        models[0:]
+    else:
+        base = models[0]
+        others = models[1:]
     list_shared_times: list[set[int]] = []
 
     time_coord = get_time_coord(cubes)
