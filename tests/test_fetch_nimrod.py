@@ -84,11 +84,12 @@ def test_get_needed_environment_variables_nimrod(monkeypatch):
 def test_retrieve_nimrod_saves_observation_and_weights(tmp_path, monkeypatch):
     """Test retrieve_nimrod saves both observation and weight files when available."""
     # Create a temporary nimrod dictionary file.
+    basedir = tmp_path / "nimrod"
     nimrod_dict = {
         "Nimrod_comp_xkm": {
             "obs_id": "nimrod_xkm",
             "wei_id": "nimrod_xkm_weights",
-            "basedir": "/data/nimrod",
+            "basedir": str(basedir),
             "obs_dir": "obs",
             "obs_fname": "_obs.nc",
             "weights_dir": "weights",
@@ -96,9 +97,14 @@ def test_retrieve_nimrod_saves_observation_and_weights(tmp_path, monkeypatch):
             "freq": "PT01H",
         }
     }
+
+    for subdir, fname in [("obs", "_obs.nc"), ("weights", "_weights.nc")]:
+        f = basedir / subdir / "2026" / f"202604071300{fname}"
+        f.parent.mkdir(parents=True)
+        f.touch()
+
     config_path = tmp_path / "restricted_nimrod_met_office.json"
     config_path.write_text(json.dumps(nimrod_dict))
-
     # Set the required environment variables.
     monkeypatch.setenv("NIMROD_COMP_XKM", "True")
     monkeypatch.setenv("NIMROD_COMP_1KM", "False")

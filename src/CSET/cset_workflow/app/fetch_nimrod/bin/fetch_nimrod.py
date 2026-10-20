@@ -85,14 +85,6 @@ def apply_radar_weights(cube_obs: iris.cube.Cube, cube_wei: iris.cube.Cube):
     return cube_obs_weighted, cube_wei
 
 
-def _load_nimrod(path: Path) -> iris.cube.Cube | None:
-    """Load a Nimrod file, or return None if it's missing."""
-    if not path.exists():
-        logger.warning("Nimrod file not found: %s", path)
-        return None
-    return iris.load_cube(path)
-
-
 def retrieve_nimrod():
     """Fetch the observations corresponding to a model run.
 
@@ -102,7 +94,15 @@ def retrieve_nimrod():
     * ANALYSIS_LENGTH
     * ROSE_DATAC
     """
+
     # Grab the environment variables required for handling Nimrod data.
+    def _load_nimrod(path: Path) -> iris.cube.Cube | None:
+        """Load a Nimrod file, or return None if it's missing."""
+        if not path.exists():
+            logger.warning("Nimrod file not found: %s", path)
+            return None
+        return iris.load_cube(path)
+
     v = _get_needed_environment_variables_nimrod()
 
     # Grab the Nimrod handling dictionary.
