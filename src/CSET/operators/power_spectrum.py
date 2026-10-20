@@ -271,7 +271,19 @@ def calculate_power_spectrum(
             else:
                 combined_cube = member_power_spectra.concatenate_cube()
 
-        combined_cube = iris.util.squeeze(combined_cube)
+        fp = iris.coords.DimCoord.from_coord(input_cube.coord("forecast_period"))
+
+        time = combined_cube.coord("time").copy()
+        time_dim = combined_cube.coord_dims("time")[0]
+
+        # Remove time as the dimension coordinate
+        combined_cube.remove_coord("time")
+
+        # Add forecast_period as the dimension coordinate
+        combined_cube.add_dim_coord(fp, time_dim)
+
+        # Add time back as an auxiliary coordinate
+        combined_cube.add_aux_coord(time, data_dims=(time_dim,))
 
         out.append(combined_cube)
 
