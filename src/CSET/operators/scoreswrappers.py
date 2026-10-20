@@ -1141,6 +1141,15 @@ def scores_rmse_model_obs(
             model,
         ])
 
+
+        for cube in input_cubelist:
+            for coord_name in ["forecast_reference_time", "forecast_period"]:
+                if cube.coords(coord_name):
+                    cube.coord(coord_name).bounds = None
+
+        input_cubelist = input_cubelist.extract_overlapping(
+                         ["forecast_reference_time", "forecast_period"])
+
         rmse = scores_rmse(
             input_cubelist,
             preserved_coordinates,
