@@ -343,14 +343,15 @@ def test_difference_different_model_types(cube):
     )
 
 
-def test_difference_flip_pressure_order(transect_source_cube_readonly):
+def test_difference_flip_pressure_order(transect_source_cube):
     """Test that pressure coord is flipped if discreasing."""
-    flipped = transect_source_cube_readonly.copy()
+    cb = transect_source_cube.copy()
+    flipped = transect_source_cube.copy()
     flipped_coord = flipped.coord("pressure")
     flipped_coord.points = np.flip(flipped_coord.points)
     flipped.data = np.flip(flipped.data, flipped_coord.cube_dims(flipped))
     del flipped.attributes["cset_comparison_base"]
-    cubes = iris.cube.CubeList([transect_source_cube_readonly, flipped])
+    cubes = iris.cube.CubeList([cb, flipped])
 
     # Take difference.
     difference_cube = misc.difference(cubes)
