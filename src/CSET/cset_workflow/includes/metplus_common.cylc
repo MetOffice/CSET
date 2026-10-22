@@ -14,6 +14,7 @@
         TASK_START_TIME = $(cylc cyclepoint --template CCYYMMDDThh)
         FORECAST_LENGTH = $(isodatetime --as-total H -- {{ANALYSIS_LENGTH}} | cut -d '.' -f 1 )
         TASK_END_TIME = $(cylc cyclepoint --offset {{ANALYSIS_LENGTH}} --template CCYYMMDDThh)
+        VERPY_DIR = {{VERPY_DIR|default("")}}
 
     [[VERPY_METLOADER]]
     # Family grouping for all VerPy metloader tasks
