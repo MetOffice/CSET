@@ -84,11 +84,12 @@ def test_get_needed_environment_variables_nimrod(monkeypatch):
 def test_retrieve_nimrod_saves_observation_and_weights(tmp_path, monkeypatch):
     """Test retrieve_nimrod saves both observation and weight files when available."""
     # Create a temporary nimrod dictionary file.
+    basedir = tmp_path / "nimrod"
     nimrod_dict = {
         "Nimrod_comp_xkm": {
             "obs_id": "nimrod_xkm",
             "wei_id": "nimrod_xkm_weights",
-            "basedir": "/data/nimrod",
+            "basedir": str(basedir),
             "obs_dir": "obs",
             "obs_fname": "_obs.nc",
             "weights_dir": "weights",
@@ -96,17 +97,22 @@ def test_retrieve_nimrod_saves_observation_and_weights(tmp_path, monkeypatch):
             "freq": "PT01H",
         }
     }
+
+    for subdir, fname in [("obs", "_obs.nc"), ("weights", "_weights.nc")]:
+        f = basedir / subdir / "2026" / f"202604071300{fname}"
+        f.parent.mkdir(parents=True)
+        f.touch()
+
     config_path = tmp_path / "restricted_nimrod_met_office.json"
     config_path.write_text(json.dumps(nimrod_dict))
-
     # Set the required environment variables.
     monkeypatch.setenv("NIMROD_COMP_XKM", "True")
     monkeypatch.setenv("NIMROD_COMP_1KM", "False")
     monkeypatch.setenv("NIMROD_COMP_2KM", "False")
     monkeypatch.setenv("NIMROD_COMP_5MIN", "False")
     monkeypatch.setenv("NIMROD_WEIGHTS", "True")
-    monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "2026-05-07T12:00:00")
-    monkeypatch.setenv("ANALYSIS_LENGTH", "PT00H")
+    monkeypatch.setenv("CYLC_TASK_CYCLE_POINT", "2026-04-07T12:00:00")
+    monkeypatch.setenv("ANALYSIS_LENGTH", "PT01H")
     rose_datac = tmp_path / "rose_datac"
     monkeypatch.setenv("ROSE_DATAC", str(rose_datac))
 
@@ -144,13 +150,13 @@ def test_retrieve_nimrod_saves_observation_and_weights(tmp_path, monkeypatch):
     fetch_nimrod.apply_radar_weights.assert_called_once_with(obs_cube, weights_cube)
 
     expected_obs_file = str(
-        Path(rose_datac) / "data" / "nimrod_xkm" / "202605071200_nimrod_xkm.nc"
+        Path(rose_datac) / "data" / "nimrod_xkm" / "202604071300_nimrod_xkm.nc"
     )
     expected_weight_file = str(
         Path(rose_datac)
         / "data"
         / "nimrod_xkm_weights"
-        / "202605071200_nimrod_xkm_weights.nc"
+        / "202604071300_nimrod_xkm_weights.nc"
     )
 
     saved_paths = [path for _, path in save_calls]
