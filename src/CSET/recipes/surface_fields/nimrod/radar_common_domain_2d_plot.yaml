@@ -49,7 +49,7 @@ steps:
       value: 11
 
     boundary_margin: $BOUNDARY_MARGIN
-    outputs: $OUTPUTS
+    required_outputs: $OUTPUTS
 
   - operator: collapse.collapse
     coordinate: [time]
