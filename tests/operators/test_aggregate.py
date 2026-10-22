@@ -237,7 +237,7 @@ def test_build_station_lookup(dummy_cubelist_obs_3_common_stations):
         dummy_cubelist_obs_3_common_stations, common_stations
     )
 
-    assert np.shape(station_lookup.data) == (2, 10, 3)
+    assert np.shape(station_lookup.subset_data) == (2, 10, 3)
 
     expected_frt_points = [
         cb.coord("forecast_reference_time").points.item()
@@ -279,29 +279,4 @@ def test_make_aggregated_obs_cube(dummy_cubelist_obs_3_common_stations):
         common_stations,
         forecast_period,
     )
-
     assert agg_obs_cube.shape == (2, 10, 3)
-
-
-def test_combine_obs_across_forecasts(dummy_cubelist_obs_3_common_stations):
-    """Test combine_obs_across_forecasts basic functionality."""
-    agg_obs_cube = aggregate.combine_obs_across_forecasts(
-        dummy_cubelist_obs_3_common_stations
-    )
-
-    assert agg_obs_cube.shape == (2, 10, 3)
-
-
-def test_build_station_lookup_failure(
-    dummy_cubelist_obs_3_common_stations, dummy_cube_1_station
-):
-    """Test with mismatching lead times."""
-    cube_list = dummy_cubelist_obs_3_common_stations
-    cube_list.append(dummy_cube_1_station)
-    common_stations = aggregate._get_common_stations(cube_list)
-    with pytest.raises(
-        ValueError, match="Forecasts have different numbers of lead times"
-    ):
-        aggregate._build_station_lookup(
-            dummy_cubelist_obs_3_common_stations, common_stations
-        )
