@@ -502,23 +502,27 @@ def extract_common_time_points(cubes: CubeList) -> CubeList:
     """
     frt_coord = cubes[0].coords("forecast_reference_time")
 
+    _ensure_same_frt(cubes)
+
     if frt_coord and len(frt_coord[0].points) > 1:
         for cb in cubes[1:]:
-            reference_frts = cubes[0].coord("forecast_reference_time").points
             cb_frt_coord = cb.coords("forecast_reference_time")
             if not cb_frt_coord:
                 raise ValueError(
                     "All cubes must have a forecast_reference_time coordinate."
                 )
-            cube_frts = cb.coord("forecast_reference_time").points
-            if not np.array_equal(reference_frts, cube_frts):
-                raise ValueError(
-                    "Cubes do not share the same forecast_reference_time values."
-                )
-
         return extract_common_points(cubes, "forecast_period")
     else:
         return _extract_common_time_points_one_frt(cubes)
+
+
+def _ensure_same_frt(cubes: CubeList):
+    """Ensure that all cubes have the same forecast_reference_time(s)."""
+    frt_cube_0 = cubes[0].coords("forecast_reference_time").points()
+    for cb in cubes[1:]:
+        frt_cube = cb.coord("forecast_reference_time").points()
+        if not np.array_equal(frt_cube_0, frt_cube):
+            raise ValueError("Cubes do not share the same forecast_reference_time.")
 
 
 def _extract_common_time_points_one_frt(cubes: CubeList) -> CubeList:
@@ -529,12 +533,11 @@ def _extract_common_time_points_one_frt(cubes: CubeList) -> CubeList:
     obs, models = split_obs_and_models(cubes)
     if obs is not None:
         base = obs
-        models[0:]
+        others = models[0:]
     else:
         base = models[0]
         others = models[1:]
     list_shared_times: list[set[int]] = []
-
     time_coord = get_time_coord(cubes)
 
     if not time_coord:
