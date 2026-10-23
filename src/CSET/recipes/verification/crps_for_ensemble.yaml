@@ -29,6 +29,7 @@ steps:
         cell_methods: []
         varname: $VARNAME
 
+  - operator: misc.extract_common_time_points
 
   - operator: scoreswrappers.scores_crps_for_ensemble
     method: $METHOD

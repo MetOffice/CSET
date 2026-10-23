@@ -432,34 +432,13 @@ def interpolate_to_point_cube(
     # Empty CubeList To store regridded cubes.
     regridded_cubes = iris.cube.CubeList()
 
+    # Generate array of point cube lat and lon points.
+    point_lat_name, point_lon_name = get_cube_yxcoordname(point_cube)
+    point_lats = point_cube.coord(point_lat_name).points
+    point_lons = point_cube.coord(point_lon_name).points
+
     # Iterate over all cubes and regrid.
     for cube in iter_maybe(fld):
-        # Ensure matching times in fld cube and point_cube
-        base_time_coord = point_cube.coord("time")
-        other_time_coord = cube.coord("time")
-        base_times = base_time_coord.units.num2date(base_time_coord.points)
-        other_times = other_time_coord.units.num2date(other_time_coord.points)
-        shared_times = set.intersection(set(base_times), set(other_times))
-        logger.debug("Shared times: %s", shared_times)
-        time_constraint = iris.Constraint(
-            coord_values={
-                "time": lambda cell, shared_times=shared_times: (
-                    cell.point in shared_times
-                )
-            }
-        )
-
-        # Extract points matching the shared times.
-        cube = cube.extract(time_constraint)
-        point_cube = point_cube.extract(time_constraint)
-        if cube is None or point_cube is None:
-            raise ValueError("No common time points found!")
-
-        # Generate array of point cube lat and lon points.
-        point_lat_name, point_lon_name = get_cube_yxcoordname(point_cube)
-        point_lats = point_cube.coord(point_lat_name).points
-        point_lons = point_cube.coord(point_lon_name).points
-
         y_coord, x_coord = get_cube_yxcoordname(cube)
 
         # Rotate point_cube coords if required to match model coord rotation.
