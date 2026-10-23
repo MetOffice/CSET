@@ -435,7 +435,7 @@ def _clean_unwanted_cube_attributes(
     def _strip_attributes(
         obj: iris.cube.Cube | iris.coords.Coord, keep: list[str]
     ) -> None:
-        """Remove all attributes not in attrs_to_preserve, in place."""
+        """Remove all attributes not in keep, in place."""
         for attr in list(obj.attributes):
             if attr not in keep:
                 obj.attributes.pop(attr, None)
