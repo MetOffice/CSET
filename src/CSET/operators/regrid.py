@@ -407,9 +407,7 @@ def transform_lat_long_points(lon, lat, cube):
 
 
 def interpolate_to_point_cube(
-    fld: iris.cube.Cube | iris.cube.CubeList,
-    point_cube: iris.cube.Cube | iris.cube.CubeList,
-    **kwargs,
+    fld: iris.cube.Cube | iris.cube.CubeList, point_cube: iris.cube.Cube, **kwargs
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Interpolate a 2D field in cube or CubeList to a set of points.
 
@@ -441,7 +439,6 @@ def interpolate_to_point_cube(
 
     # Iterate over all cubes and regrid.
     for cube in iter_maybe(fld):
-        # Get forecast field cube spatial names.
         y_coord, x_coord = get_cube_yxcoordname(cube)
 
         # Rotate point_cube coords if required to match model coord rotation.
@@ -474,107 +471,48 @@ def interpolate_to_point_cube(
             sample_points, iris.analysis.Linear(extrapolation_mode="mask")
         )
 
-        diag_data = np.diagonal(
-            fld_point_cube.data,
-            axis1=-2,
-            axis2=-1,
-        )
-
+        # Retain only diagonal elements of 2D interpolated cube to vector points
+        od_index = point_cube.coord_dims("station")[0]
         fv_cube = iris.cube.Cube(
-            diag_data,
+            fld_point_cube.data.diagonal(axis1=od_index, axis2=od_index + 1),
             standard_name=cube.standard_name,
             long_name=cube.long_name,
             units=cube.units,
         )
-
-        # Add all non-horizontal dimension coordinates
-        # from the forecast cube.
-        out_dim = 0
-
-        for coord in cube.coords(dim_coords=True):
-            if coord.name() in (
-                "latitude",
-                "longitude",
-                "grid_latitude",
-                "grid_longitude",
-            ):
-                continue
-
+        # Copy all non-lat/lon coordinates and cube attributes
+        if "time" in [coord.name() for coord in fld_point_cube.coords(dim_coords=True)]:
             fv_cube.add_dim_coord(
-                coord.copy(),
-                out_dim,
+                point_cube.coord("time"), point_cube.coord_dims("time")[0]
             )
-
-            out_dim += 1
-
-        # Station dimension is always last.
-        station_dim = out_dim
-
-        fv_cube.add_dim_coord(
-            point_cube.coord("station").copy(),
-            station_dim,
-        )
-
-        # Copy forecast auxiliary coordinates.
         for coord in cube.coords():
-            if coord.name() in (
+            if coord.name() not in [
+                "time",
                 "latitude",
                 "longitude",
                 "grid_latitude",
                 "grid_longitude",
-            ):
-                continue
-
-            if coord.name() in [c.name() for c in fv_cube.coords()]:
-                continue
-
-            dims = cube.coord_dims(coord)
-
-            if dims:
-                fv_cube.add_aux_coord(
-                    coord.copy(),
-                    dims,
-                )
-            else:
-                fv_cube.add_aux_coord(
-                    coord.copy(),
-                )
-
-        # Copy observation auxiliary coordinates.
+            ] and coord.name() not in [coord.name() for coord in fv_cube.coords()]:
+                fv_cube.add_aux_coord(coord.copy(), cube.coord_dims(coord))
         for coord in point_cube.coords():
-            if coord.name() in (
-                "station",
+            if coord.name() not in [
+                "time",
                 "forecast_period",
                 "forecast_reference_time",
-            ):
-                continue
-
-            if coord.name() in [c.name() for c in fv_cube.coords()]:
-                continue
-
-            dims = point_cube.coord_dims(coord)
-
-            if dims:
-                fv_cube.add_aux_coord(
-                    coord.copy(),
-                    dims,
-                )
-            else:
-                fv_cube.add_aux_coord(
-                    coord.copy(),
-                )
-
+                "realization",
+                "station",
+            ] and coord.name() not in [coord.name() for coord in fv_cube.coords()]:
+                fv_cube.add_aux_coord(coord.copy(), point_cube.coord_dims(coord))
+        fv_cube.add_dim_coord(point_cube.coord("station"), od_index)
         fv_cube.attributes = cube.attributes.copy()
         fv_cube.cell_methods = cube.cell_methods
         fv_cube.units = cube.units
-
         regridded_cubes.append(fv_cube)
 
-    # Preserve returning a cube if only a cube supplied.
+    # Preserve returning a cube if only a cube has been supplied to regrid.
     if len(regridded_cubes) == 1:
         return regridded_cubes[0]
-
-    return regridded_cubes
+    else:
+        return regridded_cubes
 
 
 def vertical_interpolation(
