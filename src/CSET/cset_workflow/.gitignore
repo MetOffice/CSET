@@ -15,6 +15,7 @@ docs/
 !/site/localhost.cylc
 !/site/monsoon.cylc
 !/site/nci-gadi.cylc
+!/site/nscc.cylc
 
 # User workflow configuration.
 /*rose-suite*
