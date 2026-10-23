@@ -725,6 +725,6 @@ def test_multiple_frt_common_time_coords_one_cube_no_frt(long_forecast_many_cube
     cube_list_all = CubeList([cube_1, cube_2, cube_3])
     cube_list_all[1].remove_coord("forecast_reference_time")
     with pytest.raises(
-        ValueError, match="Cubes do not share the same forecast_reference_time values."
+        ValueError, match="Cube does not contain any forecast_reference_times."
     ):
         misc.extract_common_time_points(cube_list_all)

@@ -529,7 +529,13 @@ def _ensure_same_frt(cubes: CubeList) -> None:
 
     for cube in cubes[1:]:
         points = _frt_points(cube)
-        if points is None or not np.array_equal(reference, points):
+        if points is None:
+            raise ValueError("Cube does not contain any forecast_reference_times.")
+        elif len(points) != len(reference):
+            raise ValueError(
+                "Cubes do not have same number of forecast_reference_times"
+            )
+        elif not np.array_equal(reference, points):
             raise ValueError(
                 "Cubes do not share the same forecast_reference_time values."
             )
