@@ -815,3 +815,22 @@ def load(conf: Config):
                 model_ids=model["id"],
                 aggregation=True,
             )
+
+    # Ancillary fields.
+    if conf.SPATIAL_ANCILLARY_FIELD:
+        for model, field in itertools.product(models, conf.ANCILLARY_FIELDS):
+            yield RawRecipe(
+                recipe="generic_surface_spatial_plot_sequence.yaml",
+                model_ids=model["id"],
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": model["name"],
+                    "METHOD": "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                },
+                aggregation=False,
+            )

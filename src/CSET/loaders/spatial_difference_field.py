@@ -583,3 +583,24 @@ def load(conf: Config):
                 model_ids=[base_model["id"], model["id"]],
                 aggregation=True,
             )
+
+    # Ancillary fields.
+    if conf.SPATIAL_DIFFERENCE_ANCILLARY_FIELD:
+        base_model = models[0]
+        for model, field in itertools.product(models[1:], conf.ANCILLARY_FIELDS):
+            yield RawRecipe(
+                recipe="surface_spatial_difference.yaml",
+                variables={
+                    "VARNAME": field,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODEL": model["name"],
+                    "METHOD": "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                },
+                model_ids=[base_model["id"], model["id"]],
+                aggregation=False,
+            )

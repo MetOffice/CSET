@@ -100,10 +100,20 @@
     "max": 0.005,
     "min": 0.0
   },
+  "bare_soil_momentum_roughness_length_difference": {
+    "cmap": "bwr",
+    "max": 0.0005,
+    "min": -0.0005
+  },
   "canopy_height": {
     "cmap": "YlOrRd",
     "max": 30.0,
     "min": 0.0
+  },
+  "canopy_height_difference": {
+    "cmap": "bwr",
+    "max": 10.0,
+    "min": -10.0
   },
   "ceilometer_filtered_combined_cloud_amount_maximum_random_overlap": {
     "cmap": "viridis",
@@ -119,6 +129,11 @@
     "cmap": "managua_r",
     "max": 12.0,
     "min": 0.0
+  },
+  "clapp_hornberger_b_coefficient_difference": {
+    "cmap": "bwr",
+    "max": 8.0,
+    "min": -8.0
   },
   "cloud_area_fraction": {
     "cmap": "viridis",
@@ -216,6 +231,11 @@
     "max": 1.0,
     "min": 0.0
   },
+  "fractions_of_surface_types_difference": {
+    "cmap": "PRGn",
+    "max": 0.5,
+    "min": -0.5
+  },
   "geopotential_height_at_pressure_levels": {
     "cmap": "bwr",
     "max": 15000,
@@ -312,6 +332,11 @@
     "max": "auto",
     "min": 0.0
   },
+  "half_peak_to_trough_height_orography_difference": {
+    "cmap": "PuOr",
+    "max": 150.0,
+    "min": -150.0
+  },
   "high_type_cloud_area_fraction": {
     "cmap": "viridis",
     "max": 1,
@@ -337,10 +362,20 @@
     "max": 1,
     "min": 0
   },
+  "land_binary_mask_difference": {
+    "cmap": "bwr",
+    "max": 1.0,
+    "min": -1.0
+  },
   "leaf_area_index": {
     "cmap": "YlGn",
     "max": 10.0,
     "min": 0.0
+  },
+  "leaf_area_index_difference": {
+    "cmap": "bwr",
+    "max": 5.0,
+    "min": -5.0
   },
   "low_type_cloud_area_fraction": {
     "cmap": "viridis",
@@ -357,35 +392,70 @@
     "max": 500,
     "min": -10
   },
+  "mass_content_of_water_in_soil_layer_difference": {
+    "cmap": "ocean_r",
+    "max": 10,
+    "min": -10
+  },
   "mass_fraction_of_soil_particles_in_ukmo_division1": {
     "cmap": "viridis",
     "max": 0.2,
     "min": 0.0
+  },
+  "mass_fraction_of_soil_particles_in_ukmo_division1_difference": {
+    "cmap": "bwr",
+    "max": 0.1,
+    "min": -0.1
   },
   "mass_fraction_of_soil_particles_in_ukmo_division2": {
     "cmap": "viridis",
     "max": 0.2,
     "min": 0.0
   },
+  "mass_fraction_of_soil_particles_in_ukmo_division2_difference": {
+    "cmap": "bwr",
+    "max": 0.1,
+    "min": -0.1
+  },
   "mass_fraction_of_soil_particles_in_ukmo_division3": {
     "cmap": "viridis",
     "max": 0.2,
     "min": 0.0
+  },
+  "mass_fraction_of_soil_particles_in_ukmo_division3_difference": {
+    "cmap": "bwr",
+    "max": 0.1,
+    "min": -0.1
   },
   "mass_fraction_of_soil_particles_in_ukmo_division4": {
     "cmap": "viridis",
     "max": 0.2,
     "min": 0.0
   },
+  "mass_fraction_of_soil_particles_in_ukmo_division4_difference": {
+    "cmap": "bwr",
+    "max": 0.1,
+    "min": -0.1
+  },
   "mass_fraction_of_soil_particles_in_ukmo_division5": {
     "cmap": "viridis",
     "max": 0.2,
     "min": 0.0
   },
+  "mass_fraction_of_soil_particles_in_ukmo_division5_difference": {
+    "cmap": "bwr",
+    "max": 0.1,
+    "min": -0.1
+  },
   "mass_fraction_of_soil_particles_in_ukmo_division6": {
     "cmap": "viridis",
     "max": 0.2,
     "min": 0.0
+  },
+  "mass_fraction_of_soil_particles_in_ukmo_division6_difference": {
+    "cmap": "bwr",
+    "max": 0.1,
+    "min": -0.1
   },
   "maximum_combined_cloud_amount_below_111m_asl": {
     "cmap": "viridis",
@@ -401,6 +471,11 @@
     "cmap": "viridis",
     "max": 12.0,
     "min": 0.0
+  },
+  "mean_topographic_index_difference": {
+    "cmap": "bwr",
+    "max": 2.0,
+    "min": -2.0
   },
   "medium_type_cloud_area_fraction": {
     "cmap": "viridis",
@@ -532,8 +607,18 @@
     "max": 1.5e-06,
     "min": 0.0
   },
+  "ocean_near_surface_chlorophyll_difference": {
+    "cmap": "bwr",
+    "max": 1e-06,
+    "min": -1e-06
+  },
   "orographic_gradient_x_component": {
     "cmap": "seismic",
+    "max": 0.25,
+    "min": -0.25
+  },
+  "orographic_gradient_x_component_difference": {
+    "cmap": "bwr",
     "max": 0.25,
     "min": -0.25
   },
@@ -542,8 +627,18 @@
     "max": 0.0025,
     "min": 0.0
   },
+  "orographic_gradient_xx_component_difference": {
+    "cmap": "bwr",
+    "max": 0.0025,
+    "min": -0.0025
+  },
   "orographic_gradient_xy_component": {
     "cmap": "seismic",
+    "max": 0.0025,
+    "min": -0.0025
+  },
+  "orographic_gradient_xy_component_difference": {
+    "cmap": "bwr",
     "max": 0.0025,
     "min": -0.0025
   },
@@ -552,13 +647,28 @@
     "max": 0.25,
     "min": -0.25
   },
+  "orographic_gradient_y_component_difference": {
+    "cmap": "bwr",
+    "max": 0.25,
+    "min": -0.25
+  },
   "orographic_gradient_yy_component": {
     "cmap": "hot_r",
     "max": 0.0025,
     "min": 0.0
   },
+  "orographic_gradient_yy_component_difference": {
+    "cmap": "bwr",
+    "max": 0.0025,
+    "min": -0.0025
+  },
   "orographic_subgrid_anisotropy": {
     "cmap": "seismic",
+    "max": 1.5,
+    "min": -1.5
+  },
+  "orographic_subgrid_anisotropy_difference": {
+    "cmap": "bwr",
     "max": 1.5,
     "min": -1.5
   },
@@ -567,10 +677,20 @@
     "max": 0.1,
     "min": 0.0
   },
+  "orographic_subgrid_orientation_difference": {
+    "cmap": "bwr",
+    "max": 1.5,
+    "min": -1.5
+  },
   "orographic_subgrid_slope": {
     "cmap": "hot",
     "max": 1.0,
     "min": 0.0
+  },
+  "orographic_subgrid_slope_difference": {
+    "cmap": "bwr",
+    "max": 1.5,
+    "min": -1.5
   },
   "potential_vorticity_at_pressure_levels": {
     "cmap": "RdBu_r",
@@ -639,35 +759,70 @@
     "max": 0.05,
     "min": 0.0
   },
+  "silhouette_orographic_roughness_difference": {
+    "cmap": "bwr",
+    "max": 0.05,
+    "min": -0.05
+  },
   "soil_albedo": {
     "cmap": "managua_r",
     "max": 0.5,
     "min": 0.0
+  },
+  "soil_albedo_difference": {
+    "cmap": "bwr",
+    "max": 0.1,
+    "min": -0.1
   },
   "soil_bulk_density": {
     "cmap": "cividis_r",
     "max": 1600.0,
     "min": 0.0
   },
+  "soil_bulk_density_difference": {
+    "cmap": "bwr",
+    "max": 1000.0,
+    "min": -1000.0
+  },
   "soil_carbon_content": {
     "cmap": "managua_r",
     "max": 35.0,
     "min": 0.0
+  },
+  "soil_carbon_content_difference": {
+    "cmap": "bwr",
+    "max": 15.0,
+    "min": -15.0
   },
   "soil_hydraulic_conductivity_at_saturation": {
     "cmap": "nipy_spectral_r",
     "max": 0.025,
     "min": 0.0
   },
+  "soil_hydraulic_conductivity_at_saturation_difference": {
+    "cmap": "bwr",
+    "max": 0.0025,
+    "min": -0.0025
+  },
   "soil_porosity": {
     "cmap": "nipy_spectral_r",
     "max": 0.5,
     "min": 0.0
   },
+  "soil_porosity_difference": {
+    "cmap": "bwr",
+    "max": 0.05,
+    "min": -0.05
+  },
   "soil_suction_at_saturation": {
     "cmap": "nipy_spectral_r",
     "max": 0.5,
     "min": 0.0
+  },
+  "soil_suction_at_saturation_difference": {
+    "cmap": "bwr",
+    "max": 0.5,
+    "min": -0.5
   },
   "soil_temperature": {
     "cmap": "RdYlBu_r",
@@ -686,20 +841,40 @@
     "max": 1500000.0,
     "min": 1000000.0
   },
+  "soil_thermal_capacity_difference": {
+    "cmap": "bwr",
+    "max": 100000.0,
+    "min": -100000.0
+  },
   "soil_thermal_conductivity": {
     "cmap": "nipy_spectral_r",
     "max": 0.5,
     "min": 0.0
+  },
+  "soil_thermal_conductivity_difference": {
+    "cmap": "bwr",
+    "max": 0.1,
+    "min": -0.1
   },
   "standard_deviation_orography": {
     "cmap": "pink_r",
     "max": 35.0,
     "min": 0.0
   },
+  "standard_deviation_orography_difference": {
+    "cmap": "bwr",
+    "max": 5.0,
+    "min": -5.0
+  },
   "standard_deviation_topographic_index": {
     "cmap": "viridis",
     "max": 6.0,
     "min": 0.0
+  },
+  "standard_deviation_topographic_index_difference": {
+    "cmap": "bwr",
+    "max": 2.0,
+    "min": -2.0
   },
   "structural_similarity": {
     "cmap": "afmhot",
@@ -709,22 +884,42 @@
   "surface_altitude": {
     "cmap": "terrain",
     "max": "auto",
-    "min": 0
+    "min": 0.01
+  },
+  "surface_altitude_difference": {
+    "cmap": "PuOr",
+    "max": 25.0,
+    "min": -25.0
   },
   "surface_diffuse_albedo_assuming_no_snow": {
     "cmap": "viridis",
     "max": 0.4,
     "min": 0.0
   },
+  "surface_diffuse_albedo_assuming_no_snow_difference": {
+    "cmap": "bwr",
+    "max": 0.2,
+    "min": -0.2
+  },
   "surface_diffuse_albedo_of_near_infra_red_radiation_assuming_no_snow": {
     "cmap": "viridis",
     "max": 0.4,
     "min": 0.0
   },
+  "surface_diffuse_albedo_of_near_infra_red_radiation_assuming_no_snow_difference": {
+    "cmap": "bwr",
+    "max": 0.2,
+    "min": -0.2
+  },
   "surface_diffuse_albedo_of_photosynthetically_active_radiation_assuming_no_snow": {
     "cmap": "viridis",
     "max": 0.1,
     "min": 0.0
+  },
+  "surface_diffuse_albedo_of_photosynthetically_active_radiation_assuming_no_snow_difference": {
+    "cmap": "bwr",
+    "max": 0.1,
+    "min": -0.1
   },
   "surface_downward_longwave_flux": {
     "cmap": "Greys_r",
@@ -1009,20 +1204,40 @@
     "max": "auto",
     "min": 0
   },
+  "unfiltered_orography_difference": {
+    "cmap": "PuOr",
+    "max": 25.0,
+    "min": -25.0
+  },
   "urban_building_height": {
     "cmap": "gist_earth_r",
     "max": 10.0,
     "min": 0.0
+  },
+  "urban_building_height_difference": {
+    "cmap": "bwr",
+    "max": 10.0,
+    "min": -10.0
   },
   "urban_height_to_width_ratio": {
     "cmap": "managua_r",
     "max": 0.5,
     "min": 0.0
   },
+  "urban_height_to_width_ratio_difference": {
+    "cmap": "bwr",
+    "max": 0.5,
+    "min": -0.5
+  },
   "urban_width_ratio": {
     "cmap": "managua_r",
     "max": 1.0,
     "min": 0.0
+  },
+  "urban_width_ratio_difference": {
+    "cmap": "bwr",
+    "max": 0.5,
+    "min": -0.5
   },
   "vapour_specific_humidity_at_pressure_levels_for_climate_averaging": {
     "cmap": "Blues",
@@ -1123,25 +1338,50 @@
     "max": 1.0,
     "min": 0.0
   },
+  "volume_fraction_of_clay_in_soil_difference": {
+    "cmap": "bwr",
+    "max": 1.0,
+    "min": -1.0
+  },
   "volume_fraction_of_condensed_water_in_soil_at_critical_point": {
     "cmap": "nipy_spectral_r",
     "max": 0.5,
     "min": 0.0
+  },
+  "volume_fraction_of_condensed_water_in_soil_at_critical_point_difference": {
+    "cmap": "bwr",
+    "max": 0.5,
+    "min": -0.5
   },
   "volume_fraction_of_condensed_water_in_soil_at_wilting_point": {
     "cmap": "nipy_spectral_r",
     "max": 0.5,
     "min": 0.0
   },
+  "volume_fraction_of_condensed_water_in_soil_at_wilting_point_difference": {
+    "cmap": "bwr",
+    "max": 0.5,
+    "min": -0.5
+  },
   "volume_fraction_of_sand_in_soil": {
     "cmap": "managua_r",
     "max": 1.0,
     "min": 0.0
   },
+  "volume_fraction_of_sand_in_soil_difference": {
+    "cmap": "bwr",
+    "max": 1.0,
+    "min": -1.0
+  },
   "volume_fraction_of_silt_in_soil": {
     "cmap": "managua_r",
     "max": 1.0,
     "min": 0.0
+  },
+  "volume_fraction_of_silt_in_soil_difference": {
+    "cmap": "bwr",
+    "max": 1.0,
+    "min": -1.0
   },
   "wet_bulb_potential_temperature_at_pressure_levels": {
     "cmap": "RdYlBu_r",
