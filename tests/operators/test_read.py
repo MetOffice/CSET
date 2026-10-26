@@ -286,9 +286,11 @@ def test_read_cubes_no_unwanted_attrs(cube):
     """Correctly remove unneeded attributes."""
     cube.attributes["uuid"] = "87096862-89c3-4749-9c6c-0be91c2a7954"
     cube.attributes["timeStamp"] = "2024-May-20 12:29:21 GMT"
+    cube.coord("time").attributes["time_origin"] = "2024-May-20 12:29:21 GMT"
     read._clean_unwanted_cube_attributes(cube)
     assert "uuid" not in cube.attributes
     assert "timeStamp" not in cube.attributes
+    assert "time_origin" not in cube.coord("time").attributes
 
 
 def test_lfric_time_coord_fix_callback():
