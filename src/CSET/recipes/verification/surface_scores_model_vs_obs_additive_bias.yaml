@@ -57,9 +57,7 @@ steps:
                operator: constraints.generate_var_constraint
                varname: observed_$VARNAME
 
-  - operator: misc.extract_common_time_points
-
-  - operator: scoreswrappers.scores_rmse
+  - operator: scoreswrappers.scores_additive_bias
     preserved_coordinates: $PRESERVED_COORDS
 
   - operator: collapse.collapse
