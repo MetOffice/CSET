@@ -13,7 +13,7 @@ module use /g/data/hr22/modulefiles
 module load cylc cset
 
 CSET_DIR=$(readlink -f "$SCRIPT_DIR/../..")
-BRANCH_NAME="$(cd $CSET_DIR && git branch --show-current)"
+BRANCH_NAME="$(cd "$CSET_DIR" && git branch --show-current)"
 WORK_DIR=$(mktemp --tmpdir -d csetXXXXXX)
 
 # Set up to run from the checked out CSET repository
