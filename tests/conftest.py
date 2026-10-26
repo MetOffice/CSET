@@ -1726,3 +1726,41 @@ def mercator_cube():
         units="K",
         dim_coords_and_dims=[(y, 0), (x, 1)],
     )
+
+
+@pytest.fixture()
+def xwind_read_only() -> iris.cube.Cube:
+    """Get regridded xwind to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "x_wind")
+
+
+@pytest.fixture()
+def xwind() -> iris.cube.Cube:
+    """Get regridded xwind to run tests on. It is safe to modify."""
+    return xwind_read_only.copy()
+
+
+@pytest.fixture()
+def ywind_read_only() -> iris.cube.Cube:
+    """Get regridded ywind to run tests on. It is NOT safe to modify."""
+    return read.read_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "y_wind")
+
+
+@pytest.fixture()
+def ywind() -> iris.cube.Cube:
+    """Get regridded ywind to run tests on. It is safe to modify."""
+    return ywind_read_only.copy()
+
+
+@pytest.fixture()
+def wwind_read_only() -> iris.cube.Cube:
+    """Get regridded wwind to run tests on. It is NOT sfae to modify."""
+    return read.read_cube(
+        "tests/test_data/ageofair/aoa_in_rgd.nc", "upward_air_velocity"
+    )
+
+
+@pytest.fixture()
+def wwind() -> iris.cube.Cube:
+    """Get regridded wwind to run tests on. It is safe to modify."""
+    return wwind_read_only.copy()
