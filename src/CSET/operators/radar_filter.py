@@ -388,19 +388,48 @@ def radar_mask_loop(
     use_nimrod_mask = nimrod_mask
 
     # Loop over the models.
-    # using required_outputs="all" returns both
-    # masked model and radar fields
     for model in model_field:
         filtered_model = radar_mask(
             model,
             use_nimrod_field,
             use_nimrod_mask,
             boundary_margin=boundary_margin,
-            required_outputs=required_outputs,
+            required_outputs="model",
         )
         filtered_cubes.append(filtered_model)
 
+    # Grab the filtered radar observations using
+    # the first model as the base model for regridding.
+    filtered_radar = radar_mask(
+        model_field[0],
+        use_nimrod_field,
+        use_nimrod_mask,
+        boundary_margin=boundary_margin,
+        required_outputs="radar",
+    )
+    filtered_cubes.append(filtered_radar)
+
     return filtered_cubes
+
+
+#    # Loop over the models.
+#    # using required_outputs="all" returns both
+#    # masked model and radar fields
+#    for model in model_field:
+#        filtered_model = radar_mask(
+#            model,
+#            use_nimrod_field,
+#            use_nimrod_mask,
+#            boundary_margin=boundary_margin,
+#            required_outputs=required_outputs,
+#        )
+#
+#        if isinstance(filtered_model, iris.cube.CubeList):
+#          filtered_cubes.extend(filtered_model)
+#        if isinstance(filtered_model, iris.cube.Cube):
+#          filtered_cubes.append(filtered_model)
+#
+#    return filtered_cubes
 
 
 def match_varname_and_units(cubes: iris.cube.Cube | iris.cube.CubeList):
