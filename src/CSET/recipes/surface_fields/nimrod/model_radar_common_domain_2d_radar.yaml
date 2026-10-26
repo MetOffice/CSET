@@ -54,7 +54,7 @@ steps:
       value: 11
 
     boundary_margin: $BOUNDARY_MARGIN
-    outputs: "radar"
+    required_outputs: "radar"
 
   - operator: collapse.collapse
     coordinate: [time]

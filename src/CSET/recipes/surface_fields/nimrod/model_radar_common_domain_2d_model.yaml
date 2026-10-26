@@ -54,7 +54,7 @@ steps:
       value: 11
 
     boundary_margin: $BOUNDARY_MARGIN
-    outputs: "model"
+    required_outputs: "model"
 
   - operator: collapse.collapse
     coordinate: [time]
