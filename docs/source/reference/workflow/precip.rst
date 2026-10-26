@@ -13,7 +13,7 @@ You will also need to set the model variable name that contains precipitation,
 the interval that the model precipitation is accumulated over and the
 accumulation interval to output verification statistics for::
 
-    METPLUS_PRECIP_VARIABLE="precipitation_flux"
+    METPLUS_PRECIP_FCST_VARIABLE="precipitation_flux"
     METPLUS_PRECIP_FCST_ACCUM="PT1H"
     METPLUS_PRECIP_VERIFY_ACCUM="PT1H"
 
