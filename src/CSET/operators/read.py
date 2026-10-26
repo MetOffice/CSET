@@ -433,6 +433,15 @@ def _clean_unwanted_cube_attributes(
 
     This is run as a final step in read, so cube metadata fixing has already been done.
     """
+
+    def _strip_attributes(
+        obj: iris.cube.Cube | iris.coords.Coord, keep: list[str]
+    ) -> None:
+        """Remove all attributes not in keep, in place."""
+        for attr in list(obj.attributes):
+            if attr not in keep:
+                obj.attributes.pop(attr, None)
+
     # List of cube attributes to preserve
     attrs_to_preserve = [
         "model_name",
@@ -443,9 +452,11 @@ def _clean_unwanted_cube_attributes(
 
     # Iterate through each cube and check each attribute.
     for cube in iter_maybe(cubes):
-        for attr in list(cube.attributes):
-            if attr not in attrs_to_preserve:
-                cube.attributes.pop(attr, None)
+        # remove unwanted cube attributes
+        _strip_attributes(cube, attrs_to_preserve)
+        for coord in cube.dim_coords + cube.aux_coords:
+            # remove unwanted coord attributes
+            _strip_attributes(coord, attrs_to_preserve)
 
     return cubes
 
