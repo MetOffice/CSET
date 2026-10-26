@@ -92,7 +92,6 @@
     [[verpy_plot_pointstat]]
     # Runs VerPy plotting routines
         inherit = METPLUS
-        script = rose task-run -v --app-key=verpy_plot
         [[[environment]]]
             PLOT_DIR = ${CYLC_WORKFLOW_SHARE_DIR}/web/plots
             START_DATE = $(isodatetime $CYLC_WORKFLOW_INITIAL_CYCLE_POINT --print-format %Y%m%d)
@@ -101,5 +100,6 @@
             STAT_TYPE = cnt
             STREAM = point_stat
             MODEL_NAMES = {{ models | map(attribute='name') | join(' ') }}
+            ROSE_TASK_APP = verpy_plot
 
 {% endif %}
