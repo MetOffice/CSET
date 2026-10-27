@@ -607,3 +607,45 @@ def calc_array_stats(
         array_max = np.nanmax(array)
         array_mean = np.nanmean(array)
     return array_min, array_max, array_mean
+
+
+def sort_cube_by_coord(cube: iris.cube.Cube, coord_name: str) -> iris.cube.Cube:
+    """Sort a cube along one dimension by the values of a coordinate.
+
+    The original dim coord on that dimension is replaced with a fresh
+    0..N-1 index, since reordering makes it non-monotonic.
+    """
+    if not cube.coords(coord_name):
+        return cube
+
+    def natural_key(s):
+        # Split a string into text and number chunks for natural ordering.
+        s = str(s).strip()
+        chunks = [
+            int(part) if part.isdigit() else part.lower()
+            for part in re.split(r"(\d+)", s)
+        ]
+        # Raw string as a final tiebreaker so the key is unique.
+        return chunks, s
+
+    coord = cube.coord(coord_name)
+    (dim,) = cube.coord_dims(coord)
+
+    # Remember the dim coord's name before indexing demotes it.
+    dim_coords = cube.coords(dimensions=dim, dim_coords=True)
+    dim_coord_name = dim_coords[0].name() if dim_coords else None
+
+    order = sorted(range(len(coord.points)), key=lambda i: natural_key(coord.points[i]))
+    index = [slice(None)] * cube.ndim
+    index[dim] = np.array(order)
+    sorted_cube = cube[tuple(index)]
+
+    if dim_coord_name is not None:
+        sorted_cube.remove_coord(dim_coord_name)
+        sorted_cube.add_dim_coord(
+            iris.coords.DimCoord(
+                np.arange(len(order), dtype=np.int32), long_name=dim_coord_name
+            ),
+            dim,
+        )
+    return sorted_cube
