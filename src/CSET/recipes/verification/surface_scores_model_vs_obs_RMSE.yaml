@@ -42,8 +42,7 @@ steps:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
 
-  - operator: misc.extract_common_points
-    coordinate: time
+  - operator: misc.extract_common_time_points
 
   - operator: misc.combine_cubes_into_cubelist
     first:
@@ -65,6 +64,7 @@ steps:
            constraint:
                operator: constraints.generate_var_constraint
                varname: observed_$VARNAME
+
 
   - operator: scoreswrappers.scores_rmse
     preserved_coordinates: $PRESERVED_COORDS
