@@ -10,6 +10,8 @@ then from within the checked-out repo run
 
     ./utils/nci-demo/nci-demo.sh
 
+NOTE: If running from an ARE VDI terminal you will need to escape the VDI container first by running `ssh localhost`.
+
 This will install the CSET workflow and run it using the ['nci-demo'](/src/CSET/cset_workflow/opt/rose-suite-nci-demo.conf) opt file.
 The opt file configures CSET to run against sample data held in /g/data/dp9.
 The version of CSET in the workflow will be from the checked out repository, rather than the module, so it will make use of any new features.
