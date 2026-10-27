@@ -30,12 +30,15 @@ from iris.cube import Cube, CubeList
 from iris.util import reverse
 
 from CSET._common import is_increasing
-from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
+from CSET.operators._utils import (
+    ensure_common_time_points,
+    fully_equalise_attributes,
+    get_cube_yxcoordname,
+)
 from CSET.operators.constraints import (
     generate_realization_constraint,
     generate_remove_single_ensemble_member_constraint,
 )
-from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.read import _realization_callback
 from CSET.operators.regrid import regrid_onto_cube
 
@@ -740,6 +743,38 @@ def _sort_cube_into_base_and_other(cubes: CubeList) -> tuple[Cube, CubeList]:
     return base, others
 
 
+def _split_base_and_other(cubes: CubeList):
+    r"""Split the cube into base and other cubes.
+
+    Split depends on whether there
+    is an observed cube in the cubes.  If there is an observed cube,
+    then 'base' is the observed cube, if not then 'base' is the comparison
+    model cube.
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        Cubes to split into base and other cubes.
+
+    Returns
+    -------
+    tuple
+        A tuple containing a base cube, and other cube/cubelist.
+
+    """
+    obs_cube = [cb for cb in cubes if "observed" in (cb.long_name or "")]
+    if obs_cube:
+        if len(obs_cube) > 1:
+            raise ValueError(
+                f"Expected exactly one 'observed' cube, found {len(obs_cube)}"
+            )
+        base = obs_cube[0]
+        others = CubeList(cb for cb in cubes if cb is not base)
+        return base, others
+
+    return _sort_cube_into_base_and_other(cubes)
+
+
 def _ensure_increasing_pressure_coordinates(cubes: CubeList) -> CubeList:
     r"""Ensure the pressure coordinate is increasing.
 
@@ -787,12 +822,12 @@ def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube
     is likely going to need to be refactored out of CSET and perhaps moved into
     `CSET._utils` given common code between here and `misc.difference`.
     """
+    # raises value error if cube time points don't match
+    ensure_common_time_points(base, other)
+
     # Set cubes into correct format using code from difference operator
 
-    # Extract just common time points.
     other_model_name = other.attributes["model_name"]
-
-    base, other = _extract_common_time_points(base, other)
 
     if base.coords("pressure") and other.coords("pressure"):
         common_pressure = np.intersect1d(
@@ -971,279 +1006,3 @@ def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube) -> None:
             )
     except iris.exceptions.CoordinateNotFoundError:
         pass
-
-
-def _split_base_and_other(cubes: CubeList):
-    r"""Split the cube into base and other cubes.
-
-    Split depends on whether there
-    is an observed cube in the cubes.  If there is an observed cube,
-    then 'base' is the observed cube, if not then 'base' is the comparison
-    model cube.
-
-    Parameters
-    ----------
-    cubes: iris.cube.CubeList
-        Cubes to split into base and other cubes.
-
-    Returns
-    -------
-    tuple
-        A tuple containing a base cube, and other cube/cubelist.
-
-    """
-    obs_cube = [cb for cb in cubes if "observed" in (cb.long_name or "")]
-    if obs_cube:
-        if len(obs_cube) > 1:
-            raise ValueError(
-                f"Expected exactly one 'observed' cube, found {len(obs_cube)}"
-            )
-        base = obs_cube[0]
-        others = CubeList(cb for cb in cubes if cb is not base)
-        return base, others
-
-    return _sort_cube_into_base_and_other(cubes)
-
-
-# def scores_rmse_model_obs(
-#     cubes: CubeList, preserved_coordinates: list[str] | str | None = None
-# ):
-#     r"""Calculate the Root Mean Square Error (RMSE) using scores.
-
-#     Acts as a wrapper around the RMSE calculation from ``scores`` ([scoresa]_, [scoresb]_).
-#     It is calculated as
-
-#     .. math:: RMSE = \sqrt{\frac{1}{N} \Sigma(forecast - observations)^2}
-
-#     Parameters
-#     ----------
-#     cubes: iris.cube.CubeList
-#         A CubeList containing an observation cube and at least one model cube.
-#     preserved_coordinates: list[str] | str | None, default is None.
-#         The coordinates that you wish to preserve in the calculaiton of the
-#         RMSE. For example if you want a map of each time you can preserve
-#         ["time","grid_latitude", "grid_longitude"] or if you want a time series
-#         you can preserve ["time"], if you want to collapse to a single value
-#         use `None`. The default is `None`.
-
-#     Returns
-#     -------
-#     scores_cubelist: iris.cube.CubeList
-#         A cubelist containing the RMSE between the models and observation cube(s).
-#     """
-#     rmse_cubes = CubeList()
-#     model_list = CubeList()
-
-#     # Separate observations and models
-#     for cb in cubes:
-#         if "observed" in cb.long_name:
-#             observed = cb
-#         else:
-#             model_list.append(cb)
-
-#     for model in model_list:
-
-#         frt_coord = model.coord("forecast_reference_time")
-
-#         # Multiple forecast reference times
-#         if (
-#             model.coord_dims("forecast_reference_time")
-#             and frt_coord.shape[0] > 1
-#         ):
-
-#             obs_slices = list(
-#                 observed.slices_over("forecast_reference_time")
-#             )
-
-#             model_slices = list(
-#                 model.slices_over("forecast_reference_time")
-#             )
-
-#             for obs_slice, model_slice in zip(
-#                 obs_slices,
-#                 model_slices,
-#                 strict=True,
-#             ):
-
-#                 input_cubelist = CubeList([
-#                     obs_slice,
-#                     model_slice,
-#                 ])
-
-#                 rmse = scores_rmse(
-#                     input_cubelist,
-#                     preserved_coordinates,
-#                 )
-
-#                 rmse.attributes["model_name"] = (
-#                     model.attributes["model_name"]
-#                 )
-
-#                 # Preserve the forecast_reference_time value
-#                 if not rmse.coords("forecast_reference_time"):
-#                     rmse.add_aux_coord(
-#                         model_slice.coord(
-#                             "forecast_reference_time"
-#                         ).copy()
-#                     )
-
-#                 if rmse.coords("time"):
-#                     for coord in rmse.coords("time"):
-#                         rmse.remove_coord(coord)
-
-#                 rmse_cubes.append(rmse)
-
-#         # Single forecast reference time
-#         else:
-
-#             input_cubelist = CubeList([
-#                 observed,
-#                 model,
-#             ])
-
-#             rmse = scores_rmse(
-#                 input_cubelist,
-#                 preserved_coordinates,
-#             )
-
-#             rmse.attributes["model_name"] = (
-#                 model.attributes["model_name"]
-#             )
-
-#             rmse_cubes.append(rmse)
-
-
-#     if len(rmse_cubes) > 1:
-#         return rmse_cubes.merge()
-#     else:
-#         return rmse_cubes
-
-
-def scores_rmse_model_obs(
-    cubes: CubeList,
-    preserved_coordinates: list[str] | str | None = None,
-):
-    """Calculate RMSE between observations and model cubes."""
-    rmse_cubes = CubeList()
-    model_list = CubeList()
-
-    # Separate observations and models
-    for cb in cubes:
-        if "observed" in cb.long_name:
-            observed = cb
-        else:
-            model_list.append(cb)
-
-    for model in model_list:
-        input_cubelist = CubeList(
-            [
-                observed,
-                model,
-            ]
-        )
-
-        for cube in input_cubelist:
-            for coord_name in ["forecast_reference_time", "forecast_period"]:
-                if cube.coords(coord_name):
-                    cube.coord(coord_name).bounds = None
-
-        input_cubelist = input_cubelist.extract_overlapping(
-            ["forecast_reference_time", "forecast_period"]
-        )
-
-        rmse = scores_rmse(
-            input_cubelist,
-            preserved_coordinates,
-        )
-
-        rmse.attributes["model_name"] = model.attributes["model_name"]
-
-        if rmse.coords("time"):
-            for coord in rmse.coords("time"):
-                rmse.remove_coord(coord)
-
-        rmse_cubes.append(rmse)
-
-    if len(rmse_cubes) > 1:
-        return rmse_cubes.merge()
-
-    return rmse_cubes
-
-
-from CSET.operators.aggregate import (
-    _add_nref,
-    combine_obs_across_forecasts,
-    ensure_aggregatable_across_cases,
-    time_aggregate,
-)
-from CSET.operators.constraints import generate_var_constraint
-from CSET.operators.filters import filter_multiple_cubes
-from CSET.operators.misc import (
-    _extract_common_time_points_multiplecubes,
-    combine_cubes_into_cubelist,
-)
-from CSET.operators.regrid import interpolate_to_point_cube
-
-
-def hinton_rmse_model_vs_baseline(
-    source_cubes,
-    entries,
-):
-    """
-    Parameters
-    ----------
-    cubes : CubeList
-    entries : list[str]
-        e.g.
-        [
-            "temperature_at_screen_level/mean/6",
-            "air_pressure_at_mean_sea_level/mean/6",
-        ]
-    """
-    output = iris.cube.CubeList()
-
-    for entry in entries:
-        varname, method, timefreq = entry.split("/")
-
-        obs_varname = f"observed_{varname}"
-
-        obs_cube = combine_obs_across_forecasts(
-            cubes=filter_multiple_cubes(
-                source_cubes,
-                constraint=generate_var_constraint(obs_varname),
-            )
-        )
-
-        model_cubes = interpolate_to_point_cube(
-            fld=ensure_aggregatable_across_cases(
-                cubes=filter_multiple_cubes(
-                    source_cubes,
-                    constraint=generate_var_constraint(varname),
-                )
-            ),
-            point_cube=obs_cube,
-        )
-
-        cubes = combine_cubes_into_cubelist(first=obs_cube, second=model_cubes)
-
-        cubes = _extract_common_time_points_multiplecubes(cubes)
-
-        cubes = time_aggregate(
-            cubes=cubes,
-            method=method,
-            interval_iso=timefreq,
-            coordinate="forecast_period",
-        )
-
-        for cube in cubes:
-            cube = _add_nref(cube)
-
-        rmse = scores_rmse_model_obs(
-            cubes=cubes,
-            preserved_coordinates=["forecast_period"],
-        )
-
-        for c in rmse:
-            output.append(c)
-
-    return output

@@ -26,6 +26,8 @@ steps:
 
   - operator: aggregate.ensure_aggregatable_across_cases
 
+  - operator: misc.extract_common_time_points
+
   - operator: collapse.collapse_by_validity_time
     method: MEAN
 
