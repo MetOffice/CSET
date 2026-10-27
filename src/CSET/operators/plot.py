@@ -61,6 +61,7 @@ from CSET.operators._utils import (
     get_num_models,
     is_transect,
     slice_over_maybe,
+    sort_cube_by_coord,
     validate_cube_shape,
     validate_cubes_coords,
 )
@@ -1952,6 +1953,7 @@ def _spatial_plot(
         for crd in cube.coords()
     ):
         plotting_func = _plot_and_save_spatial_plot
+        cube = sort_cube_by_coord(cube, "Station_Name")
         method = "scatter"
 
     # Must have a sequence coordinate.
