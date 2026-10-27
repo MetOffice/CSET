@@ -1006,3 +1006,54 @@ def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube) -> None:
             )
     except iris.exceptions.CoordinateNotFoundError:
         pass
+
+
+def scores_rmse_model_obs(
+    cubes: CubeList,
+    preserved_coordinates: list[str] | str | None = None,
+):
+    """Calculate RMSE between observations and model cubes."""
+    rmse_cubes = CubeList()
+    model_list = CubeList()
+
+    # Separate observations and models
+    for cb in cubes:
+        if "observed" in cb.long_name:
+            observed = cb
+        else:
+            model_list.append(cb)
+
+    for model in model_list:
+        input_cubelist = CubeList(
+            [
+                observed,
+                model,
+            ]
+        )
+
+        for cube in input_cubelist:
+            for coord_name in ["forecast_reference_time", "forecast_period"]:
+                if cube.coords(coord_name):
+                    cube.coord(coord_name).bounds = None
+
+        input_cubelist = input_cubelist.extract_overlapping(
+            ["forecast_reference_time", "forecast_period"]
+        )
+
+        rmse = scores_rmse(
+            input_cubelist,
+            preserved_coordinates,
+        )
+
+        rmse.attributes["model_name"] = model.attributes["model_name"]
+
+        if rmse.coords("time"):
+            for coord in rmse.coords("time"):
+                rmse.remove_coord(coord)
+
+        rmse_cubes.append(rmse)
+
+    if len(rmse_cubes) > 1:
+        return rmse_cubes.merge()
+
+    return rmse_cubes
