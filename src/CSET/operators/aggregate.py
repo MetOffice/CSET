@@ -557,7 +557,10 @@ def _aggregate_in_time_multiple_frt(
 
     Aggregates each forecast cycle separately, then concatenates the results
     back into a single cube along forecast_reference_time.
+
+    Currently only tested for 6h means, with T+0h excluded.
     """
+
     aggregated_cycles = iris.cube.CubeList()
     for frt_cube in cube.slices_over("forecast_reference_time"):
         forecast_period = frt_cube.coord("forecast_period")
@@ -574,6 +577,14 @@ def _aggregate_in_time_multiple_frt(
             getattr(iris.analysis, method),
         )
         agg.remove_coord("interval")
+
+        # # Drop singleton [0,0] interval
+        # agg = agg[1:]
+
+        # Relabel points to upper bound
+        fp = agg.coord("forecast_period")
+        fp.points = fp.bounds[:, 1]
+
         agg = iris.util.new_axis(
             agg,
             agg.coord("forecast_reference_time"),
@@ -584,6 +595,7 @@ def _aggregate_in_time_multiple_frt(
     # as we can construct it if needed.
     for cb in aggregated_cycles:
         cb.remove_coord("time")
+
     return aggregated_cycles.concatenate_cube()
 
 
