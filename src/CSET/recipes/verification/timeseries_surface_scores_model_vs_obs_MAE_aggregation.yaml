@@ -30,6 +30,8 @@ steps:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
 
+  - operator: misc.extract_common_time_points
+
   - operator: misc.combine_cubes_into_cubelist
     first:
       operator: aggregate.combine_obs_across_forecasts

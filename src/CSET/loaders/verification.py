@@ -75,6 +75,25 @@ def _get_scores_timeseries_methods_model_vs_obs(conf):
     return scores_timeseries_methods_model_vs_obs
 
 
+def _get_scores_timeseries_methods_model_vs_obs_case_aggregated(conf):
+    """Compile list of the required case aggregated scores model vs observations timeseries plots."""
+    scores_timeseries_methods_model_vs_obs_case_aggregated = []
+    if (
+        conf.SCORES_TIMESERIES_RMSE_MODEL_VS_OBS_CASE_AGG
+        or conf.SCORES_ALL_MODEL_VS_OBS
+    ):
+        scores_timeseries_methods_model_vs_obs_case_aggregated.append("RMSE")
+    if conf.SCORES_TIMESERIES_AB_MODEL_VS_OBS_CASE_AGG or conf.SCORES_ALL_MODEL_VS_OBS:
+        scores_timeseries_methods_model_vs_obs_case_aggregated.append("additive_bias")
+    if conf.SCORES_TIMESERIES_MAE_MODEL_VS_OBS_CASE_AGG or conf.SCORES_ALL_MODEL_VS_OBS:
+        scores_timeseries_methods_model_vs_obs_case_aggregated.append("MAE")
+    if conf.SCORES_TIMESERIES_PC_MODEL_VS_OBS_CASE_AGG or conf.SCORES_ALL_MODEL_VS_OBS:
+        scores_timeseries_methods_model_vs_obs_case_aggregated.append(
+            "correlation_pearsonr"
+        )
+    return scores_timeseries_methods_model_vs_obs_case_aggregated
+
+
 def _get_scores_timeseries_categorical(conf):
     """List of categorical scores metrics, all model vs obs."""
     scores_timeseries_categorical = []
@@ -207,6 +226,76 @@ def load(conf: Config):
             model_ids=["OBS"] + [model["id"] for model in models],
             aggregation=False,
         )
+
+    scores_timeseries_methods_model_vs_obs_case_aggregated = (
+        _get_scores_timeseries_methods_model_vs_obs_case_aggregated(conf)
+    )
+
+    if scores_timeseries_methods_model_vs_obs_case_aggregated:
+        for field, scores_method in itertools.product(
+            conf.POINT_OBS_FIELDS,
+            scores_timeseries_methods_model_vs_obs_case_aggregated,
+        ):
+            yield RawRecipe(
+                recipe=f"timeseries_surface_scores_model_vs_obs_{scores_method}_aggregation.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT,
+                    "AGGREGATION_METHOD": "forecast_period"
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=["OBS"] + [model["id"] for model in models],
+                aggregation=True,
+            )
+
+    scores_spatial_methods_model_vs_obs = _get_scores_spatial_methods_model_vs_obs(conf)
+    if scores_spatial_methods_model_vs_obs:
+        # Produce 2D spatial plots of scores metrics.
+
+        for field, model, method, scores_method in itertools.product(
+            conf.POINT_OBS_FIELDS,
+            models,
+            conf.SPATIAL_SCORES_FIELD_METHOD_MODEL_VS_OBS,
+            scores_spatial_methods_model_vs_obs,
+        ):
+            preserved_coords = ["time", "latitude", "longitude"]
+            scores_method_case = "CASE"
+            scores_coords_case = ["latitude", "longitude"]
+            recipe_method = method
+            if scores_method == "RMSE" and method == scores_method_case:
+                preserved_coords = ["latitude", "longitude"]
+                recipe_method = ""
+            if scores_method == "MAE" and method == scores_method_case:
+                # Set the preserved coords and collapse method required
+                # to produce MAE spatial plot over an entire case study.
+                preserved_coords = scores_coords_case
+                recipe_method = ""
+            if scores_method == "additive_bias" and method == scores_method_case:
+                # Set the preserved coords and collapse method required
+                # to produce ME additive bias spatial plot over an entire case study.
+                preserved_coords = scores_coords_case
+                recipe_method = ""
+
+            yield RawRecipe(
+                recipe=f"surface_scores_model_vs_obs_{scores_method}.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": ["OBS"] + [model["name"]],
+                    "METHOD": recipe_method,
+                    "PRESERVED_COORDS": preserved_coords,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=["OBS"] + [model["id"]],
+                aggregation=False,
+            )
 
     # including AGGREGATION_MODE in the variables dictionary to allow for clearer labeling of plots.
     if conf.SCORES_RMSE_VERTICAL_PROFILES:
