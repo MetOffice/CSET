@@ -1,0 +1,175 @@
+category: Hinton
+title: Full mean sqaure error Hinton
+description: TODO experimental
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: [temperature_at_screen_level, observed_temperature_at_screen_level,
+                  wind_speed_at_10m, observed_wind_speed_at_10m,
+                  visibility_in_air, observed_visibility_in_air,
+                  dew_point_temperature_at_screen_level, observed_dew_point_temperature_at_screen_level]
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        coordinate: pressure
+        levels: []
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: misc.combine_cubes_into_cubelist
+    first:
+      operator: scoreswrappers.scores_mse_model_obs
+      preserved_coordinates: [forecast_period]
+      cubes:
+        operator: misc.extract_common_time_points
+        cubes:
+          operator: aggregate.time_aggregate
+          method: MEAN
+          interval_iso: PT6H
+          cubes:
+            operator: misc.combine_cubes_into_cubelist
+            first:
+              operator: aggregate.combine_obs_across_forecasts
+              cubes:
+                operator: filters.filter_multiple_cubes
+                constraint:
+                  operator: constraints.generate_var_constraint
+                  varname: observed_temperature_at_screen_level
+            second:
+              operator: regrid.interpolate_to_point_cube
+              fld:
+                operator: aggregate.ensure_aggregatable_across_cases
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: temperature_at_screen_level
+              point_cube:
+                operator: aggregate.combine_obs_across_forecasts
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: observed_temperature_at_screen_level
+
+    third:
+      operator: scoreswrappers.scores_mse_model_obs
+      preserved_coordinates: [forecast_period]
+      cubes:
+        operator: misc.extract_common_time_points
+        cubes:
+          operator: aggregate.time_aggregate
+          method: MEAN
+          interval_iso: PT6H
+          cubes:
+            operator: misc.combine_cubes_into_cubelist
+            first:
+              operator: aggregate.combine_obs_across_forecasts
+              cubes:
+                operator: filters.filter_multiple_cubes
+                constraint:
+                  operator: constraints.generate_var_constraint
+                  varname: observed_wind_speed_at_10m
+            second:
+              operator: regrid.interpolate_to_point_cube
+              fld:
+                operator: aggregate.ensure_aggregatable_across_cases
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: wind_speed_at_10m
+              point_cube:
+                operator: aggregate.combine_obs_across_forecasts
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: observed_wind_speed_at_10m
+
+    fourth:
+      operator: scoreswrappers.scores_mse_model_obs
+      preserved_coordinates: [forecast_period]
+      cubes:
+        operator: misc.extract_common_time_points
+        cubes:
+          operator: aggregate.time_aggregate
+          method: MEAN
+          interval_iso: PT6H
+          cubes:
+            operator: misc.combine_cubes_into_cubelist
+            first:
+              operator: aggregate.combine_obs_across_forecasts
+              cubes:
+                operator: filters.filter_multiple_cubes
+                constraint:
+                  operator: constraints.generate_var_constraint
+                  varname: observed_visibility_in_air
+            second:
+              operator: regrid.interpolate_to_point_cube
+              fld:
+                operator: aggregate.ensure_aggregatable_across_cases
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: visibility_in_air
+              point_cube:
+                operator: aggregate.combine_obs_across_forecasts
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: observed_visibility_in_air
+
+
+    fifth:
+      operator: scoreswrappers.scores_mse_model_obs
+      preserved_coordinates: [forecast_period]
+      cubes:
+        operator: misc.extract_common_time_points
+        cubes:
+          operator: aggregate.time_aggregate
+          method: MEAN
+          interval_iso: PT6H
+          cubes:
+            operator: misc.combine_cubes_into_cubelist
+            first:
+              operator: aggregate.combine_obs_across_forecasts
+              cubes:
+                operator: filters.filter_multiple_cubes
+                constraint:
+                  operator: constraints.generate_var_constraint
+                  varname: observed_dew_point_temperature_at_screen_level
+            second:
+              operator: regrid.interpolate_to_point_cube
+              fld:
+                operator: aggregate.ensure_aggregatable_across_cases
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: dew_point_temperature_at_screen_level
+              point_cube:
+                operator: aggregate.combine_obs_across_forecasts
+                cubes:
+                  operator: filters.filter_multiple_cubes
+                  constraint:
+                    operator: constraints.generate_var_constraint
+                    varname: observed_dew_point_temperature_at_screen_level
+
+
+    # Plot the data.
+  - operator: plot.hinton_plot
+    models: $MODEL_NAME
+    magnitude: false
+
+  - operator: write.write_cube_to_nc
+    overwrite: true
