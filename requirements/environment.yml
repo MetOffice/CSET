@@ -22,6 +22,8 @@ dependencies:
   - cartopy = 0.25 # Newer versions break plotting, see issue #2500
   - matplotlib-base = 3.10.9 # Newer versions break plotting, see issue #2500
   - simple-track # For feature tracking and cell stats operators
+  - brotli-python >= 1.2.1 # lower versions have a vulnerability
+  - libbrotlidec >= 1.2.1 # lower versions have a vulnerability
 
   # Build dependencies
   - setuptools>=64
