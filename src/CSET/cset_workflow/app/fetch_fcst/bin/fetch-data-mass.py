@@ -7,6 +7,8 @@ import subprocess
 
 from fetch_data import FileRetrieverABC, fetch_data
 
+logger = logging.getLogger(__name__)
+
 
 class MASSFileRetriever(FileRetrieverABC):
     """Retrieve files from MASS."""
@@ -28,10 +30,10 @@ class MASSFileRetriever(FileRetrieverABC):
             True if files were transferred, otherwise False.
         """
         moo_command = ["moo", "get", "--force", file_path, output_dir]
-        logging.debug(f"Fetching from MASS with:\n{' '.join(moo_command)}")
-        p = subprocess.run(moo_command)
+        logger.debug(f"Fetching from MASS with:\n{' '.join(moo_command)}")
+        p = subprocess.run(moo_command, check=False)
         if p.returncode > 0:
-            logging.info("moo get exited with non-zero code %s.", p.returncode)
+            logger.info("moo get exited with non-zero code %s.", p.returncode)
             return False
         return True
 

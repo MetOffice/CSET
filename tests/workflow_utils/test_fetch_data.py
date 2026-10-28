@@ -48,7 +48,7 @@ def test_get_needed_environment_variables(monkeypatch):
     duration_raw = "PT1H"
     duration = datetime.timedelta(hours=1)
     date_raw = "20000101T0000Z"
-    date = datetime.datetime(2000, 1, 1, 0, 0, tzinfo=datetime.timezone.utc)
+    date = datetime.datetime(2000, 1, 1, 0, 0, tzinfo=datetime.UTC)
     path = "/path/to/data"
     number_raw = "1"
 
@@ -175,7 +175,7 @@ def test_template_file_path_validity_time():
     actual = fetch_data._template_file_path(
         "/path/%Y-%m-%d.nc",
         "validity",
-        datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
+        datetime.datetime(2000, 1, 1, tzinfo=datetime.UTC),
         datetime.timedelta(days=5),
         datetime.timedelta(),
         datetime.timedelta(days=1),
@@ -195,7 +195,7 @@ def test_template_file_path_initiation_time():
     actual = fetch_data._template_file_path(
         "/path/%Y-%m-%d.nc",
         "initiation",
-        datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
+        datetime.datetime(2000, 1, 1, tzinfo=datetime.UTC),
         datetime.timedelta(days=5),
         datetime.timedelta(),
         datetime.timedelta(days=1),
@@ -209,7 +209,7 @@ def test_template_file_path_lead_time():
     actual = fetch_data._template_file_path(
         "/path/%N.nc",
         "initiation",
-        datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
+        datetime.datetime(2000, 1, 1, tzinfo=datetime.UTC),
         datetime.timedelta(hours=5, seconds=1),
         datetime.timedelta(hours=1),
         datetime.timedelta(hours=1),

@@ -17,7 +17,7 @@
 import base64
 import json
 
-import CSET.cset_workflow.lib.python.jinja_utils as jinja_utils
+from CSET.cset_workflow.lib.python import jinja_utils
 
 
 def test_b64json_list():

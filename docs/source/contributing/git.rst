@@ -16,7 +16,7 @@ started with git on the command line, you may find this `git cheat sheet`_
 helpful.
 
 .. _Met Office git and GitHub tutorial: https://metoffice.github.io/git-novice/
-.. _GitHub flow: https://docs.github.com/en/get-started/quickstart/github-flow
+.. _GitHub flow: https://docs.github.com/en/get-started/using-github/github-flow
 .. _good commit messages: https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 .. _git cheat sheet: https://education.github.com/git-cheat-sheet-education.pdf
 
@@ -86,7 +86,7 @@ To avoid having to use a username and password you can switch to SSH:
 
     git remote set-url origin git@github.com:MetOffice/CSET.git
 
-.. _Git Credential Manager: https://github.com/git-ecosystem/git-credential-manager/blob/main/README.md
+.. _Git Credential Manager: https://github.com/git-ecosystem/git-credential-manager
 .. _GitHub CLI to authenticate: https://cli.github.com/manual/gh_auth_login
 .. _configure git to use it: https://cli.github.com/manual/gh_auth_setup-git
 .. _GitHub's documentation on SSH: https://docs.github.com/en/authentication/connecting-to-github-with-ssh

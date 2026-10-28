@@ -59,7 +59,7 @@ def main(argv: list[str]):
     if args.output == "-":
         out_context = nullcontext(sys.stdout)
     else:
-        out_context = open(args.output, "wt")
+        out_context = open(args.output, "wt")  # noqa: SIM115 Context manager used below.
 
     with out_context as output:
         PrepBomNci(args.system).odb2ascii(output, valid_times_iterator(args.valid_time))

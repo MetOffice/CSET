@@ -26,6 +26,8 @@ from iris.analysis.cartography import rotate_pole
 from CSET._common import iter_maybe
 from CSET.operators._utils import get_cube_yxcoordname
 
+logger = logging.getLogger(__name__)
+
 
 class BoundaryWarning(UserWarning):
     """Selected gridpoint is close to the domain edge.
@@ -347,8 +349,8 @@ def regrid_to_single_point(
             regridded_cubes.append(cube_rgd)
         else:
             if (
-                np.abs((lat_tr - lat.points[0])) > 0.1
-                or np.abs((lon_tr - lon.points[0])) > 0.1
+                np.abs(lat_tr - lat.points[0]) > 0.1
+                or np.abs(lon_tr - lon.points[0]) > 0.1
             ):
                 raise ValueError(
                     "Selected point is too far from the specified coordinates. It should be within 0.1 degrees."
@@ -430,34 +432,13 @@ def interpolate_to_point_cube(
     # Empty CubeList To store regridded cubes.
     regridded_cubes = iris.cube.CubeList()
 
+    # Generate array of point cube lat and lon points.
+    point_lat_name, point_lon_name = get_cube_yxcoordname(point_cube)
+    point_lats = point_cube.coord(point_lat_name).points
+    point_lons = point_cube.coord(point_lon_name).points
+
     # Iterate over all cubes and regrid.
     for cube in iter_maybe(fld):
-        # Ensure matching times in fld cube and point_cube
-        base_time_coord = point_cube.coord("time")
-        other_time_coord = cube.coord("time")
-        base_times = base_time_coord.units.num2date(base_time_coord.points)
-        other_times = other_time_coord.units.num2date(other_time_coord.points)
-        shared_times = set.intersection(set(base_times), set(other_times))
-        logging.debug("Shared times: %s", shared_times)
-        time_constraint = iris.Constraint(
-            coord_values={
-                "time": lambda cell, shared_times=shared_times: (
-                    cell.point in shared_times
-                )
-            }
-        )
-
-        # Extract points matching the shared times.
-        cube = cube.extract(time_constraint)
-        point_cube = point_cube.extract(time_constraint)
-        if cube is None or point_cube is None:
-            raise ValueError("No common time points found!")
-
-        # Generate array of point cube lat and lon points.
-        point_lat_name, point_lon_name = get_cube_yxcoordname(point_cube)
-        point_lats = point_cube.coord(point_lat_name).points
-        point_lons = point_cube.coord(point_lon_name).points
-
         y_coord, x_coord = get_cube_yxcoordname(cube)
 
         # Rotate point_cube coords if required to match model coord rotation.

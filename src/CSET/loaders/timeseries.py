@@ -60,7 +60,7 @@ def load(conf: Config):
             )
 
     # Surface time series: land mask.
-    if conf.TIMESERIES_SURFACE_FIELD_LAND_MASK:
+    if conf.TIMESERIES_SURFACE_FIELD_SEA_ONLY:
         for field in conf.SURFACE_FIELDS:
             yield RawRecipe(
                 recipe="land_mask_for_surface_domain_mean_time_series.yaml",
@@ -78,7 +78,7 @@ def load(conf: Config):
             )
 
     # Surface time series: sea mask.
-    if conf.TIMESERIES_SURFACE_FIELD_SEA_MASK:
+    if conf.TIMESERIES_SURFACE_FIELD_LAND_ONLY:
         for field in conf.SURFACE_FIELDS:
             yield RawRecipe(
                 recipe="sea_mask_for_surface_domain_mean_time_series.yaml",

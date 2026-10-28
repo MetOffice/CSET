@@ -171,7 +171,7 @@ class RawRecipe:
         plural = "s" if len(self.model_ids) > 1 else ""
         ids = " ".join(str(m) for m in self.model_ids)
         aggregation = ", Aggregation" if self.aggregation else ""
-        pad = max([0] + [len(k) for k in self.variables.keys()])
+        pad = max([0] + [len(k) for k in self.variables])
         variables = "".join(f"\n\t{k:<{pad}} {v}" for k, v in self.variables.items())
         return f"{recipe} (model{plural} {ids}{aggregation}){variables}"
 

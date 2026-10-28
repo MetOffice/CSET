@@ -22,9 +22,15 @@ import numpy as np
 from skimage.metrics import structural_similarity
 
 from CSET._common import is_increasing
-from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
-from CSET.operators.misc import _extract_common_time_points
+from CSET.operators._utils import (
+    ensure_common_time_points,
+    fully_equalise_attributes,
+    get_cube_yxcoordname,
+    get_time_coord,
+)
 from CSET.operators.regrid import regrid_onto_cube
+
+logger = logging.getLogger(__name__)
 
 
 def _SSIM_cube_preparation(
@@ -91,9 +97,7 @@ def _SSIM_cube_preparation(
             "vapour_specific_humidity_at_pressure_levels_for_climate_averaging",
         ]
     ):
-        logging.debug(
-            "Linear regridding base cube to other grid to compute differences"
-        )
+        logger.debug("Linear regridding base cube to other grid to compute differences")
         base = regrid_onto_cube(base, other, method="Linear")
 
     # Figure out if we are comparing between UM and LFRic; flip array if so.
@@ -103,26 +107,16 @@ def _SSIM_cube_preparation(
         other.data = np.flip(other.data, other.coord(other_lat_name).cube_dims(other))
 
     # Extract just common time points.
-    base, other = _extract_common_time_points(base, other)
-
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])
-    logging.debug("Base: %s\nOther: %s", base, other)
+    logger.debug("Base: %s\nOther: %s", base, other)
 
-    # Get the name of the first non-scalar time coordinate.
-    time_coord = next(
-        map(
-            lambda coord: coord.name(),
-            filter(
-                lambda coord: coord.shape > (1,) and coord.name() in ["time", "hour"],
-                base.coords(),
-            ),
-        ),
-        None,
-    )
-
-    if time_coord is None:
+    # will raise if not common times
+    time_coord = get_time_coord(base)
+    if not time_coord:
         raise ValueError("Cubes should contain a time coordinate.")
+    ensure_common_time_points(base, other)
+
     # Create and empty CubeList for storing the time or realization data.
     return base, other, time_coord
 
@@ -179,13 +173,6 @@ def spatial_structural_similarity_model_comparisons(
 
     Further details, including caveats, can be found in Wang et al. (2004)
     [Wangetal2004]_.
-
-    References
-    ----------
-    .. [Wangetal2004] Wang, Z., Bovik, A.C., Sheikh, H.R., Simoncelli, E.P. (2004)
-       "Image Quality Assessment: From Error Visibility to Structural Similarity."
-       IEEE Transactions on Image Processing, vol. 13, 600-612,
-       doi: 10.1109/TIP.2003.819861
 
     Examples
     --------
@@ -280,13 +267,6 @@ def mean_structural_similarity_model_comparisons(
 
     Further details, including caveats, can be found in Wang et al. (2004)
     [Wangetal2004a]_.
-
-    References
-    ----------
-    .. [Wangetal2004a] Wang, Z., Bovik, A.C., Sheikh, H.R., Simoncelli, E.P. (2004)
-       "Image Quality Assessment: From Error Visibility to Structural Similarity."
-       IEEE Transactions on Image Processing, vol. 13, 600-612,
-       doi: 10.1109/TIP.2003.819861
 
     Examples
     --------

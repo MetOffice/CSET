@@ -25,6 +25,8 @@ from CSET._common import iter_maybe
 from CSET.operators._utils import get_cube_yxcoordname
 from CSET.operators.regrid import regrid_onto_cube
 
+logger = logging.getLogger(__name__)
+
 
 def calculate_vector_wind(
     u: iris.cube.Cube | iris.cube.CubeList,
@@ -82,7 +84,7 @@ def calculate_vector_wind(
             u_cube.coord(u_lat).shape != v_cube.coord(v_lat).shape
             or u_cube.coord(u_lon).shape != v_cube.coord(v_lon).shape
         ):
-            logging.debug(
+            logger.debug(
                 "Regridding U cube onto V cube grid for vector wind calculation."
             )
             u_cube = regrid_onto_cube(u_cube, v_cube, method="Linear")
@@ -227,13 +229,6 @@ def convert_to_beaufort_scale(
     Beaufort Scale, sometimes used for tropical cyclones. Hence, why values
     can reach above 12 in this diagnostic. However, these are not referred to
     in the table as anything above F12 is labelled as Hurricane force.
-
-    References
-    ----------
-    .. [Beer96] Beer, T. (1996) Environmental Oceanography, CRC Marince Science,
-       Vol. 11, 2nd Edition, CRC Press, 402 pp.
-    .. [Berryetal45] Berry, F. A., Jr., E. Bollay, and N. R. Beers, (1945) Handbook
-       of Meteorology. McGraw Hill, 1068 pp.
 
     Examples
     --------

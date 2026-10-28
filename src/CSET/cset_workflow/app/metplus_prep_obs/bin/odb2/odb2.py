@@ -8,9 +8,10 @@ import functools
 import json
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from glob import glob
 from pathlib import Path
-from typing import Iterable, TextIO
+from typing import TextIO
 
 import metomi.isodatetime.parsers
 import numpy

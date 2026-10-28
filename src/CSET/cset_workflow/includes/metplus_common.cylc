@@ -3,15 +3,18 @@
 
     [[METPLUS]]
         [[[environment]]]
-        METPLUS_ANA_DIR = {{METPLUS_ANA_DIR}}
+        # Next line is to provide compatibility with cylc versions before 8.5.1, where CYLC_WORKFLOW_SHARE_DIR does not yet exist
+        CYLC_TASK_SHARE_CYCLE_DIR = {{CYLC_TASK_SHARE_CYCLE_DIR| default("${CYLC_WORKFLOW_SHARE_DIR}/cycle/${CYLC_TASK_CYCLE_POINT}")}}
+        METPLUS_ANA_DIR = {{METPLUS_ANA_DIR|default("/dev/null")}}
         METPLUS_FCST_DIR = {{METPLUS_FCST_DIR|default("$CYLC_TASK_SHARE_CYCLE_DIR/metplus_fcst")}}
         METPLUS_OBS_DIR = {{METPLUS_OBS_DIR|default("$CYLC_TASK_SHARE_CYCLE_DIR/metplus_obs")}}
-        METPLUS_AREA_DIR = {{METPLUS_AREA_DIR}}
-        METPLUS_STN_DIR = {{METPLUS_STN_DIR}}
+        METPLUS_AREA_DIR = {{METPLUS_AREA_DIR|default("/dev/null")}}
+        METPLUS_STN_DIR = {{METPLUS_STN_DIR|default("/dev/null")}}
         ROSE_APP_OPT_CONF_KEYS = ({{SITE}}) {{METPLUS_OPT_CONFIG_KEYS|default("")}}
         TASK_START_TIME = $(cylc cyclepoint --template CCYYMMDDThh)
         FORECAST_LENGTH = $(isodatetime --as-total H -- {{ANALYSIS_LENGTH}} | cut -d '.' -f 1 )
         TASK_END_TIME = $(cylc cyclepoint --offset {{ANALYSIS_LENGTH}} --template CCYYMMDDThh)
+        VERPY_DIR = {{VERPY_DIR|default("")}}
 
     [[VERPY_METLOADER]]
     # Family grouping for all VerPy metloader tasks

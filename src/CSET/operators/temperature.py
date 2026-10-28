@@ -68,15 +68,6 @@ def dewpoint_temperature(
 
     All cubes must be on the same grid.
 
-    References
-    ----------
-    .. [Bolton80] Bolton. D. (1980) "The computation of equivalent potential
-       temperature". Monthly Weather Review, vol. 108, 1046-1053,
-       doi: 10.1175/1520-0493(1980)108<1046:TCOEPT>2.0.CO;2
-    .. [Flack24] Flack, D.L.A. (2024) "Stratification of the vertical spread-skill
-       relation by radiosonde drift in a convective-scale ensemble."
-       Atmospheric Science Letters, vol. 25, e1194, doi: 10.1002/asl.1194
-
     Examples
     --------
     >>> Td = temperature.dewpoint_temperature(T, RH)
@@ -186,12 +177,6 @@ def wet_bulb_temperature(
     operator.
 
     All cubes should be on the same grid.
-
-    References
-    ----------
-    .. [Stull11] Stull, R. (2011) "Wet-Bulb Temperature from Relative Humidity
-       and air temperature." Journal of Applied Meteorology and Climatology, vol. 50,
-       2267-2269, doi: 10.1175/JAMC-D-11-0143.1
 
     Examples
     --------
@@ -380,14 +365,6 @@ def equivalent_potential_temperature(
 
     All cubes must be on the same grid.
 
-    References
-    ----------
-    .. [Emanuel94] Emanuel, K.A. (1994) "Atmospheric Convection" Oxford University
-       Press, 580 pp.
-    .. [Paluch79] Paluch, I.R., (1979) "The entrainment mechanism in Colorado
-       Cumuli" Journal of the Atmospheric Sciences, vol. 36, 2467-2478,
-       doi: 10.1175/1520-0469(1979)036<2467:TEMICC>2.0.CO;2
-
     Examples
     --------
     >>> Theta_e = temperature.equivalent_potential_temperature(T, RH, P)
@@ -459,12 +436,6 @@ def wet_bulb_potential_temperature(
     this range.
 
     All cubes must be on the same grid.
-
-    References
-    ----------
-    .. [DaviesJones08] Davies-Jones, R. (2008) "An Efficient and Accurate
-       Method for Computing the Wet-Bulb Temperature along Pseudoadiabats"
-       Monthly Weather Review, vol. 136, 2764-2785, doi: 10.1175/2007MWR2224.1
 
     Examples
     --------
