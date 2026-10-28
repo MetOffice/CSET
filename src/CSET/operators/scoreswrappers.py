@@ -697,6 +697,7 @@ def _make_scores_cube(
         raise ValueError(f"Scores Unknown metric: {metric}")
 
     _fix_spatial_coord(base, scores_cube)
+
     _attach_scaler_time_coord_maybe(scores_cube, base)
     model_name = other.attributes["model_name"]
     scores_cube.attributes["model_name"] = model_name
@@ -1004,39 +1005,3 @@ def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube) -> None:
 
     except iris.exceptions.CoordinateNotFoundError:
         pass
-
-
-def _get_obs_cube(cubes: CubeList):
-    return [cb for cb in cubes if "observed" in (cb.long_name or "")]
-
-
-def _split_base_and_other(cubes: CubeList):
-    r"""Split the cube into base and other cubes.
-
-    Split depends on whether there
-    is an observed cube in the cubes.  If there is an observed cube,
-    then 'base' is the observed cube, if not then 'base' is the comparison
-    model cube.
-
-    Parameters
-    ----------
-    cubes: iris.cube.CubeList
-        Cubes to split into base and other cubes.
-
-    Returns
-    -------
-    tuple
-        A tuple containing a base cube, and other cube/cubelist.
-
-    """
-    obs_cube = _get_obs_cube(cubes)
-    if obs_cube:
-        if len(obs_cube) > 1:
-            raise ValueError(
-                f"Expected exactly one 'observed' cube, found {len(obs_cube)}"
-            )
-        base = obs_cube[0]
-        others = CubeList(cb for cb in cubes if cb is not base)
-        return base, others
-
-    return _sort_cube_into_base_and_other(cubes)
