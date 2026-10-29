@@ -2822,6 +2822,12 @@ def hinton_plot(
     base_cubes = iris.cube.CubeList()
     other_cubes = iris.cube.CubeList()
     for c in cubes:
+
+        if (
+            c.long_name is not None
+            and c.long_name.startswith("significance_")
+        ):
+            continue
         if c.attributes["model_name"] == base_name:
             base_cubes.append(c)
         elif c.attributes["model_name"] == other_name:
