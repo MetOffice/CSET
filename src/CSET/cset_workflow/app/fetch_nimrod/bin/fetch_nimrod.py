@@ -130,12 +130,15 @@ def retrieve_nimrod():
             # the time stamps for these files mark the end of the
             # accumulation period rather than the beginning.
             radar_offset = timedelta(hours=0.0)
-            if nimrod_field == "Nimrod_comp_xkm":
-                radar_offset = timedelta(hours=1.0)
-            if nimrod_field == "Nimrod_comp_1km":
-                radar_offset = timedelta(hours=1.0)
-            if nimrod_field == "Nimrod_comp_2km":
-                radar_offset = timedelta(hours=1.0)
+
+            match nimrod_field:
+                case "Nimrod_comp_xkm":
+                    radar_offset = timedelta(hours=1.0)
+                case "Nimrod_comp_1km":
+                    radar_offset = timedelta(hours=1.0)
+                case "Nimrod_comp_2km":
+                    radar_offset = timedelta(hours=1.0)
+
             date_start_offset = v["data_time"] + radar_offset
 
             # Process Nimrod data between the start and end dates.
