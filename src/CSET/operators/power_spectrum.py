@@ -156,7 +156,6 @@ def calculate_power_spectrum(
                     "forecast_reference_time",
                 )
 
-            # time = ps.coord("time").copy()
             time_dim = ps.coord_dims("time")[0]
 
             # Remove time as the dimension coordinate
@@ -220,7 +219,6 @@ def calculate_power_spectrum(
                     for frt_cube in frt_power_spectra:
                         frt_cube = frt_cube.copy()
 
-                        # time_coord = frt_cube.coord("forecast_period").copy()
                         time_dims = frt_cube.coord_dims("forecast_period")
                         time_dim = time_dims[0]
 
@@ -231,10 +229,6 @@ def calculate_power_spectrum(
                         index[time_dim] = 0
 
                         frt_cube = frt_cube[tuple(index)]
-
-                        # frt_dims = frt_cube.coord_dims("forecast_reference_time")
-
-                        # frt_dim = frt_dims[0]
 
                         cubes_for_frt_concat.append(frt_cube)
 
