@@ -1,5 +1,5 @@
 category: Surface Model versus Observation Time Series Aggregation
-title: "$VARNAME\nscores pearson correlation time series for model vs observation points $SUBAREA_NAME aggregation by $AGGREGATION_METHOD"
+title: "$VARNAME\nscores pearson correlation time series for model vs observation points $SUBAREA_NAME aggregation by $AGGREGATION_MODE"
 description: |
   Extracts and plots the Pearson's Correlation coefficient in $VARNAME
   computed over the domain for each timestep. The PC is calculated based on that used in the
@@ -55,10 +55,10 @@ steps:
             varname: observed_$VARNAME
 
   - operator: scoreswrappers.scores_correlation_pearsonr
-    preserved_coordinates: $AGGREGATION_METHOD
+    preserved_coordinates: $PRESERVED_VARIABLE
 
   - operator: plot.plot_line_series
-    series_coordinate: $AGGREGATION_METHOD
+    series_coordinate: $PRESERVED_VARIABLE
 
   - operator: write.write_cube_to_nc
     overwrite: True
