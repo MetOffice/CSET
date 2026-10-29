@@ -241,10 +241,11 @@ def load(conf: Config):
                     "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT,
-                    "AGGREGATION_METHOD": "forecast_period"
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
                     if conf.SELECT_SUBAREA
                     else None,
+                    "AGGREGATION_MODE": "Case Date",
+                    "PRESERVED_VARIABLE": "forecast_period",
                 },
                 model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=True,
