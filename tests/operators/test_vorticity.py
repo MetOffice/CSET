@@ -14,6 +14,7 @@
 
 """Test vorticity operators."""
 
+import iris.cube
 import numpy as np
 from iris.analysis.calculus import curl
 
@@ -24,8 +25,29 @@ def test_vertical_relative_vorticity(xwind, ywind):
     """Test vertical relative vorticity calculation."""
     _, _, expected = curl(xwind, ywind)
     assert np.allclose(
-        vorticity.relative_vorticity(xwind, ywind).data,
+        vorticity.vertical_relative_vorticity(xwind, ywind).data,
         expected.data,
         rtol=1e-6,
         atol=1e-2,
     )
+
+
+def test_vertical_relative_vorticity_cubelist(xwind, ywind):
+    """Test vertical relative vorticity calculation for a cubelist."""
+    xwind_cubelist = iris.cube.CubeList([xwind, xwind])
+    ywind_cubelist = iris.cube.CubeList([ywind, ywind])
+    expected_cubelist = iris.cube.CubeList([])
+    for cube_a, cube_b in zip(xwind_cubelist, ywind_cubelist, strict=True):
+        _, _, expected_vorticity = curl(cube_a, cube_b)
+        expected_cubelist.append(expected_vorticity)
+    calculated_cubelist = vorticity.vertical_relative_vorticity(
+        xwind_cubelist, ywind_cubelist
+    )
+    for cube_a, cube_b in zip(expected_cubelist, calculated_cubelist, strict=True):
+        assert np.allclose(cube_a.data, cube_b.data, rtol=1e-6, atol=1e-2)
+
+
+def test_vertical_relative_vorticity_name(xwind, ywind):
+    """Test renaming of vertical vorticity cube."""
+    expected_name = "vertical_component_of_relative_vorticity"
+    assert expected_name == vorticity.vertical_relative_vorticity(xwind, ywind).name()
