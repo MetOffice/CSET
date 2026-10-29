@@ -1563,14 +1563,14 @@ def wind_cubelist_observed():
     return wind_cubelist
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def xwind_read_only() -> iris.cube.Cube:
     """Get regridded xwind to run tests on. It is NOT safe to modify."""
     return read.read_cube("tests/test_data/ageofair/aoa_in_rgd.nc", "x_wind")
 
 
 @pytest.fixture()
-def xwind() -> iris.cube.Cube:
+def xwind(xwind_read_only) -> iris.cube.Cube:
     """Get regridded xwind to run tests on. It is safe to modify."""
     return xwind_read_only.copy()
 
@@ -1582,7 +1582,7 @@ def ywind_read_only() -> iris.cube.Cube:
 
 
 @pytest.fixture()
-def ywind() -> iris.cube.Cube:
+def ywind(ywind_read_only) -> iris.cube.Cube:
     """Get regridded ywind to run tests on. It is safe to modify."""
     return ywind_read_only.copy()
 
@@ -1596,6 +1596,6 @@ def wwind_read_only() -> iris.cube.Cube:
 
 
 @pytest.fixture()
-def wwind() -> iris.cube.Cube:
+def wwind(wwind_read_only) -> iris.cube.Cube:
     """Get regridded wwind to run tests on. It is safe to modify."""
     return wwind_read_only.copy()
