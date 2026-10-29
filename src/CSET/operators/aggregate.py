@@ -569,7 +569,7 @@ def _aggregate_in_time_multiple_frt(
         iris.coord_categorisation.add_categorised_coord(
             frt_cube,
             "interval",
-            "time",
+            "forecast_period",
             lambda coord, cell: (cell - 1) // interval * interval,
         )
         agg = frt_cube.aggregated_by(
@@ -593,8 +593,11 @@ def _aggregate_in_time_multiple_frt(
     # Current approach is to remove time 2d auxcoord as it causes issues concatenating into a single cube.
     # Time can be reconstructed from forecast_reference_time and forecast_period later on.
     # as we can construct it if needed.
-    for cb in aggregated_cycles:
-        cb.remove_coord("time")
+    try:
+        for cb in aggregated_cycles:
+            cb.remove_coord("time")
+    except:
+        pass
 
     return aggregated_cycles.concatenate_cube()
 
