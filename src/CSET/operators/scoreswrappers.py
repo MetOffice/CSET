@@ -1211,52 +1211,232 @@ def scores_mse_model_obs(
 
 
 
-# def scores_crps_model_obs(
-#     cubes: CubeList,
-#     preserved_coordinates: list[str] | str | None = None,
-# ):
-#     """Calculate RMSE between observations and model cubes."""
-#     rmse_cubes = CubeList()
-#     model_list = CubeList()
+import numpy as np
+import xarray as xr
 
-#     # Separate observations and models
-#     for cb in cubes:
-#         if "observed" in cb.long_name:
-#             observed = cb
-#         else:
-#             model_list.append(cb)
+from iris.cube import Cube, CubeList
+from scores.probability import crps_for_ensemble
+from iris.coords import DimCoord
 
-#     for model in model_list:
-#         input_cubelist = CubeList(
-#             [
-#                 observed,
-#                 model,
-#             ]
-#         )
+def scores_crps_model_obs(
+    cubes: CubeList,
+    n_bootstrap: int = 10000,
+    alpha: float = 0.05,
+):
+    """
+    Compute HiRA-style CRPS from neighbourhoods and determine
+    significance via bootstrap resampling over forecast_reference_time.
 
-#         for cube in input_cubelist:
-#             for coord_name in ["forecast_reference_time", "forecast_period"]:
-#                 if cube.coords(coord_name):
-#                     cube.coord(coord_name).bounds = None
+    Inputs:
 
-#         input_cubelist = input_cubelist.extract_overlapping(
-#             ["forecast_reference_time", "forecast_period"]
-#         )
+        Obs:
+            (frt, lead, station)
 
-#         rmse = scores_rmse(
-#             input_cubelist,
-#             preserved_coordinates,
-#         )
+        Models:
+            (frt, lead, station,
+             neighbourhood_y,
+             neighbourhood_x)
 
-#         rmse.attributes["model_name"] = model.attributes["model_name"]
+    Outputs:
 
-#         if rmse.coords("time"):
-#             for coord in rmse.coords("time"):
-#                 rmse.remove_coord(coord)
+        model1 CRPS
+        model2 CRPS
+        significance_<var>
+    """
 
-#         rmse_cubes.append(rmse)
+    model_list = CubeList()
 
-#     if len(rmse_cubes) > 1:
-#         return rmse_cubes.merge()
+    for cb in cubes:
+        if "observed" in cb.long_name:
+            observed = cb
+        else:
+            model_list.append(cb)
 
-#     return rmse_cubes
+    if len(model_list) != 2:
+        raise ValueError(
+            f"Expected 2 model cubes, got {len(model_list)}"
+        )
+
+    model1 = model_list[0]
+    model2 = model_list[1]
+
+    def neighbourhood_to_realization(cube):
+
+        nrealization = (
+            cube.shape[-2]
+            * cube.shape[-1]
+        )
+
+        out = Cube(
+            cube.data.reshape(
+                *cube.shape[:-2],
+                nrealization,
+            ),
+            standard_name=cube.standard_name,
+            long_name=cube.long_name,
+            var_name=cube.var_name,
+            units=cube.units,
+            attributes=cube.attributes.copy(),
+            dim_coords_and_dims=[
+                (cube.coord("forecast_reference_time").copy(), 0),
+                (cube.coord("forecast_period").copy(), 1),
+                (cube.coord("station").copy(), 2),
+                (
+                    DimCoord(
+                        np.arange(nrealization),
+                        long_name="realization",
+                    ),
+                    3,
+                ),
+            ],
+        )
+
+        for coord_name in [
+            "Station_Name",
+            "latitude",
+            "longitude",
+        ]:
+            out.add_aux_coord(
+                cube.coord(coord_name).copy(),
+                (2,),
+            )
+
+        return out
+
+
+    model1_flattened = neighbourhood_to_realization(model1)
+    model2_flattened = neighbourhood_to_realization(model2)
+
+    crps1 =  xr.DataArray.to_iris(crps_for_ensemble(
+        xr.DataArray.from_iris(model1_flattened),
+        xr.DataArray.from_iris(observed),
+        ensemble_member_dim="realization",
+        preserve_dims=["forecast_period","forecast_reference_time"]
+    ))
+
+    crps2 =  xr.DataArray.to_iris(crps_for_ensemble(
+        xr.DataArray.from_iris(model2_flattened),
+        xr.DataArray.from_iris(observed),
+        ensemble_member_dim="realization",
+        preserve_dims=["forecast_period","forecast_reference_time"]
+    ))
+
+   
+    # Mean CRPS versus lead time
+    crps1_mean = crps1.collapsed('forecast_reference_time', iris.analysis.MEAN)
+    crps2_mean = crps2.collapsed('forecast_reference_time', iris.analysis.MEAN)
+
+
+    crps1_mean.long_name = model1.long_name
+    crps2_mean.long_name = model2.long_name
+
+    crps1_mean.attributes = model1.attributes.copy()
+    crps2_mean.attributes = model2.attributes.copy()
+
+    #
+    # Paired differences
+    #
+    delta_case = crps1.data - crps2.data
+
+    frt_dim = crps1.coord_dims(
+        "forecast_reference_time"
+    )[0]
+
+    lead_dim = crps1.coord_dims(
+        "forecast_period"
+    )[0]
+
+    #
+    # Put into (lead, frt) ordering
+    #
+    delta_case = np.moveaxis(
+        delta_case,
+        (lead_dim, frt_dim),
+        (0, 1),
+    )
+
+    nlead = delta_case.shape[0]
+
+    significance = np.zeros(
+        nlead,
+        dtype=bool,
+    )
+
+    rng = np.random.default_rng(
+        seed=42,
+    )
+
+    #
+    # Bootstrap over forecast_reference_time
+    #
+    for lead in range(nlead):
+
+        sample = delta_case[lead, :]
+
+        sample = sample[
+            np.isfinite(sample)
+        ]
+
+        n = len(sample)
+
+        #
+        # Not enough independent cases
+        #
+        if n < 10:
+            continue
+
+        means = np.empty(
+            n_bootstrap,
+        )
+
+        for i in range(n_bootstrap):
+
+            resample = rng.choice(
+                sample,
+                size=n,
+                replace=True,
+            )
+
+            means[i] = np.mean(
+                resample
+            )
+
+        lower = np.percentile(
+            means,
+            100 * alpha / 2,
+        )
+
+        upper = np.percentile(
+            means,
+            100 * (1 - alpha / 2),
+        )
+
+        significance[lead] = (
+            lower > 0.0
+            or upper < 0.0
+        )
+
+    sig_cube = Cube(
+        significance.astype(np.int8),
+        long_name=f"significance_{model1.long_name}",
+        units="1",
+        attributes=model1.attributes.copy(),
+        dim_coords_and_dims=[
+            (
+                crps1_mean.coord(
+                    "forecast_period"
+                ).copy(),
+                0,
+            )
+        ],
+    )
+
+    crps2_mean.long_name = crps1_mean.long_name
+
+    return CubeList(
+        [
+            crps1_mean,
+            crps2_mean,
+            sig_cube,
+        ]
+    )
