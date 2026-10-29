@@ -1,5 +1,5 @@
 category: Surface Model versus Observation Time Series Aggregation
-title: "$VARNAME\nscores additive bias time series for model vs observation points $SUBAREA_NAME aggregation by $AGGREGATION_METHOD"
+title: "$VARNAME\nscores additive bias time series for model vs observation points $SUBAREA_NAME aggregation by $AGGREGATION_MODE"
 description: |
   Extracts and plots the Mean Error (also known as the Additive Bias) in $VARNAME
   computed over the domain for each timestep. The ME is calculated based on that used in the
@@ -57,10 +57,10 @@ steps:
             varname: observed_$VARNAME
 
   - operator: scoreswrappers.scores_additive_bias
-    preserved_coordinates: $AGGREGATION_METHOD
+    preserved_coordinates: $PRESERVED_VARIABLE
 
   - operator: plot.plot_line_series
-    series_coordinate: $AGGREGATION_METHOD
+    series_coordinate: $PRESERVED_VARIABLE
 
   - operator: write.write_cube_to_nc
     overwrite: True

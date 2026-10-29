@@ -1,5 +1,5 @@
 category: Surface Model versus Observation Time Series Aggregation
-title: "$VARNAME\nscores rmse time series for model vs observation points $SUBAREA_NAME aggregation by $AGGREGATION_METHOD"
+title: "$VARNAME\nscores rmse time series for model vs observation points $SUBAREA_NAME aggregation by $AGGREGATION_MODE"
 description: |
   Extracts and plot a time series of $VARNAME for all times based on RMSE between given models and observation points.
 
@@ -64,10 +64,10 @@ steps:
             varname: observed_$VARNAME
 
   - operator: scoreswrappers.scores_rmse
-    preserved_coordinates: $AGGREGATION_METHOD
+    preserved_coordinates: $PRESERVED_VARIABLE
 
   - operator: plot.plot_line_series
-    series_coordinate: $AGGREGATION_METHOD
+    series_coordinate: $PRESERVED_VARIABLE
 
   - operator: write.write_cube_to_nc
     overwrite: True
