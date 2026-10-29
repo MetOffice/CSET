@@ -2,10 +2,10 @@ category: Power Spectrum
 title: "Mean Power Spectrum $VARNAME $LEVELTYPE $LEVEL $SUBAREA_NAME"
 description: |
   Extracts and plots the mean power spectral density of $VARNAME from a
-  file at $LEVELTYPE level $LEVEL of $MODEL_NAME. Mean is over all times for each case.
+  file at $LEVELTYPE level $LEVEL of $MODEL_NAME over all times in one case.
 
   Power Spectra calculated on regional domains using Discrete Cosine Transform (DCT)
-  as described in [Denis_etal_2002].
+  as described in [Denis_etal_2002]_.
   The power spectra is then converted into a power spectral density to enable fair comparison
   between different model resolutions, comparison with observations with different number of data points
   or comparison of models between different domain sizes, cases, run lengths.
@@ -47,10 +47,12 @@ steps:
 
   - operator: collapse.collapse
     method: MEAN
-    coordinate: "time"
+    coordinate: "forecast_period"
 
   - operator: plot.plot_line_series
     series_coordinate: "physical_wavenumber"
+    sequence_coordinate: "forecast_period"
+    stamp_coordinate: "realization"
     single_plot: $SPECTRUM_PLEVEL_FIELD_SEQUENCE
 
   - operator: write.write_cube_to_nc
