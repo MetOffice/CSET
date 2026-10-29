@@ -237,7 +237,7 @@ def test_build_station_lookup(dummy_cubelist_obs_3_common_stations):
         dummy_cubelist_obs_3_common_stations, common_stations
     )
 
-    assert np.shape(station_lookup.subset_data) == (2, 10, 3)
+    assert np.shape(station_lookup.data) == (2, 10, 3)
 
     expected_frt_points = [
         cb.coord("forecast_reference_time").points.item()
