@@ -51,8 +51,14 @@ steps:
         temperature:
             operator: filters.filter_multiple_cubes
             constraint:
-                operator: constraints.generate_var_constraint
-                varname: "air_temperature"
+                operator: constraints.combine_constraints
+                constraint_1:
+                    operator: constraints.generate_var_constraint
+                    varname: "air_temperature"
+                constraint_2:
+                    operator: constraints.generate_level_constraint
+                    coordinate: "model_level_number"
+                    levels: "*"
         pressure:
             operator: filters.filter_multiple_cubes
             constraint:
