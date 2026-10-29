@@ -88,10 +88,31 @@ def collapse(
         else:
             coord_names = ["forecast_reference_time", "forecast_period"]
 
-        for cube in cubes:
+        overlap_input = iris.cube.CubeList(iter_maybe(cubes))
+        for cube in overlap_input:
             for coord_name in coord_names:
                 cube.coord(coord_name).bounds = None
-        cubes = cubes.extract_overlapping(coord_names)
+        cubes = overlap_input.extract_overlapping(coord_names)
+
+        # Fallback for mixed/irregular inputs: if strict overlap on forecast
+        # coordinates fails, try forecast_period only, then time where available.
+        if len(cubes) == 0 and not is_power_spectrum:
+            period_overlap_input = iris.cube.CubeList(
+                cube for cube in overlap_input if cube.coords("forecast_period")
+            )
+            if len(period_overlap_input) > 1:
+                for cube in period_overlap_input:
+                    cube.coord("forecast_period").bounds = None
+                cubes = period_overlap_input.extract_overlapping(["forecast_period"])
+
+        if len(cubes) == 0 and not is_power_spectrum:
+            time_overlap_input = iris.cube.CubeList(
+                cube for cube in overlap_input if cube.coords("time")
+            )
+            if len(time_overlap_input) > 1:
+                for cube in time_overlap_input:
+                    cube.coord("time").bounds = None
+                cubes = time_overlap_input.extract_overlapping(["time"])
 
         if is_power_spectrum:
             for cube in cubes:

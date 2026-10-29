@@ -544,6 +544,12 @@ def validate_cube_shape(
 ) -> None:
     """Check all cubes have a model name."""
     if isinstance(cube, iris.cube.CubeList) and len(cube) != num_models:
+        # Single-model inputs can legitimately be split into multiple cubes
+        # (e.g. chunked files). Allow this case when model_name does not vary.
+        if num_models == 1:
+            model_names = {cb.attributes.get("model_name") for cb in cube}
+            if len(model_names) <= 1:
+                return
         raise ValueError(
             f"The number of model names ({num_models}) should equal the number "
             f"of cubes ({len(cube)})."

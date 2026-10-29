@@ -127,10 +127,44 @@ def read_cube(
     # Check filtered cubes is a CubeList containing one cube.
     if len(cubes) == 1:
         return cubes[0]
-    else:
-        raise ValueError(
-            f"Constraint doesn't produce single cube: {constraint}\n{cubes}"
-        )
+
+    # Some datasets can legitimately load as multiple temporal chunks for the
+    # same constrained variable. Attempt to merge/concatenate to a single cube
+    # before treating this as an error.
+    try:
+        merged = _merge_cubes_check_ensemble(cubes)
+        concatenated = merged.concatenate()
+        if len(concatenated) == 1:
+            return concatenated[0]
+    except (ValueError, iris.exceptions.ConcatenateError):
+        pass
+
+    # Some observation inputs can still contain duplicate cubes for the same
+    # constrained variable (for example one full time series plus a static
+    # field). In this case, prefer the cube with the most complete time axis.
+    cube_names = {cube.name() for cube in cubes}
+    if len(cube_names) == 1:
+        time_lengths = []
+        for cube in cubes:
+            if cube.coords("time"):
+                time_lengths.append(np.size(cube.coord("time").points))
+            else:
+                time_lengths.append(0)
+
+        best_index = int(np.argmax(time_lengths))
+        if (
+            time_lengths[best_index] > 0
+            and time_lengths.count(time_lengths[best_index]) == 1
+        ):
+            logger.warning(
+                "Constraint %s matched %d cubes; selecting cube with longest time axis (%d points).",
+                constraint,
+                len(cubes),
+                time_lengths[best_index],
+            )
+            return cubes[best_index]
+
+    raise ValueError(f"Constraint doesn't produce single cube: {constraint}\n{cubes}")
 
 
 def read_cubes(
