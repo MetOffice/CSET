@@ -159,7 +159,6 @@ def test_read_cube():
         constraint=constraints.generate_cell_methods_constraint([]),
     )
     assert isinstance(cube, iris.cube.Cube)
-
     # Global [latitude, longitude] example file
     cube = read.read_cube(
         "tests/test_data/air_temperature_global.nc",
@@ -274,22 +273,24 @@ def test_um_normalise_callback_missing_entry(cube, caplog):
     assert level == logging.WARNING
 
 
-def test_lfric_normalise_callback_remove_attrs(cube):
-    """Correctly remove unneeded attributes."""
-    cube.attributes["uuid"] = "87096862-89c3-4749-9c6c-0be91c2a7954"
-    cube.attributes["timeStamp"] = "2024-May-20 12:29:21 GMT"
-    read._lfric_normalise_callback(cube)
-    assert "uuid" not in cube.attributes
-    assert "timeStamp" not in cube.attributes
-
-
 def test_lfric_normalise_callback_sort_stash(cube):
     """Correctly sort STASH code lists."""
     cube.attributes["um_stash_source"] = "['m01s03i025', 'm01s00i025']"
-    read._lfric_normalise_callback(cube)
+    read._lfric_stash_source_callback(cube)
     actual = cube.attributes["um_stash_source"]
     expected = "['m01s00i025', 'm01s03i025']"
     assert actual == expected
+
+
+def test_read_cubes_no_unwanted_attrs(cube):
+    """Correctly remove unneeded attributes."""
+    cube.attributes["uuid"] = "87096862-89c3-4749-9c6c-0be91c2a7954"
+    cube.attributes["timeStamp"] = "2024-May-20 12:29:21 GMT"
+    cube.coord("time").attributes["time_origin"] = "2024-May-20 12:29:21 GMT"
+    read._clean_unwanted_cube_attributes(cube)
+    assert "uuid" not in cube.attributes
+    assert "timeStamp" not in cube.attributes
+    assert "time_origin" not in cube.coord("time").attributes
 
 
 def test_lfric_time_coord_fix_callback():
@@ -856,6 +857,13 @@ def test_lfric_forecast_period_convert_units_callback(cube):
     assert cube.coord("forecast_period").units == "hours"
 
 
+def test_remove_cset_comparison_base_attribute_callback():
+    """Ensure ``cset_comparison_base`` attribute is removed."""
+    cube = iris.cube.Cube(shape=(1,), attributes={"cset_comparison_base": 1})
+    read._remove_cset_comparison_base_attribute_callback(cube)
+    assert "cset_comparison_base" not in cube.attributes
+
+
 def test_read_cubes_extract_cells():
     """Read cube and ensure appropriate number of cells are trimmed from domain edges."""
     cube = read.read_cubes(
@@ -1166,11 +1174,11 @@ def test_fix_no_time_coords_callback(cube):
     assert cube.coord("time").units == "hours since 0001-01-01 00:00:00"
 
 
-def test_normalise_ML_varname(transect_source_cube):
+def test_normalise_longname(transect_source_cube):
     """Check that pressure varname is changed."""
     cube = transect_source_cube.copy()
     cube.rename = "air_temperature"
-    read._normalise_ML_varname(cube)
+    read._normalise_longname(cube)
     assert cube.long_name == "temperature_at_pressure_levels"
 
 
@@ -1307,15 +1315,16 @@ def test_check_combine_point_observations_multiple_obs(cube):
 
 def test_compute_winds(vector_cubes, tmp_working_dir):
     """Ensure _compute_winds calculates wind_speed from component inputs."""
+    constraint = constraints.generate_var_constraint("wind_speed_at_10m")
     assert len(vector_cubes) == 2
     vector_cubes[0].rename("eastward_wind_at_10m")
     vector_cubes[1].rename("northward_wind_at_10m")
-    output_cubes = read._compute_winds(vector_cubes)
-    assert len(vector_cubes) == 3
+    output_cubes = read._compute_winds(vector_cubes, constraint=constraint)
     assert len(output_cubes) == 1
     assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))
-    assert output_cubes.extract(iris.Constraint("wind_speed_at_10m"))[0].units == "ms-1"
-
+    assert (
+        output_cubes.extract(iris.Constraint("wind_speed_at_10m"))[0].units == "m s-1"
+    )
     u = vector_cubes[0].data
     v = vector_cubes[1].data
     expected_wind = (u**2 + v**2) ** 0.5
@@ -1333,10 +1342,20 @@ def test_compute_winds_multi_vars(cube, vector_cubes, tmp_working_dir):
     """Ensure _compute_winds extends multiple input variable cubelist."""
     # Add cube of air_temperature to CubeList containing wind components.
     assert len(vector_cubes) == 2
+    constraint = constraints.generate_var_constraint(
+        [
+            "air_temperature",
+            "wind_speed_at_10m",
+            "eastward_wind_at_10m",
+            "northward_wind_at_10m",
+        ]
+    )
     vector_cubes[0].rename("eastward_wind_at_10m")
     vector_cubes[1].rename("northward_wind_at_10m")
+
     output_cubes = read._compute_winds(
-        iris.cube.CubeList([cube, vector_cubes[0], vector_cubes[1]])
+        iris.cube.CubeList([cube, vector_cubes[0], vector_cubes[1]]),
+        constraint=constraint,
     )
     assert len(vector_cubes) == 2
     assert len(output_cubes) == 4
@@ -1351,3 +1370,239 @@ def test_compute_winds_multi_vars(cube, vector_cubes, tmp_working_dir):
     expected_wind = (u**2 + v**2) ** 0.5
     output_wind = output_cubes.extract(iris.Constraint("wind_speed_at_10m"))[0]
     assert np.allclose(output_wind.data, expected_wind, rtol=1e-6, atol=1e-2)
+
+
+def test_compute_wind_no_constraint(wind_cubelist_um):
+    """No constraint given should return the cubelist unchanged."""
+    cubes = read._compute_winds(wind_cubelist_um)
+    assert cubes == wind_cubelist_um
+
+
+def test_wind_um(wind_cubelist_um):
+    """UM cubes filtered to wind speed only."""
+    cubes = wind_cubelist_um.copy()
+    constraint = constraints.generate_var_constraint("wind_speed_at_10m")
+    cubes = read._compute_winds(cubes, constraint=constraint)
+    assert len(cubes) == 1
+    speed = cubes.extract_cube(iris.Constraint("wind_speed_at_10m"))
+    assert speed.standard_name == "wind_speed"
+
+
+def test_wind_um_eastward(wind_cubelist_um):
+    """UM cubes filtered to eastward wind only."""
+    cubes = wind_cubelist_um.copy()
+    constraint = constraints.generate_var_constraint("eastward_wind_at_10m")
+    cubes = read._compute_winds(cubes, constraint=constraint)
+    assert len(cubes) == 1
+    eastward = cubes.extract_cube(iris.Constraint("eastward_wind_at_10m"))
+    assert eastward.standard_name == "x_wind"
+
+
+def test_wind_um_northward(wind_cubelist_um):
+    """UM cubes filtered to northward wind only."""
+    cubes = wind_cubelist_um.copy()
+    constraint = constraints.generate_var_constraint("northward_wind_at_10m")
+    cubes = read._compute_winds(cubes, constraint=constraint)
+    assert len(cubes) == 1
+    northward = cubes.extract_cube(iris.Constraint("northward_wind_at_10m"))
+    assert northward.standard_name == "y_wind"
+
+
+def test_wind_um_northward_and_eastward(wind_cubelist_um):
+    """UM cubes filtered to both wind components."""
+    cubes = wind_cubelist_um.copy()
+    constraint = constraints.generate_var_constraint(
+        ["eastward_wind_at_10m", "northward_wind_at_10m"]
+    )
+    cubes = read._compute_winds(cubes, constraint=constraint)
+    assert len(cubes) == 2
+    eastward = cubes.extract_cube(iris.Constraint("eastward_wind_at_10m"))
+    northward = cubes.extract_cube(iris.Constraint("northward_wind_at_10m"))
+    assert eastward.standard_name == "x_wind"
+    assert northward.standard_name == "y_wind"
+
+
+def test_wind_um_all(wind_cubelist_um):
+    """UM cubes filtered to wind speed and both wind components."""
+    cubes = wind_cubelist_um.copy()
+    constraint = constraints.generate_var_constraint(
+        ["wind_speed_at_10m", "eastward_wind_at_10m", "northward_wind_at_10m"]
+    )
+    cubes = read._compute_winds(cubes, constraint=constraint)
+    assert len(cubes) == 3
+    speed = cubes.extract_cube(iris.Constraint("wind_speed_at_10m"))
+    eastward = cubes.extract_cube(iris.Constraint("eastward_wind_at_10m"))
+    northward = cubes.extract_cube(iris.Constraint("northward_wind_at_10m"))
+    assert speed.standard_name == "wind_speed"
+    assert eastward.standard_name == "x_wind"
+    assert northward.standard_name == "y_wind"
+
+
+def test_wind_lfric(wind_cubelist_lfric):
+    """LFRic cubes filtered to wind speed only."""
+    cubes = wind_cubelist_lfric.copy()
+    constraint = constraints.generate_var_constraint("wind_speed_at_10m")
+    cubes = read._compute_winds(cubes, constraint=constraint)
+    assert len(cubes) == 1
+    speed = cubes.extract_cube(iris.Constraint("wind_speed_at_10m"))
+    assert speed.var_name == "wspd10m"
+
+
+def test_wind_lfric_eastward(wind_cubelist_lfric):
+    """LFRic cubes filtered to eastward wind only."""
+    cubes = wind_cubelist_lfric.copy()
+    constraint = constraints.generate_var_constraint("eastward_wind_at_10m")
+    cubes = read._compute_winds(cubes, constraint=constraint)
+    assert len(cubes) == 1
+    eastward = cubes.extract_cube(iris.Constraint("eastward_wind_at_10m"))
+    assert eastward.var_name == "u10m"
+
+
+def test_wind_lfric_northward(wind_cubelist_lfric):
+    """LFRic cubes filtered to northward wind only."""
+    cubes = wind_cubelist_lfric.copy()
+    constraint = constraints.generate_var_constraint("northward_wind_at_10m")
+    cubes = read._compute_winds(cubes, constraint=constraint)
+    assert len(cubes) == 1
+    northward = cubes.extract_cube(iris.Constraint("northward_wind_at_10m"))
+    assert northward.var_name == "v10m"
+
+
+def test_wind_lfric_northward_and_eastward(wind_cubelist_lfric):
+    """LFRic cubes filtered to both wind components."""
+    cubes = wind_cubelist_lfric.copy()
+    constraint = constraints.generate_var_constraint(
+        ["eastward_wind_at_10m", "northward_wind_at_10m"]
+    )
+    cubes = read._compute_winds(cubes, constraint=constraint)
+    assert len(cubes) == 2
+    eastward = cubes.extract_cube(iris.Constraint("eastward_wind_at_10m"))
+    northward = cubes.extract_cube(iris.Constraint("northward_wind_at_10m"))
+    assert eastward.var_name == "u10m"
+    assert northward.var_name == "v10m"
+
+
+def test_wind_lfric_all(wind_cubelist_lfric):
+    """LFRic cubes filtered to speed and both wind components."""
+    cubes = wind_cubelist_lfric.copy()
+    constraint = constraints.generate_var_constraint(
+        ["wind_speed_at_10m", "eastward_wind_at_10m", "northward_wind_at_10m"]
+    )
+    cubes = read._compute_winds(cubes, constraint=constraint)
+    assert len(cubes) == 3
+    speed = cubes.extract_cube(iris.Constraint("wind_speed_at_10m"))
+    eastward = cubes.extract_cube(iris.Constraint("eastward_wind_at_10m"))
+    northward = cubes.extract_cube(iris.Constraint("northward_wind_at_10m"))
+    assert speed.var_name == "wspd10m"
+    assert eastward.var_name == "u10m"
+    assert northward.var_name == "v10m"
+
+
+def test_wind_observed(wind_cubelist_observed):
+    """Observed cubes filtered to speed."""
+    cubes = wind_cubelist_observed.copy()
+    constraint = constraints.generate_var_constraint(
+        ["observed_wind_speed_at_10m", "wind_speed_at_10m"]
+    )
+    cubes = read._compute_winds(cubes, constraint=constraint)
+    assert len(cubes) == 1
+    observed_speed = cubes.extract_cube(iris.Constraint("observed_wind_speed_at_10m"))
+    assert observed_speed
+
+
+def test_wind_combined_constraint(wind_cubelist_um):
+    """UM cubes filtered to wind speed only."""
+    cubes = wind_cubelist_um.copy()
+    var_constraint = constraints.generate_var_constraint("wind_speed_at_10m")
+    constraint_1 = iris.Constraint(name="air_potential_temperature")
+    constraint_2 = iris.Constraint(name="temperature_at_screen_level")
+    combined_constraint_1 = var_constraint & constraint_1
+    combined_constraint_2 = combined_constraint_1 & constraint_2
+    cubes = read._compute_winds(cubes, constraint=combined_constraint_2)
+    assert len(cubes) == 1
+    speed = cubes.extract_cube(iris.Constraint("wind_speed_at_10m"))
+    assert speed.standard_name == "wind_speed"
+
+
+def test_flatten_single_constraint():
+    """A single constraint is returned unchanged."""
+    constraint = iris.Constraint(name="wind_speed_at_10m")
+    flattened = list(read._flatten_combined_constraint(constraint))
+    assert flattened == [constraint]
+
+
+def test_probe_variables(tmp_path):
+    """Test probing variables from a file."""
+    cube1 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="temperature_at_screen_level",
+    )
+    cube2 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="eastward_wind_at_10m",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save([cube1, cube2], input_file)
+
+    result = read._probe_variables(str(input_file))
+
+    assert result == [
+        "eastward_wind_at_10m",
+        "temperature_at_screen_level",
+    ]
+
+
+def test_probe_variables_10mwind_added(tmp_path):
+    """Test 10m wind added if suitable."""
+    cube1 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="eastward_wind_at_10m",
+    )
+    cube2 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="northward_wind_at_10m",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save([cube1, cube2], input_file)
+
+    result = read._probe_variables(str(input_file))
+
+    assert result == [
+        "eastward_wind_at_10m",
+        "northward_wind_at_10m",
+        "wind_speed_at_10m",
+    ]
+
+
+def test_probe_variables_ignores_missing_long_names(tmp_path):
+    """Test cubes without long names are not returned."""
+    cube1 = iris.cube.Cube(
+        np.ones((2, 2)),
+        long_name="temperature_at_screen_level",
+    )
+    cube2 = iris.cube.Cube(
+        np.ones((2, 2)),
+        standard_name="air_temperature",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save([cube1, cube2], input_file)
+
+    result = read._probe_variables(str(input_file))
+
+    assert result == ["temperature_at_screen_level"]
+
+
+def test_probe_variables_no_long_names(tmp_path):
+    """Test probing cubes with no long names returns an empty list."""
+    cube = iris.cube.Cube(
+        np.ones((2, 2)),
+        standard_name="air_temperature",
+    )
+
+    input_file = tmp_path / "test.nc"
+    iris.save(cube, input_file)
+
+    assert read._probe_variables(str(input_file)) == []

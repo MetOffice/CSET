@@ -51,9 +51,11 @@ from CSET.operators._colormaps import (
     get_model_colors_map,
 )
 from CSET.operators._utils import (
+    calc_array_stats,
     check_sequence_coordinate,
     check_single_cube,
     check_stamp_coordinate,
+    ensure_common_time_points,
     fully_equalise_attributes,
     get_cube_yxcoordname,
     get_num_models,
@@ -63,7 +65,6 @@ from CSET.operators._utils import (
     validate_cubes_coords,
 )
 from CSET.operators.collapse import collapse
-from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.regrid import regrid_onto_cube
 
 logger = logging.getLogger(__name__)
@@ -334,6 +335,7 @@ def _set_title_and_filename(
     nplot: int,
     recipe_title: str,
     filename: str,
+    model_name: str | None = None,
 ):
     """Set plot title and filename based on cube coordinate.
 
@@ -405,6 +407,16 @@ def _set_title_and_filename(
             plot_filename = f"{filename.rsplit('.', 1)[0]}{sequence_fname}.png"
         else:
             plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    if model_name:
+        if "the comparison model" in plot_title:
+            plot_title = plot_title.replace("the comparison model", model_name)
+            plot_filename = slugify(
+                plot_filename.replace("the comparison model", model_name)
+            )
+        else:
+            plot_title = f"{model_name}_{plot_title}"
+            plot_filename = slugify(f"{model_name}_{plot_filename}")
 
     return plot_title, plot_filename
 
@@ -744,8 +756,9 @@ def _plot_and_save_spatial_plot(
 
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
+    cube_min, cube_max, cube_mean = calc_array_stats(cube.data)
     axes.annotate(
-        f"Min: {np.min(cube.data):.3g} Max: {np.max(cube.data):.3g} Mean: {np.mean(cube.data):.3g}",
+        f"Min: {cube_min:.3g} Max: {cube_max:.3g} Mean: {cube_mean:.3g}",
         xy=(0.025, yinfopad),
         xycoords="axes fraction",
         xytext=(-5, 5),
@@ -1473,8 +1486,9 @@ def _plot_and_save_vector_plot(
 
     # Add watermark with min/max/mean. Currently not user togglable.
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
+    cube_min, cube_max, cube_mean = calc_array_stats(cube_vec_mag.data)
     axes.annotate(
-        f"Min: {np.min(cube_vec_mag.data):.3g} Max: {np.max(cube_vec_mag.data):.3g} Mean: {np.mean(cube_vec_mag.data):.3g}",
+        f"Min: {cube_min:.3g} Max: {cube_max:.3g} Mean: {cube_mean:.3g}",
         xy=(0.05, -0.05),
         xycoords="axes fraction",
         xytext=(-5, 5),
@@ -1610,7 +1624,10 @@ def _plot_and_save_histogram_series(
         ax.set_ylabel(
             f"Contribution to mean ({iter_maybe(cubes)[0].units})", fontsize=14
         )
-    ax.set_xlim(vmin, vmax)
+    try:
+        ax.set_xlim(vmin, vmax)
+    except ValueError:
+        pass
     ax.tick_params(axis="both", labelsize=12)
 
     # Overlay grid-lines onto histogram plot.
@@ -1950,8 +1967,14 @@ def _spatial_plot(
     for iseq, cube_slice in enumerate(cube.slices_over(sequence_coordinate)):
         # Set plot titles and filename
         seq_coord = cube_slice.coord(sequence_coordinate)
+
+        if "model_name" in cube.attributes:
+            model_name = cube.attributes["model_name"]
+        else:
+            model_name = None
+
         plot_title, plot_filename = _set_title_and_filename(
-            seq_coord, nplot, recipe_title, filename
+            seq_coord, nplot, recipe_title, filename, model_name=model_name
         )
 
         # Extract sequence slice for overlay_cube, contour_cube and point_cube if required.
@@ -2033,7 +2056,7 @@ def spatial_contour_plot(
 
 
 def spatial_pcolormesh_plot(
-    cube: iris.cube.Cube,
+    cubes: iris.cube.Cube | iris.cube.CubeList,
     filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
@@ -2051,8 +2074,8 @@ def spatial_pcolormesh_plot(
 
     Parameters
     ----------
-    cube: Cube
-        Iris cube of the data to plot. It should have two spatial dimensions,
+    cube: Cubes
+        Iris cube or cubelist of the data to plot. Each cube should have two spatial dimensions,
         such as lat and lon, and may also have a another two dimension to be
         plotted sequentially and/or as postage stamp plots.
     filename: str, optional
@@ -2067,20 +2090,34 @@ def spatial_pcolormesh_plot(
 
     Returns
     -------
-    Cube
-        The original cube (so further operations can be applied).
+    Cubes
+        The original cube/cubelist (so further operations can be applied).
 
     Raises
     ------
     ValueError
         If the cube doesn't have the right dimensions.
-    TypeError
-        If the cube isn't a single cube.
     """
-    _spatial_plot(
-        "pcolormesh", cube, filename, sequence_coordinate, stamp_coordinate, **kwargs
-    )
-    return cube
+    if isinstance(cubes, iris.cube.CubeList):
+        for model_cube in cubes:
+            _spatial_plot(
+                "pcolormesh",
+                model_cube,
+                filename,
+                sequence_coordinate,
+                stamp_coordinate,
+                **kwargs,
+            )
+    elif isinstance(cubes, iris.cube.Cube):
+        _spatial_plot(
+            "pcolormesh",
+            cubes,
+            filename,
+            sequence_coordinate,
+            stamp_coordinate,
+            **kwargs,
+        )
+    return cubes
 
 
 def spatial_multi_pcolormesh_plot(
@@ -2218,6 +2255,7 @@ def plot_line_series(
 
     # Iterate over all cubes and extract coordinate to plot.
     cubes = iris.cube.CubeList(iter_maybe(cube))
+
     coords = []
     for model_cube in cubes:
         try:
@@ -2226,19 +2264,28 @@ def plot_line_series(
             raise ValueError(
                 f"Cube must have a {series_coordinate} coordinate."
             ) from err
-        # Count dimensions excluding realization
+        # Count cube dimensions and exclude realization and
+        # forecast_reference_time if they exist.
         ndim = model_cube.ndim
 
         if model_cube.coords("realization"):
+            # returns coord dimension
             realization_dims = model_cube.coord_dims("realization")
 
             # Only subtract if realization is a dimension coordinate
             if realization_dims:
                 ndim -= len(realization_dims)
 
+        if model_cube.coords("forecast_reference_time"):
+            frt_dims = model_cube.coord_dims("forecast_reference_time")
+
+            # Only subtract if frt is a dimension coordinate
+            if frt_dims:
+                ndim -= len(frt_dims)
+
         if ndim > 2:
             raise ValueError(
-                "Cube must be 1D or 2D (excluding any realization dimension)."
+                "Cube must be 1D or 2D (excluding any realization or forecast_reference_time dimensions)."
             )
 
     plot_index = []
@@ -2685,7 +2732,8 @@ def qq_plot(
         base = regrid_onto_cube(base, other, method="Linear")
 
     # Extract just common time points.
-    base, other = _extract_common_time_points(base, other)
+    # raise value error if no shared time
+    ensure_common_time_points(base, other)
 
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])
@@ -2729,7 +2777,9 @@ def qq_plot(
     return iris.cube.CubeList([base, other])
 
 
-def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
+def hinton_plot(
+    cubes: iris.cube.CubeList, base_name: str, other_name: str, magnitude: bool = False
+) -> None:
     """
     Plot a Hinton style triangle/scorecard plot.
 
@@ -2741,42 +2791,123 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
 
     Parameters
     ----------
-    change: np.ndarray
-        A 2d numpy array containing the values (scaled to 1 to -1) that determine the triangle
-        size/direction.
-    signif: np.ndarray
-        A 2d numpy array containing 0s and 1s to determine if triangle is significant or not.
-    xaxis_labels: list
-        List of labels for the xaxis (must match the second dimension length of signif and change,
-        along with magnitude if not None).
-    yaxis_labels: list
-        List of labels for the yaxis (must match the first dimension length of signif and change,
-        along with magnitude if not None).
-    magnitude: np.ndarray | None
-        Optional 2D array, matching the shape of change, signif, which contains numerical values
-        the user wishes to display under each respective triangle.
-
-    Returns
-    -------
-    matplotlib axes object to either display or do further modifications to.
+    cubes: iris.cube.CubeList
+        A iris cubelist, containing at least two cubes of a skill metric to plot (model vs obs). Can
+        include multiple variables, in which the plot will automatically scale for. If cubes containing
+        a name significance_<var> exist, containing a bool array, then it will also plot whether each
+        triangle is significant by using a thick black outline. Each cube should be 1D, with
+        forecast_period as the only dimension.
+    base_name: str
+        The name of the base model to use as the control in the Hinton plot, as a string.
+    other_name: str
+        The name of the other model to use as the test in the Hinton plot, as a string.
+    magnitude: bool
+        Option bool when if True, then plot the numerical value difference in two values under each
+        triangle.
     """
+    # Ensure we have a name for the plot file.
+    recipe_title = get_recipe_metadata().get("title", "Hinton")
+    title = f"{recipe_title}"
+    filename = slugify(recipe_title)
+
+    # Check that all cubes only have one dimension called forecast_period
+    for cube in cubes:
+        if len(cube.dim_coords) > 1:
+            raise ValueError(f"Should only have one dimension coord, {cube}")
+        if cube.dim_coords[0].name() != "forecast_period":
+            raise ValueError(
+                f"Single coord should be forecast_period, not {cube.dim_coords[0].name()}"
+            )
+
+    # Separate out base cubes and other cubes.
+    base_cubes = iris.cube.CubeList()
+    other_cubes = iris.cube.CubeList()
+    for c in cubes:
+        if c.attributes["model_name"] == base_name:
+            base_cubes.append(c)
+        elif c.attributes["model_name"] == other_name:
+            other_cubes.append(c)
+
+    # base cubes should be the same length as other cubes, otherwise one is missing a variable.
+    if len(base_cubes) != len(other_cubes):
+        raise ValueError(
+            f"base cubes {base_cubes} are not same number as {other_cubes}"
+        )
+
+    # Find common variable names in the two groups.
+    base_vars = {cube.long_name for cube in base_cubes if cube.long_name is not None}
+    other_vars = {cube.long_name for cube in other_cubes if cube.long_name is not None}
+    common_vars = sorted(base_vars & other_vars)
+
+    # Iterate over each variable (row)
+    rows = []
+    for var in common_vars:
+        # Extract cube with matching variable name
+        base_cube = next(
+            (c for c in base_cubes if c.long_name == var),
+            None,
+        )
+
+        other_cube = next(
+            (c for c in other_cubes if c.long_name == var),
+            None,
+        )
+
+        # If we can't find a variable in both cubes, then skip
+        if base_cube is None or other_cube is None:
+            continue
+
+        # Compute difference (1D array)
+        # We can already make assumption both on same forecast_periods as checked
+        # prior to computing metric.
+        diff = other_cube.data - base_cube.data
+
+        # See if there is a significance cube present, if not, set as None.
+        sig_cube = next(
+            (cube for cube in cubes if cube.long_name == f"significance_{var}"),
+            None,
+        )
+
+        # Append row information.
+        rows.append(
+            {
+                "name": var,
+                "forecast_periods": base_cube.coord("forecast_period").points,
+                "change": diff,
+                "significance": sig_cube.data.astype(bool)
+                if sig_cube is not None
+                else None,
+            }
+        )
+
+    # For each row, compute standardised anomalies
+    for row in rows:
+        change = np.asarray(row["change"])
+
+        anoms = change - np.mean(change)
+
+        scale = np.max(np.abs(anoms))
+
+        if scale > 0:
+            scaled = anoms / scale
+        else:
+            scaled = np.zeros_like(anoms)
+
+        row["anoms"] = anoms
+        row["scaled"] = scaled
+
     # Setup colors of triangles
     color_pos = "#7CAE00"
     color_neg = "#7B68EE"
 
     # Setup cell/text size ratios
     figsize = None
-    cell_size_in = 0.35
+    cell_size_in = 1.5
     text_row_ratio = 0.25
 
-    # Ensure arrays, and change to bool for sig.
-    change = np.asarray(change)
-    signif = np.asarray(signif).astype(bool)
-    if magnitude is not None:
-        magnitude = np.asarray(magnitude)
-
     # Get the number of x and y elements
-    ny, nx = change.shape
+    ny = len(rows)
+    nx = max(len(row["forecast_periods"]) for row in rows)
 
     # Build non-uniform y coordinates
     tri_height = 1.0
@@ -2792,7 +2923,7 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
         y += tri_height
         y_edges.append(y)
 
-        if magnitude is not None:
+        if magnitude:
             txt_y.append(y + txt_height / 2)
             y += txt_height
             y_edges.append(y)
@@ -2812,11 +2943,16 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
     ax.set_xlim(-0.5, nx - 0.5)
     ax.set_ylim(0, total_height)
 
+    longest_row = max(rows, key=lambda row: len(row["forecast_periods"]))
+
     ax.set_xticks(np.arange(nx))
-    ax.set_xticklabels(xaxis_labels, rotation=90)
+    ax.set_xticklabels(
+        longest_row["forecast_periods"],
+        rotation=90,
+    )
 
     ax.set_yticks(tri_y)
-    ax.set_yticklabels(yaxis_labels)
+    ax.set_yticklabels([row["name"] for row in rows])
 
     ax.set_xticks(np.arange(-0.5, nx, 1), minor=True)
     ax.set_yticks(y_edges, minor=True)
@@ -2843,19 +2979,22 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
     text_fontsize = cell_pixels * 0.15
 
     # Plot triangles + text
-    for j in range(ny):
-        for i in range(nx):
-            val = change[j, i]
+    for j, row in enumerate(rows):
+        scaled = row["scaled"]
+        anoms = row["anoms"]
+        signif = row["significance"]
+
+        for i in range(len(scaled)):
+            val = scaled[i]
+
             if np.isnan(val):
                 continue
 
             if abs(val) < 0.01:
                 continue
 
-            sig = signif[j, i]
             size = max_marker_size * abs(val)
 
-            # Triangle style
             if val >= 0:
                 marker = "^"
                 color = color_pos
@@ -2863,14 +3002,14 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
                 marker = "v"
                 color = color_neg
 
-            if sig:
-                edgecolor = "black"
-                linewidth = 0.6
+            if signif is not None:
+                sig = bool(signif[i])
+                edgecolor = "black" if sig else "none"
+                linewidth = 0.6 if sig else 0.0
             else:
                 edgecolor = "none"
                 linewidth = 0.0
 
-            # Triangle
             ax.scatter(
                 i,
                 tri_y[j],
@@ -2880,12 +3019,12 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
                 edgecolors=edgecolor,
                 linewidths=linewidth,
                 zorder=3,
-                clip_on=True,  # ensures no rendering bleed
+                clip_on=True,
             )
 
             # Text row
-            if magnitude is not None:
-                mag_val = magnitude[j, i]
+            if magnitude:
+                mag_val = anoms[i]
 
                 if not np.isnan(mag_val):
                     ax.text(
@@ -2899,8 +3038,20 @@ def hinton_plot(change, signif, xaxis_labels, yaxis_labels, magnitude=None):
                         zorder=4,
                     )
 
+    ax.set_title(title)
     plt.tight_layout()
-    return fig, ax
+
+    # Save plot.
+    _save_close_figure(fig, "hinton", filename)
+
+    # Add file extension.
+    plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    # Add list of plots to plot metadata.
+    plot_index = _append_to_plot_index([plot_filename])
+
+    # Make a page to display the plots.
+    _make_plot_html_page(plot_index)
 
 
 def scatter_plot(

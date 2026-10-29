@@ -219,6 +219,9 @@ def install_restricted_files(workflow_dir: Path, alternative_url: str | None = N
         # Delete unwanted top-level README.
         (Path(tempdir) / "README.md").unlink(missing_ok=True)
 
+        # Preserve the existing workflow directory permissions.
+        workflow_mode = stat.S_IMODE(workflow_dir.stat().st_mode)
+
         # Copy remaining files, skipping hidden files.
         shutil.copytree(
             tempdir,
@@ -227,4 +230,8 @@ def install_restricted_files(workflow_dir: Path, alternative_url: str | None = N
             symlinks=True,
             dirs_exist_ok=True,
         )
+
+        # Restore the workflow directory permissions.
+        workflow_dir.chmod(workflow_mode)
+
         print(f"Installed site-specific restricted files into {workflow_dir}.")

@@ -20,6 +20,7 @@ import functools
 import glob
 import itertools
 import logging
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Literal
 
@@ -31,6 +32,7 @@ import iris.cube
 import iris.exceptions
 import iris.util
 import numpy as np
+from iris._constraints import ConstraintCombination
 from iris.analysis.cartography import rotate_pole, rotate_winds
 
 from CSET._common import iter_maybe
@@ -48,9 +50,27 @@ class NoDataError(FileNotFoundError):
     """Error that no data has been loaded."""
 
 
+def _probe_variables(file_paths: list[str] | str):
+    """Return variables in input data using CSET-normalised long names.
+
+    Files are loaded using the standard CSET loading callbacks, so UM STASH
+    codes are mapped to their corresponding LFRic names where possible.
+    """
+    # Use _load_model to make use of normalisation callbacks.
+    cubes = _load_model(file_paths, model_name=None, constraint=None)
+
+    variables = {cube.long_name for cube in cubes if cube.long_name is not None}
+
+    # Add 10m wind, if eastward and northward wind exist.
+    if "eastward_wind_at_10m" in variables and "northward_wind_at_10m" in variables:
+        variables.add("wind_speed_at_10m")
+
+    return sorted(variables)
+
+
 def read_cube(
     file_paths: list[str] | str,
-    constraint: iris.Constraint = None,
+    constraint: iris.Constraint | None = None,
     model_names: list[str] | str | None = None,
     subarea_type: str | None = None,
     subarea_extent: list[float] | None = None,
@@ -167,6 +187,16 @@ def read_cubes(
     paths = iter_maybe(file_paths)
     model_names = iter_maybe(model_names)
 
+    # flattens model_names if needed into one dimensional list.
+    if model_names != (None,):
+        flat = []
+        for item in model_names:
+            if isinstance(item, list):
+                flat.extend(item)
+            else:
+                flat.append(item)
+        model_names = flat
+
     # Check we have appropriate number of model names.
     if model_names != (None,) and len(model_names) != len(paths):
         raise ValueError(
@@ -185,7 +215,6 @@ def read_cubes(
     for cube in cubes:
         # Use 1 to indicate True, as booleans can't be saved in NetCDF attributes.
         cube.attributes["cset_comparison_base"] = 1
-
     # Load the rest of the models.
     cubes.extend(itertools.chain.from_iterable(model_cubes))
 
@@ -197,6 +226,9 @@ def read_cubes(
 
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
+
+    # Clean unwanted cube attributes
+    cubes = _clean_unwanted_cube_attributes(cubes)
 
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = _merge_cubes_check_ensemble(cubes)
@@ -237,7 +269,7 @@ def _load_model(
     logger.debug("Constraint: %s", constraint)
     cubes = iris.load(input_files, constraint, callback=_loading_callback)
     # If required, compute wind_speed from components.
-    cubes = _compute_winds(cubes)
+    cubes = _compute_winds(cubes, constraint)
 
     # Add model_name attribute to each cube to make it available at any further
     # step without needing to pass it as function parameter.
@@ -392,13 +424,48 @@ def _cutout_cubes(
     return cutout_cubes
 
 
+def _clean_unwanted_cube_attributes(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Remove unwanted cube attributes, apart from those in an exception list.
+
+    This is run as a final step in read, so cube metadata fixing has already been done.
+    """
+
+    def _strip_attributes(
+        obj: iris.cube.Cube | iris.coords.Coord, keep: list[str]
+    ) -> None:
+        """Remove all attributes not in keep, in place."""
+        for attr in list(obj.attributes):
+            if attr not in keep:
+                obj.attributes.pop(attr, None)
+
+    # List of cube attributes to preserve
+    attrs_to_preserve = [
+        "model_name",
+        "cset_comparison_base",
+        "STASH",
+        "um_stash_source",
+    ]
+
+    # Iterate through each cube and check each attribute.
+    for cube in iter_maybe(cubes):
+        # remove unwanted cube attributes
+        _strip_attributes(cube, attrs_to_preserve)
+        for coord in cube.dim_coords + cube.aux_coords:
+            # remove unwanted coord attributes
+            _strip_attributes(coord, attrs_to_preserve)
+
+    return cubes
+
+
 def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
     """Compose together the needed callbacks into a single function."""
     # Most callbacks operate in-place, but save the cube when returned!
+    _remove_cset_comparison_base_attribute_callback(cube)
     _realization_callback(cube)
     _um_normalise_callback(cube)
-    _lfric_normalise_callback(cube)
-    _nimrod_normalise_callback(cube)
+    _lfric_stash_source_callback(cube)
     cube = _lfric_time_coord_fix_callback(cube)
     _normalise_var0_varname(cube)
     cube = _fix_no_spatial_coords_callback(cube)
@@ -413,8 +480,16 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _lfric_time_callback(cube)
     _lfric_forecast_period_callback(cube)
     cube = _fix_no_time_coords_callback(cube)
-    _normalise_ML_varname(cube)
+    _normalise_longname(cube)
     return cube
+
+
+def _remove_cset_comparison_base_attribute_callback(cube):
+    """Remove ``cset_comparison_base`` attribute if present.
+
+    This allows for reprocessing output previously saved by CSET.
+    """
+    cube.attributes.pop("cset_comparison_base", None)
 
 
 def _realization_callback(cube):
@@ -456,39 +531,19 @@ def _um_normalise_callback(cube: iris.cube.Cube):
             )
 
 
-def _lfric_normalise_callback(cube: iris.cube.Cube):
-    """Normalise attributes that prevents LFRic cube from merging.
-
-    The uuid and timeStamp relate to the output file, as saved by XIOS, and has
-    no relation to the data contained. These attributes are removed.
+def _lfric_stash_source_callback(cube: iris.cube.Cube):
+    """Add um stash source to LFRic data.
 
     The um_stash_source is a list of STASH codes for when an LFRic field maps to
     multiple UM fields, however it can be encoded in any order. This attribute
     is sorted to prevent this. This attribute is only present in LFRic data that
     has been converted to look like UM data.
     """
-    # Remove unwanted attributes.
-    cube.attributes.pop("timeStamp", None)
-    cube.attributes.pop("uuid", None)
-    cube.attributes.pop("name", None)
-    cube.attributes.pop("source", None)
-    cube.attributes.pop("analysis_source", None)
-    cube.attributes.pop("history", None)
-
     # Sort STASH code list.
     stash_list = cube.attributes.get("um_stash_source")
     if stash_list:
         # Parse the string as a list, sort, then re-encode as a string.
         cube.attributes["um_stash_source"] = str(sorted(ast.literal_eval(stash_list)))
-
-
-def _nimrod_normalise_callback(cube: iris.cube.Cube):
-    """Normalise attributes that prevents NIMROD radar cubes from merging."""
-    # Remove unwanted attributes.
-    cube.attributes.pop("radar_sites", None)
-    cube.attributes.pop("additional_radar_sites", None)
-    cube.attributes.pop("recursive_filter_iterations", None)
-    cube.attributes.pop("Probability methods", None)
 
 
 def _lfric_time_coord_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
@@ -890,7 +945,10 @@ def _fix_lfric_cloud_base_altitude(cube: iris.cube.Cube):
         cube.data = dask.array.ma.masked_greater(cube.core_data(), 144.0)
 
 
-def _compute_winds(cubes: iris.cube.CubeList):
+def _compute_winds(
+    cubes: iris.cube.CubeList,
+    constraint: iris.Constraint | ConstraintCombination | None = None,
+):
     """To compute wind_speed from vector components if not available as diagnostic.
 
     Diagnostics of wind are also not always consistent between the UM
@@ -905,27 +963,54 @@ def _compute_winds(cubes: iris.cube.CubeList):
     # the cell methods, but it may not be warranted.
     #
     # A check on UM STASH attributes is also conducted to adjust directions.
+
+    if constraint is None:
+        return cubes
+    filter_windspeed = None
+    for constr in _flatten_combined_constraint(constraint):
+        filter_windspeed = getattr(constr, "varname", None)
+        if filter_windspeed:
+            constraint = constr
+            break
+
     u_constr = iris.Constraint("eastward_wind_at_10m")
     v_constr = iris.Constraint("northward_wind_at_10m")
-    speed_constr = iris.Constraint("wind_speed_at_10m")
+    sp_constr = iris.Constraint("wind_speed_at_10m")
+
     try:
-        if cubes.extract(u_constr) and cubes.extract(v_constr):
-            if len(cubes) == 2:
-                wind_only = True
-            else:
-                wind_only = False
-            if len(cubes.extract(u_constr)) == 1 and not cubes.extract(speed_constr):
+        if (
+            cubes.extract(u_constr)
+            and cubes.extract(v_constr)
+            and not cubes.extract(sp_constr)
+        ):
+            if "wind_speed_at_10m" in constraint.varname:
                 _add_wind_speed_um(cubes)
             # Convert winds in the UM to be relative to true east and true north.
-            if cubes.extract(u_constr) and cubes.extract(v_constr):
-                _convert_wind_true_dirn_um(cubes)
-            # Return only wind_speed cube
-            if wind_only:
-                cubes = cubes.extract(speed_constr)
+            _convert_wind_true_dirn_um(cubes)
     except (KeyError, AttributeError):
         pass
 
+    if filter_windspeed:
+        filter_windspeed_constraint = iris.Constraint(
+            cube_func=lambda cube: (
+                cube.long_name in filter_windspeed
+                or cube.standard_name in filter_windspeed
+                or cube.var_name in filter_windspeed
+            )
+        )
+        cubes = cubes.extract(filter_windspeed_constraint)
     return cubes
+
+
+def _flatten_combined_constraint(
+    con: iris.Constraint | ConstraintCombination,
+) -> Iterator[iris.Constraint]:
+    # yields constraints of a possibly nested constraint combination
+    if isinstance(con, ConstraintCombination):
+        yield from _flatten_combined_constraint(con.lhs)
+        yield from _flatten_combined_constraint(con.rhs)
+    else:
+        yield con
 
 
 def _add_wind_speed_um(cubes: iris.cube.CubeList):
@@ -936,7 +1021,7 @@ def _add_wind_speed_um(cubes: iris.cube.CubeList):
     wspd10.attributes["STASH"] = "m01s03i227"
     wspd10.standard_name = "wind_speed"
     wspd10.long_name = "wind_speed_at_10m"
-    wspd10.units = "ms-1"
+    wspd10.units = "m s-1"
     cubes.append(wspd10)
 
 
@@ -1032,9 +1117,6 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                     "Cannot find forecast_reference_time, but no `time_origin` attribute to construct it from."
                 )
 
-        # Remove time_origin to allow multiple case studies to merge.
-        tcoord.attributes.pop("time_origin", None)
-
         # Construct forecast_period axis (forecast lead time) if it doesn't exist.
         if not cube.coords("forecast_period"):
             try:
@@ -1098,7 +1180,7 @@ def _fix_no_time_coords_callback(cube: iris.cube.Cube):
     return cube
 
 
-def _normalise_ML_varname(cube: iris.cube.Cube):
+def _normalise_longname(cube: iris.cube.Cube):
     """Fix plev variable names to standard names."""
     if cube.coords("pressure"):
         if cube.name() == "x_wind":
