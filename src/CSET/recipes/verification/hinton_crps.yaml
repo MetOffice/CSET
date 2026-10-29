@@ -26,7 +26,6 @@ steps:
   - operator: misc.combine_cubes_into_cubelist
     first:
       operator: scoreswrappers.scores_crps_model_obs
-      preserved_coordinates: [forecast_period]
       cubes:
         operator: misc.extract_common_time_points
         cubes:
@@ -43,7 +42,7 @@ steps:
                   operator: constraints.generate_var_constraint
                   varname: observed_temperature_at_screen_level
             second:
-              operator: regrid.interpolate_to_point_cube
+              operator: regrid.interpolate_neighbourhood_to_point_cube
               fld:
                 operator: aggregate.ensure_aggregatable_across_cases
                 cubes:
@@ -61,7 +60,6 @@ steps:
 
     third:
       operator: scoreswrappers.scores_crps_model_obs
-      preserved_coordinates: [forecast_period]
       cubes:
         operator: misc.extract_common_time_points
         cubes:
@@ -78,7 +76,7 @@ steps:
                   operator: constraints.generate_var_constraint
                   varname: observed_wind_speed_at_10m
             second:
-              operator: regrid.interpolate_to_point_cube
+              operator: regrid.interpolate_neighbourhood_to_point_cube
               fld:
                 operator: aggregate.ensure_aggregatable_across_cases
                 cubes:
@@ -96,7 +94,6 @@ steps:
 
     fourth:
       operator: scoreswrappers.scores_crps_model_obs
-      preserved_coordinates: [forecast_period]
       cubes:
         operator: misc.extract_common_time_points
         cubes:
@@ -113,7 +110,7 @@ steps:
                   operator: constraints.generate_var_constraint
                   varname: observed_visibility_in_air
             second:
-              operator: regrid.interpolate_to_point_cube
+              operator: regrid.interpolate_neighbourhood_to_point_cube
               fld:
                 operator: aggregate.ensure_aggregatable_across_cases
                 cubes:
@@ -132,7 +129,6 @@ steps:
 
     fifth:
       operator: scoreswrappers.scores_crps_model_obs
-      preserved_coordinates: [forecast_period]
       cubes:
         operator: misc.extract_common_time_points
         cubes:
@@ -149,7 +145,7 @@ steps:
                   operator: constraints.generate_var_constraint
                   varname: observed_dew_point_temperature_at_screen_level
             second:
-              operator: regrid.interpolate_to_point_cube
+              operator: regrid.interpolate_neighbourhood_to_point_cube
               fld:
                 operator: aggregate.ensure_aggregatable_across_cases
                 cubes:
