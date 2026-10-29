@@ -346,6 +346,7 @@ def combine_cubes_into_cubelist(first: Cube | CubeList, **kwargs) -> CubeList:
     """
     # Create empty CubeList to store cubes/CubeList.
     all_cubes = CubeList()
+
     # Combine all CubeLists into a single flat iterable.
     for item in itertools.chain(iter_maybe(first), *map(iter_maybe, kwargs.values())):
         # Check each item is a Cube, erroring if not.
@@ -354,6 +355,7 @@ def combine_cubes_into_cubelist(first: Cube | CubeList, **kwargs) -> CubeList:
             all_cubes.append(item)
         else:
             raise TypeError("Not a Cube or CubeList!", item)
+
     return all_cubes
 
 
@@ -500,18 +502,22 @@ def extract_common_time_points(cubes: CubeList) -> CubeList:
         lacks a forecast_reference_time coordinate or has different FRT
         values (compared element-wise, so order matters).
     """
-    frt_coord = cubes[0].coords("forecast_reference_time")
+    multi_frt = any(
+        len(c.coord("forecast_reference_time").points) > 1
+        for c in cubes
+        if c.coords("forecast_reference_time")
+    )
 
-    _ensure_same_frt(cubes)
-
-    if frt_coord and len(frt_coord[0].points) > 1:
+    if multi_frt:
         for cb in cubes[1:]:
             cb_frt_coord = cb.coords("forecast_reference_time")
             if not cb_frt_coord:
                 raise ValueError(
                     "All cubes must have a forecast_reference_time coordinate."
                 )
-        return extract_common_points(cubes, "forecast_period")
+        cubes_common = extract_common_points(cubes, "forecast_period")
+
+        return cubes_common
     else:
         return _extract_common_time_points_one_frt(cubes)
 
@@ -728,7 +734,6 @@ def extract_common_points(cubes: iris.cube.CubeList, coordinate: str):
     common_cubes = iris.cube.CubeList()
     for cube in cubes:
         common_cubes.append(_slice_cube_on_levels(cube, coordinate, common_points))
-
     return common_cubes
 
 
