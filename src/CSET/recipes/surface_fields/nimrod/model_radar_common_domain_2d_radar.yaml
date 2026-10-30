@@ -1,5 +1,5 @@
 category: Surface Spatial Plot
-title: "$RADAR_LABEL $RADAR_VARNAME\n common domain $MODEL_LABEL and $RADAR_LABEL"
+title: "$RADAR_LABEL $RADAR_VARNAME.\n Common domain $MODEL_NAME and $RADAR_LABEL"
 description: |
   Creates a 2-d surface plot of the observed radar rain accumualation
   field over the domain common to both the model and the radar observation network.
@@ -15,7 +15,7 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: [$MODEL_LABEL, $RADAR_LABEL, $MASK_LABEL]
+    model_names: [$MODEL_NAME, $RADAR_NAME, $MASK_NAME]
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
     constraint: [$MODEL_VARNAME, "Hourly rain accumulation", "Hourly wts accumulation"]
