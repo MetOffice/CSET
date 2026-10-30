@@ -630,6 +630,7 @@ def sort_cube_by_coord(cube: iris.cube.Cube, coord_name: str) -> iris.cube.Cube:
     order = sorted(
         range(len(coord.points)), key=lambda i: natural_sort_key(coord.points[i])
     )
+
     index = [slice(None)] * cube.ndim
     index[dim] = np.array(order)
     sorted_cube = cube[tuple(index)]

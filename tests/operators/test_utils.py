@@ -786,3 +786,84 @@ def test_natural_sort_key_tiebreak_is_order_independent(tied):
     reversed_tied = reversed(tied)
     backwards = sorted(reversed_tied, key=operator_utils.natural_sort_key)
     assert forwards == backwards
+
+
+def test_sort_cube_by_coord_sorts_names_and_data(station_cube_unsorted):
+    """Station names are naturally sorted and the data moves with them."""
+    result = operator_utils.sort_cube_by_coord(station_cube_unsorted, "Station_Name")
+    assert list(result.coord("Station_Name").points) == [
+        "2030_aberdeen",
+        "heathrow",
+        "st2",
+        "st10",
+    ]
+    # Columns reorder; forecast_period rows keep their order.
+    np.testing.assert_array_equal(
+        result.data, station_cube_unsorted.data[:, [1, 2, 3, 0]]
+    )
+
+
+def test_sort_cube_by_coord_moves_other_aux_coords(station_cube_unsorted):
+    """Other coords on the sorted dimension stay matched to their stations."""
+    result = operator_utils.sort_cube_by_coord(station_cube_unsorted, "Station_Name")
+    for name in ("latitude", "longitude"):
+        np.testing.assert_array_equal(
+            result.coord(name).points,
+            station_cube_unsorted.coord(name).points[[1, 2, 3, 0]],
+        )
+
+
+def test_sort_cube_by_coord_keeps_original_dim_coord_as_aux(station_cube_unsorted):
+    """Original station dim coord is kept as an aux coord and an index added."""
+    result = operator_utils.sort_cube_by_coord(station_cube_unsorted, "Station_Name")
+
+    # New dim coord on the station dimension is a 0..N-1 index.
+    (dim_coord,) = result.coords(dimensions=1, dim_coords=True)
+    assert dim_coord.name() == "station_index"
+    assert dim_coord.dtype == np.int32
+    np.testing.assert_array_equal(dim_coord.points, [0, 1, 2, 3])
+
+    # Original survives as an aux coord, reordered, metadata intact.
+    original = result.coord("station")
+    assert not isinstance(original, iris.coords.DimCoord)
+    np.testing.assert_array_equal(original.points, [1, 2, 3, 0])
+    assert original.units == station_cube_unsorted.coord("station").units
+
+
+def test_sort_cube_by_coord_leaves_other_dimension(station_cube_unsorted):
+    """The forecast_period dim coord is untouched."""
+    result = operator_utils.sort_cube_by_coord(station_cube_unsorted, "Station_Name")
+    assert result.coord("forecast_period") == station_cube_unsorted.coord(
+        "forecast_period"
+    )
+
+
+def test_sort_cube_by_coord_already_sorted_keeps_dim_coord(station_cube_sorted):
+    """If the order doesn't change, the dim coord stays and no index is added."""
+    # Default names st0, st1, st2 are already in natural order.
+    cube = station_cube_sorted
+    result = operator_utils.sort_cube_by_coord(cube, "Station_Name")
+    (dim_coord,) = result.coords(dimensions=1, dim_coords=True)
+    assert dim_coord.name() == "station"
+
+
+def test_sort_cube_by_coord_without_dim_coord(station_cube_unsorted):
+    """No index is added when the station dimension has no dim coord."""
+    station_cube_unsorted.remove_coord("station")
+    result = operator_utils.sort_cube_by_coord(station_cube_unsorted, "Station_Name")
+    assert result.coords(dimensions=1, dim_coords=True) == []
+
+
+def test_sort_cube_by_coord_does_not_modify_input(station_cube_unsorted):
+    """The input cube is left unchanged."""
+    original = station_cube_unsorted.copy()
+    operator_utils.sort_cube_by_coord(station_cube_unsorted, "Station_Name")
+    assert station_cube_unsorted == original
+
+
+def test_sort_cube_by_coord_missing_coord_returns_input(station_cube_unsorted):
+    """A cube without the coord is returned as-is."""
+    assert (
+        operator_utils.sort_cube_by_coord(station_cube_unsorted, "not_a_coord")
+        is station_cube_unsorted
+    )

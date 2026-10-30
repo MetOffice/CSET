@@ -1364,6 +1364,7 @@ def _make_test_cube_stations(
     long_name: str,
     standard_name: str | None = None,
     model_name: str | None = None,
+    station_names: list[str] | None = None,
 ):
     rng = np.random.default_rng(seed)
 
@@ -1378,8 +1379,11 @@ def _make_test_cube_stations(
         units="no_unit",
     )
 
+    if station_names is None:
+        station_names = [f"st{i}" for i in range(shape[1])]
+
     station_name_coord = iris.coords.AuxCoord(
-        points=np.array([f"st{i}" for i in range(shape[1])]),
+        points=np.array(station_names),
         long_name="Station_Name",
         units="unknown",
     )
@@ -1410,6 +1414,24 @@ def _make_test_cube_stations(
             (longitude_coord, 1),
         ],
     )
+
+
+@pytest.fixture
+def station_cube_unsorted():
+    """2D (forecast_period, station) cube with unsorted station names."""
+    station_names_unsorted = ["st10", "2030_aberdeen", "heathrow", "st2"]
+    return _make_test_cube_stations(
+        (2, len(station_names_unsorted)),
+        seed=0,
+        long_name="temperature",
+        station_names=station_names_unsorted,
+    )
+
+
+@pytest.fixture
+def station_cube_sorted():
+    """2D (forecast_period, station) cube with sorted station names."""
+    return _make_test_cube_stations((2, 3), seed=0, long_name="temperature")
 
 
 def add_time_coords(cube, time_start, frt_dt, hour_step=1):
