@@ -197,7 +197,7 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     script = rose task-run -v --app-key=fetch_nimrod
         [[[environment]]]
         ROSE_APP_COMMAND_KEY = "fetchnimrod"
-        NIMROD_COMP_XKM = {{NIMROD_COMP_XKM}}
+        NIMROD_COMP_5KM = {{NIMROD_COMP_5KM}}
         NIMROD_COMP_1KM = {{NIMROD_COMP_1KM}}
         NIMROD_COMP_2KM = {{NIMROD_COMP_2KM}}
         NIMROD_WEIGHTS = {{NIMROD_WEIGHTS}}
