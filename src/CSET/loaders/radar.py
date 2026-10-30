@@ -20,6 +20,7 @@ from CSET.recipes import Config, RawRecipe, get_models
 def select_radar_source(input_source_list: list[str]) -> str:
     """Select the preferred radar source from a list of sources."""
     # Preference list for Nimrod sources, with most preferred heading the list.
+    # Note: xkm is 5km gridded Nimrod.
     nimrod_preference = ["Nimrod2km", "Nimrodxkm", "Nimrod1km"]
 
     empty_string = ""
@@ -52,7 +53,7 @@ def get_radar_sources(conf) -> list[dict]:
                 "varname": "Hourly rain accumulation",
             }
         )
-    if conf.NIMROD_COMP_XKM:
+    if conf.NIMROD_COMP_5KM:
         radar_sources.append(
             {
                 "name": "Nimrod_xkm",
@@ -76,7 +77,7 @@ def get_radar_sources(conf) -> list[dict]:
                 "varname": "Hourly wts accumulation",
             }
         )
-    if conf.NIMROD_COMP_XKM and conf.NIMROD_WEIGHTS:
+    if conf.NIMROD_COMP_5KM and conf.NIMROD_WEIGHTS:
         radar_sources.append(
             {
                 "name": "Nimrod_xkm_weights",
