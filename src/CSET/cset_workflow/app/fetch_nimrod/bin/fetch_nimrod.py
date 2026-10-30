@@ -24,7 +24,7 @@ nimrod_met_office = "restricted_nimrod_met_office.json"
 def _get_needed_environment_variables_nimrod() -> dict:
     """Load the needed variables from the environment to retrieve UK Nimrod data."""
     radar_sources = []
-    if os.environ["NIMROD_COMP_XKM"] == "True":
+    if os.environ["NIMROD_COMP_5KM"] == "True":
         radar_sources.append("Nimrod_comp_xkm")
     if os.environ["NIMROD_COMP_1KM"] == "True":
         radar_sources.append("Nimrod_comp_1km")
@@ -89,7 +89,7 @@ def retrieve_nimrod():
     """Fetch the observations corresponding to a model run.
 
     The following environment variables need to be set:
-    * NIMROD_COMP_XKM, NIMROD_COMP_1KM, NIMROD_COMP_2KM, NIMROD_COMP_5MIN
+    * NIMROD_COMP_5KM, NIMROD_COMP_1KM, NIMROD_COMP_2KM, NIMROD_COMP_5MIN
     * CYLC_TASK_CYCLE_POINT
     * ANALYSIS_LENGTH
     * ROSE_DATAC
