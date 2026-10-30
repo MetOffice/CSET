@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Load radar observation recipes."""
+"""Load radar observation recipes.
+
+Note: the 5km gridded Nimrod product is archived with templated file names using
+xkm rather than 5km. Recipes are loaded so that output plots all use
+5km for labelling the Nimrod 5km gridded data.
+"""
 
 from CSET.recipes import Config, RawRecipe, get_models
 
@@ -56,7 +61,7 @@ def get_radar_sources(conf) -> list[dict]:
     if conf.NIMROD_COMP_5KM:
         radar_sources.append(
             {
-                "name": "Nimrod_xkm",
+                "name": "Nimrod_5km",
                 "id": "Nimrodxkm",
                 "varname": "Hourly rain accumulation",
             }
@@ -80,7 +85,7 @@ def get_radar_sources(conf) -> list[dict]:
     if conf.NIMROD_COMP_5KM and conf.NIMROD_WEIGHTS:
         radar_sources.append(
             {
-                "name": "Nimrod_xkm_weights",
+                "name": "Nimrod_5km_weights",
                 "id": "Nimrodxkm_weights",
                 "varname": "Hourly wts accumulation",
             }
@@ -99,12 +104,24 @@ def get_radar_sources(conf) -> list[dict]:
 
 def _model_and_radar_names_ids(models, accum_radars):
     """Select the model and radar names and ids."""
-    # Model and radar names and ids.
+    # Model names and ids.
     model_names_list = [model["name"] for model in models]
     model_ids_list = [model["id"] for model in models]
+
+    # Nimrod radar source ids.
     radar_source = select_radar_source([source["id"] for source in accum_radars])
     radar_obs_ids = [radar_source]
     radar_wts_ids = [radar_source + "_weights"]
+
+    # Choose the Nimrod radar name.
+    radar_name = "Nimrod"
+    match radar_source:
+        case "Nimrod1km":
+            radar_name = "Nimrod_1km"
+        case "Nimrod2km":
+            radar_name = "Nimrod_2km"
+        case "Nimrodxkm":
+            radar_name = "Nimrod_5km"
 
     # Construct the dictionary to return.
     model_and_radar = {
@@ -113,7 +130,8 @@ def _model_and_radar_names_ids(models, accum_radars):
         "radar_wts_ids": radar_wts_ids,
         "model_names_list": model_names_list,
         "model_ids_list": model_ids_list,
-        "combined_names": model_names_list + radar_obs_ids + radar_wts_ids,
+        "combined_names": model_names_list + [radar_name] + [radar_name + "_weights"],
+        "radar_name": radar_name,
         "combined_ids": model_ids_list + radar_obs_ids + radar_wts_ids,
     }
 
@@ -172,9 +190,10 @@ def load(conf: Config):
             variables={
                 "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
                 "RADAR_VARNAME": "Hourly rain accumulation",
-                "MODEL_LABEL": names_ids["model_names_list"][0],
-                "RADAR_LABEL": names_ids["radar_obs_ids"][0],
-                "MASK_LABEL": names_ids["radar_wts_ids"][0],
+                "MODEL_NAME": names_ids["model_names_list"][0],
+                "RADAR_LABEL": names_ids["radar_name"],
+                "RADAR_NAME": names_ids["radar_obs_ids"][0],
+                "MASK_NAME": names_ids["radar_wts_ids"][0],
                 "METHOD": "SEQ",
                 "BOUNDARY_MARGIN": boundary_margin,
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
@@ -199,9 +218,10 @@ def load(conf: Config):
                 variables={
                     "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
                     "RADAR_VARNAME": "Hourly rain accumulation",
-                    "MODEL_LABEL": model_use,
-                    "RADAR_LABEL": names_ids["radar_obs_ids"][0],
-                    "MASK_LABEL": names_ids["radar_wts_ids"][0],
+                    "MODEL_NAME": model_use,
+                    "RADAR_NAME": names_ids["radar_obs_ids"][0],
+                    "RADAR_LABEL": names_ids["radar_name"],
+                    "MASK_NAME": names_ids["radar_wts_ids"][0],
                     "METHOD": "SEQ",
                     "BOUNDARY_MARGIN": boundary_margin,
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
