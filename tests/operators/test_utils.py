@@ -713,3 +713,151 @@ def test_calc_array_stats_masked_array():
     assert array_min == 1.0
     assert array_max == 3.0
     assert array_mean == 2.0
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        # Mixed text and numbers; trailing digits give a trailing empty string.
+        ("aj56hf847", ("aj", 56, "hf", 847, "")),
+        # Leading digits give a leading empty string to keep alignment.
+        ("5aj", ("", 5, "aj")),
+        # Text only gives a single chunk.
+        ("abc", ("abc",)),
+        # Empty string still starts with a (empty) text chunk.
+        ("", ("",)),
+        # Leading zeros are dropped by int conversion.
+        ("a007", ("a", 7, "")),
+        # Signs and decimal points are treated as text.
+        ("1.5", ("", 1, ".", 5, "")),
+        # Superscripts aren't matched by \d, so stay as text.
+        ("x²", ("x²",)),
+    ],
+)
+def test_split_text_and_numbers(text, expected):
+    """Strings split into alternating text and integer chunks."""
+    assert operator_utils.split_text_and_numbers(text) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        # Chunks are casefolded and stripped; the tiebreaker is unchanged.
+        (" AbC10 ", (("abc", 10, ""), " AbC10 ")),
+        # Non-string input is converted with str().
+        (42, (("", 42, ""), "42")),
+    ],
+)
+def test_natural_sort_key(value, expected):
+    """Key is the normalised chunks plus the original string as tiebreaker."""
+    assert operator_utils.natural_sort_key(value) == expected
+
+
+@pytest.mark.parametrize(
+    "unsorted, expected",
+    [
+        # Numbers compare numerically, not lexically.
+        (["file10", "file2", "file1"], ["file1", "file2", "file10"]),
+        # Ordering ignores case.
+        (["B2", "a10", "a2"], ["a2", "a10", "B2"]),
+        # Digit-first and text-first strings compare without TypeError.
+        (["10", "a", "1a", "a1"], ["1a", "10", "a", "a1"]),
+    ],
+)
+def test_natural_sort_order(unsorted, expected):
+    """Sorting with the key gives natural (human) ordering."""
+    assert sorted(unsorted, key=operator_utils.natural_sort_key) == expected
+
+
+@pytest.mark.parametrize(
+    "tied",
+    [
+        # Differ only in case.
+        ["a1", "A1"],
+        # Differ only in leading zeros.
+        ["a01", "a1"],
+        # Differ only in surrounding whitespace.
+        [" a1", "a1"],
+    ],
+)
+def test_natural_sort_key_tiebreak_is_order_independent(tied):
+    """Strings with equal chunks sort the same whatever the input order."""
+    forwards = sorted(tied, key=operator_utils.natural_sort_key)
+    reversed_tied = reversed(tied)
+    backwards = sorted(reversed_tied, key=operator_utils.natural_sort_key)
+    assert forwards == backwards
+
+
+def test_sort_cube_by_coord_sorts_names_and_data(station_cube_unsorted):
+    """Station names are naturally sorted and the data moves with them."""
+    result = operator_utils.sort_cube_by_station_name(station_cube_unsorted)
+    assert list(result.coord("Station_Name").points) == [
+        "2030_aberdeen",
+        "heathrow",
+        "st2",
+        "st10",
+    ]
+    # Columns reorder; forecast_period rows keep their order.
+    np.testing.assert_array_equal(
+        result.data, station_cube_unsorted.data[:, [1, 2, 3, 0]]
+    )
+
+
+def test_sort_cube_by_station_name_moves_other_aux_coords(station_cube_unsorted):
+    """Other coords on the sorted dimension stay matched to their stations."""
+    result = operator_utils.sort_cube_by_station_name(station_cube_unsorted)
+    for name in ("latitude", "longitude"):
+        np.testing.assert_array_equal(
+            result.coord(name).points,
+            station_cube_unsorted.coord(name).points[[1, 2, 3, 0]],
+        )
+
+
+def test_sort_cube_by_station_name_keeps_original_dim_coord_as_aux(
+    station_cube_unsorted,
+):
+    """Original station dim coord is kept as an aux coord and an index added."""
+    result = operator_utils.sort_cube_by_station_name(station_cube_unsorted)
+
+    # New dim coord on the station dimension is a 0..N-1 index.
+    (dim_coord,) = result.coords(dimensions=1, dim_coords=True)
+    assert dim_coord.name() == "station_index"
+    assert dim_coord.dtype == np.int32
+    np.testing.assert_array_equal(dim_coord.points, [0, 1, 2, 3])
+
+    # Original survives as an aux coord, reordered, metadata intact.
+    original = result.coord("station")
+    assert not isinstance(original, iris.coords.DimCoord)
+    np.testing.assert_array_equal(original.points, [1, 2, 3, 0])
+    assert original.units == station_cube_unsorted.coord("station").units
+
+
+def test_sort_cube_by_station_name_leaves_other_dimension(station_cube_unsorted):
+    """The forecast_period dim coord is untouched."""
+    result = operator_utils.sort_cube_by_station_name(station_cube_unsorted)
+    assert result.coord("forecast_period") == station_cube_unsorted.coord(
+        "forecast_period"
+    )
+
+
+def test_sort_cube_by_station_name_already_sorted_keeps_dim_coord(station_cube_sorted):
+    """If the order doesn't change, the dim coord stays and no index is added."""
+    # Default names st0, st1, st2 are already in natural order.
+    cube = station_cube_sorted
+    result = operator_utils.sort_cube_by_station_name(cube)
+    (dim_coord,) = result.coords(dimensions=1, dim_coords=True)
+    assert dim_coord.name() == "station"
+
+
+def test_sort_cube_by_station_name_without_dim_coord(station_cube_unsorted):
+    """No index is added when the station dimension has no dim coord."""
+    station_cube_unsorted.remove_coord("station")
+    result = operator_utils.sort_cube_by_station_name(station_cube_unsorted)
+    assert result.coords(dimensions=1, dim_coords=True) == []
+
+
+def test_sort_cube_by_station_name_does_not_modify_input(station_cube_unsorted):
+    """The input cube is left unchanged."""
+    original = station_cube_unsorted.copy()
+    operator_utils.sort_cube_by_station_name(station_cube_unsorted)
+    assert station_cube_unsorted == original
