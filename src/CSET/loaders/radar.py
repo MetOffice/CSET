@@ -154,7 +154,9 @@ def load(conf: Config):
     ]
 
     # Specify the lateral boundary margin width to use when trimming model fields.
-    boundary_margin = 16
+    boundary_margin = 8
+    if conf.BOUNDARY_MARGIN:
+        boundary_margin = conf.BOUNDARY_MARGIN
 
     # Surface (2D) fields for Nimrod radar rainfall.
     #
