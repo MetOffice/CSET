@@ -23,7 +23,10 @@ import copy
 import logging
 import warnings
 
+import iris.cube
 import numpy as np
+
+from CSET._common import iter_maybe
 
 logger = logging.getLogger(__name__)
 
@@ -33,13 +36,13 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
 
     Parameters
     ----------
-    SBCAPE: Cube
+    SBCAPE: Cube | CubeList
         Surface-based convective available potential energy as calculated by the
         model. If using the UM please use STASH ``m01s20i114``
-    MUCAPE: Cube
+    MUCAPE: Cube | CubeList
         Most-unstable convective available potential energy as calculated by the
         model. If using the UM please use STASH ``m01s20i112``
-    MUCIN: Cube
+    MUCIN: Cube | CubeList
         Most-unstable convective inhibition associated with the most-unstable
         ascent as calculated by the model. If using the UM please use STASH
         ``m01s20i113``
@@ -48,7 +51,14 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
 
     Returns
     -------
-    Cube
+    Cube | CubeList
+        A single Cube if single Cubes were given, otherwise a CubeList with one
+        CAPE ratio per set of input cubes, paired by position.
+
+    Raises
+    ------
+    ValueError
+        If the CubeLists given have different lengths.
 
     Notes
     -----
@@ -105,30 +115,38 @@ def cape_ratio(SBCAPE, MUCAPE, MUCIN, MUCIN_thresh=-75.0):
     >>> plt.colorbar()
     >>> plt.show()
     """
-    # Load in the data into the new arrays.
-    MUCAPE_data = copy.deepcopy(MUCAPE.data)
-    if isinstance(MUCAPE_data, np.ma.MaskedArray):
-        MUCAPE_data = MUCAPE_data.filled(np.nan)
-    # Remove all MUCAPE below MUCIN threshold.
-    MUCAPE_data[MUCIN.data <= MUCIN_thresh] = np.nan
-    with warnings.catch_warnings():
-        # Ignore possible divide by zero warnings, as they are replaced by NaNs.
-        warnings.filterwarnings("ignore", category=RuntimeWarning)
-        # Now calculate the main diagnostic.
-        EC_Flagb = 1 - (SBCAPE.data / MUCAPE_data)
-        if isinstance(EC_Flagb, np.ma.MaskedArray):
-            EC_Flagb = EC_Flagb.filled(np.nan)
-    # Filter to reduce NaN values and -inf values for plotting ease.
-    # There are multiple types of NaN values so need to convert them all to same type.
-    EC_Flagb[np.isnan(EC_Flagb)] = np.nan
-    EC_Flagb[np.isinf(EC_Flagb)] = np.nan
-    # Take the coordinates from an existing cube and replace the data.
-    cape_ratio_cube = SBCAPE.copy()
-    cape_ratio_cube.data = EC_Flagb
-    # Rename and remove STASH code.
-    cape_ratio_cube.var_name = "cape_ratio"
-    cape_ratio_cube.attributes.pop("STASH", None)
-    return cape_ratio_cube
+    cape_ratio_list = iris.cube.CubeList([])
+    for sbcape, mucape, mucin in zip(
+        iter_maybe(SBCAPE), iter_maybe(MUCAPE), iter_maybe(MUCIN), strict=True
+    ):
+        # Load in the data into the new arrays.
+        MUCAPE_data = copy.deepcopy(mucape.data)
+        if isinstance(MUCAPE_data, np.ma.MaskedArray):
+            MUCAPE_data = MUCAPE_data.filled(np.nan)
+        # Remove all MUCAPE below MUCIN threshold.
+        MUCAPE_data[mucin.data <= MUCIN_thresh] = np.nan
+        with warnings.catch_warnings():
+            # Ignore possible divide by zero warnings, as they are replaced by NaNs.
+            warnings.filterwarnings("ignore", category=RuntimeWarning)
+            # Now calculate the main diagnostic.
+            EC_Flagb = 1 - (sbcape.data / MUCAPE_data)
+            if isinstance(EC_Flagb, np.ma.MaskedArray):
+                EC_Flagb = EC_Flagb.filled(np.nan)
+        # Filter to reduce NaN values and -inf values for plotting ease.
+        # There are multiple types of NaN values so need to convert them all to same type.
+        EC_Flagb[np.isnan(EC_Flagb)] = np.nan
+        EC_Flagb[np.isinf(EC_Flagb)] = np.nan
+        # Take the coordinates from an existing cube and replace the data.
+        cape_ratio_cube = sbcape.copy()
+        cape_ratio_cube.data = EC_Flagb
+        # Rename and remove STASH code.
+        cape_ratio_cube.var_name = "cape_ratio"
+        cape_ratio_cube.attributes.pop("STASH", None)
+        cape_ratio_list.append(cape_ratio_cube)
+    if len(cape_ratio_list) == 1:
+        return cape_ratio_list[0]
+    else:
+        return cape_ratio_list
 
 
 def inflow_layer_properties(EIB, BLheight, Orography):
