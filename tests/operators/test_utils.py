@@ -713,3 +713,76 @@ def test_calc_array_stats_masked_array():
     assert array_min == 1.0
     assert array_max == 3.0
     assert array_mean == 2.0
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        # Mixed text and numbers; trailing digits give a trailing empty string.
+        ("aj56hf847", ("aj", 56, "hf", 847, "")),
+        # Leading digits give a leading empty string to keep alignment.
+        ("5aj", ("", 5, "aj")),
+        # Text only gives a single chunk.
+        ("abc", ("abc",)),
+        # Empty string still starts with a (empty) text chunk.
+        ("", ("",)),
+        # Leading zeros are dropped by int conversion.
+        ("a007", ("a", 7, "")),
+        # Signs and decimal points are treated as text.
+        ("1.5", ("", 1, ".", 5, "")),
+        # Superscripts aren't matched by \d, so stay as text.
+        ("x²", ("x²",)),
+    ],
+)
+def test_split_text_and_numbers(text, expected):
+    """Strings split into alternating text and integer chunks."""
+    assert operator_utils.split_text_and_numbers(text) == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        # Chunks are casefolded and stripped; the tiebreaker is unchanged.
+        (" AbC10 ", (("abc", 10, ""), " AbC10 ")),
+        # Non-string input is converted with str().
+        (42, (("", 42, ""), "42")),
+    ],
+)
+def test_natural_sort_key(value, expected):
+    """Key is the normalised chunks plus the original string as tiebreaker."""
+    assert operator_utils.natural_sort_key(value) == expected
+
+
+@pytest.mark.parametrize(
+    "unsorted, expected",
+    [
+        # Numbers compare numerically, not lexically.
+        (["file10", "file2", "file1"], ["file1", "file2", "file10"]),
+        # Ordering ignores case.
+        (["B2", "a10", "a2"], ["a2", "a10", "B2"]),
+        # Digit-first and text-first strings compare without TypeError.
+        (["10", "a", "1a", "a1"], ["1a", "10", "a", "a1"]),
+    ],
+)
+def test_natural_sort_order(unsorted, expected):
+    """Sorting with the key gives natural (human) ordering."""
+    assert sorted(unsorted, key=operator_utils.natural_sort_key) == expected
+
+
+@pytest.mark.parametrize(
+    "tied",
+    [
+        # Differ only in case.
+        ["a1", "A1"],
+        # Differ only in leading zeros.
+        ["a01", "a1"],
+        # Differ only in surrounding whitespace.
+        [" a1", "a1"],
+    ],
+)
+def test_natural_sort_key_tiebreak_is_order_independent(tied):
+    """Strings with equal chunks sort the same whatever the input order."""
+    forwards = sorted(tied, key=operator_utils.natural_sort_key)
+    reversed_tied = reversed(tied)
+    backwards = sorted(reversed_tied, key=operator_utils.natural_sort_key)
+    assert forwards == backwards

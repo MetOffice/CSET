@@ -613,43 +613,51 @@ def calc_array_stats(
 def sort_cube_by_coord(cube: iris.cube.Cube, coord_name: str) -> iris.cube.Cube:
     """Sort a cube along one dimension by the values of a coordinate.
 
-    The original dim coord on that dimension is replaced with a fresh
-    0..N-1 index, since reordering makes it non-monotonic.
+    Reordering makes the dimension's dim coord non-monotonic, so Iris
+    demotes it to an aux coord (keeping its values and metadata). A fresh
+    0..N-1 index named '<dim coord name>_index' becomes the new dim coord.
     """
     if not cube.coords(coord_name):
         return cube
 
-    def natural_key(s):
-        # Split a string into text and number chunks for natural ordering.
-        s = str(s).strip()
-        chunks = [
-            int(part) if part.isdigit() else part.lower()
-            for part in re.split(r"(\d+)", s)
-        ]
-        # Raw string as a final tiebreaker so the key is unique.
-        return chunks, s
-
     coord = cube.coord(coord_name)
     (dim,) = cube.coord_dims(coord)
 
-    # Remember the dim coord's name before indexing demotes it.
+    # save the coords name
     dim_coords = cube.coords(dimensions=dim, dim_coords=True)
     dim_coord_name = dim_coords[0].name() if dim_coords else None
 
-    order = sorted(range(len(coord.points)), key=lambda i: natural_key(coord.points[i]))
+    order = sorted(
+        range(len(coord.points)), key=lambda i: natural_sort_key(coord.points[i])
+    )
     index = [slice(None)] * cube.ndim
     index[dim] = np.array(order)
     sorted_cube = cube[tuple(index)]
 
-    if dim_coord_name is not None:
-        sorted_cube.remove_coord(dim_coord_name)
+    if dim_coord_name is not None and not sorted_cube.coords(
+        dimensions=dim, dim_coords=True
+    ):
         sorted_cube.add_dim_coord(
             iris.coords.DimCoord(
-                np.arange(len(order), dtype=np.int32), long_name=dim_coord_name
+                np.arange(len(order), dtype=np.int32),
+                long_name=f"{dim_coord_name}_index",
+                units="1",
             ),
             dim,
         )
     return sorted_cube
+
+
+def split_text_and_numbers(text):
+    """Split into alternating text and integer chunks: 'a10b' -> ('a', 10, 'b')."""
+    parts = re.compile(r"(\d+)").split(text)
+    return tuple(int(p) if i % 2 else p for i, p in enumerate(parts))
+
+
+def natural_sort_key(value):
+    text = str(value)
+    chunks = split_text_and_numbers(text.strip().casefold())
+    return chunks, text
 
 
 def get_time_coord(cube: Cube | CubeList) -> str | None:
