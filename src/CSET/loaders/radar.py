@@ -12,9 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Load radar observation recipes."""
+"""Load radar observation recipes.
 
-from CSET.recipes import Config, RawRecipe
+Note: the 5km gridded Nimrod product is archived with templated file names using
+xkm rather than 5km. Recipes are loaded so that output plots all use
+5km for labelling the Nimrod 5km gridded data.
+"""
+
+from CSET.recipes import Config, RawRecipe, get_models
+
+
+def select_radar_source(input_source_list: list[str]) -> str:
+    """Select the preferred radar source from a list of sources."""
+    # Preference list for Nimrod sources, with most preferred heading the list.
+    # Note: xkm is 5km gridded Nimrod.
+    nimrod_preference = ["Nimrod2km", "Nimrodxkm", "Nimrod1km"]
+
+    empty_string = ""
+    preferred_nimrod = empty_string
+    for prefer in reversed(nimrod_preference):
+        if any(prefer in source for source in input_source_list):
+            preferred_nimrod = prefer
+    return preferred_nimrod
 
 
 def get_radar_sources(conf) -> list[dict]:
@@ -39,10 +58,10 @@ def get_radar_sources(conf) -> list[dict]:
                 "varname": "Hourly rain accumulation",
             }
         )
-    if conf.NIMROD_COMP_XKM:
+    if conf.NIMROD_COMP_5KM:
         radar_sources.append(
             {
-                "name": "Nimrod_xkm",
+                "name": "Nimrod_5km",
                 "id": "Nimrodxkm",
                 "varname": "Hourly rain accumulation",
             }
@@ -63,10 +82,10 @@ def get_radar_sources(conf) -> list[dict]:
                 "varname": "Hourly wts accumulation",
             }
         )
-    if conf.NIMROD_COMP_XKM and conf.NIMROD_WEIGHTS:
+    if conf.NIMROD_COMP_5KM and conf.NIMROD_WEIGHTS:
         radar_sources.append(
             {
-                "name": "Nimrod_xkm_weights",
+                "name": "Nimrod_5km_weights",
                 "id": "Nimrodxkm_weights",
                 "varname": "Hourly wts accumulation",
             }
@@ -83,8 +102,47 @@ def get_radar_sources(conf) -> list[dict]:
     return radar_sources
 
 
+def _model_and_radar_names_ids(models, accum_radars):
+    """Select the model and radar names and ids."""
+    # Model names and ids.
+    model_names_list = [model["name"] for model in models]
+    model_ids_list = [model["id"] for model in models]
+
+    # Nimrod radar source ids.
+    radar_source = select_radar_source([source["id"] for source in accum_radars])
+    radar_obs_ids = [radar_source]
+    radar_wts_ids = [radar_source + "_weights"]
+
+    # Choose the Nimrod radar name.
+    radar_name = "Nimrod"
+    match radar_source:
+        case "Nimrod1km":
+            radar_name = "Nimrod_1km"
+        case "Nimrod2km":
+            radar_name = "Nimrod_2km"
+        case "Nimrodxkm":
+            radar_name = "Nimrod_5km"
+
+    # Construct the dictionary to return.
+    model_and_radar = {
+        "radar_source": radar_source,
+        "radar_obs_ids": radar_obs_ids,
+        "radar_wts_ids": radar_wts_ids,
+        "model_names_list": model_names_list,
+        "model_ids_list": model_ids_list,
+        "combined_names": model_names_list + [radar_name] + [radar_name + "_weights"],
+        "radar_name": radar_name,
+        "combined_ids": model_ids_list + radar_obs_ids + radar_wts_ids,
+    }
+
+    return model_and_radar
+
+
 def load(conf: Config):
     """Yield recipes from the given workflow configuration."""
+    # Load a list of model detail dictionaries.
+    models = get_models(conf.asdict())
+
     # Load the required radar observation sources.
     radar_sources = get_radar_sources(conf)
 
@@ -95,12 +153,20 @@ def load(conf: Config):
         if radar["varname"] == "Hourly rain accumulation"
     ]
 
+    # Specify the lateral boundary margin width to use when trimming model fields.
+    boundary_margin = 8
+    if conf.BOUNDARY_MARGIN:
+        boundary_margin = conf.BOUNDARY_MARGIN
+
     # Surface (2D) fields for Nimrod radar rainfall.
+    #
+    # These loaders produce 2D plots of both the Nimrod
+    # surface rainfall amount in [mm] and the Nimrod weights field, which gives an indication of data quality.
     #
     # The different sources of Nimrod rainfall accumulation have
     # different spatial grids. So each source requires its own
     # recipe to prevent incompatible cubes being created.
-    if conf.SPATIAL_SURFACE_FIELD:
+    if conf.NIMROD_RADAR_OBS and conf.PROCESS_RADAR_2D and (len(radar_sources) > 0):
         for radar in radar_sources:
             yield RawRecipe(
                 recipe="generic_surface_spatial_plot_sequence_radar_rainfall.yaml",
@@ -118,77 +184,91 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    # Histograms for surface (2D) Nimrod radar hourly accumulated rainfall.
-    #
-    # To get multiple radar sources plotted on the histogram the
-    # recipe must be done by passing lists of the radar_ids and
-    # the radar_names. As this is a multiline plot, all radar sources
-    # share the same radar variable name.
-    if conf.HISTOGRAM_SURFACE_FIELD and accum_radars:
+    # Radar 2D plots using a common domain between model and radar network.
+    if conf.NIMROD_RADAR_OBS and conf.PROCESS_RADAR_2D and (len(accum_radars) > 0):
+        names_ids = _model_and_radar_names_ids(models, accum_radars)
         yield RawRecipe(
-            recipe="generic_surface_histogram_series.yaml",
-            # model_ids -> Becomes $INPUT_PATHS
-            model_ids=[radar["id"] for radar in accum_radars],
+            recipe="model_radar_common_domain_2d_radar.yaml",
             variables={
-                "VARNAME": next(radar["varname"] for radar in accum_radars),
-                "MODEL_NAME": [radar["name"] for radar in accum_radars],
-                "SEQUENCE": "time"
-                if conf.HISTOGRAM_SURFACE_FIELD_SEQUENCE
-                else "realization",
+                "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
+                "RADAR_VARNAME": "Hourly rain accumulation",
+                "MODEL_NAME": names_ids["model_names_list"][0],
+                "RADAR_LABEL": names_ids["radar_name"],
+                "RADAR_NAME": names_ids["radar_obs_ids"][0],
+                "MASK_NAME": names_ids["radar_wts_ids"][0],
+                "METHOD": "SEQ",
+                "BOUNDARY_MARGIN": boundary_margin,
                 "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
                 "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
                 "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
             },
+            model_ids=[
+                names_ids["model_ids_list"][0],
+                names_ids["radar_obs_ids"][0],
+                names_ids["radar_wts_ids"][0],
+            ],
             aggregation=False,
         )
 
-    # Histograms for surface (2D) Nimrod radar 5 minute rainfall rate.
-    if conf.HISTOGRAM_SURFACE_FIELD and conf.NIMROD_COMP_5MIN:
-        yield RawRecipe(
-            recipe="generic_surface_histogram_series.yaml",
-            # model_ids -> Becomes $INPUT_PATHS
-            model_ids="Nimrod5min",
-            variables={
-                "VARNAME": "Rainfall rate Composite",
-                "MODEL_NAME": "Nimrod_5min",
-                "SEQUENCE": "time"
-                if conf.HISTOGRAM_SURFACE_FIELD_SEQUENCE
-                else "realization",
-                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
-                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-            },
-            aggregation=False,
-        )
+    # Model rainfall 2D plots using a common domain between model and radar network.
+    if conf.NIMROD_RADAR_OBS and conf.PROCESS_RADAR_2D and (len(accum_radars) > 0):
+        names_ids = _model_and_radar_names_ids(models, accum_radars)
+        # Loop over the model names.
+        for idx, model_use in enumerate(names_ids["model_names_list"]):
+            yield RawRecipe(
+                recipe="model_radar_common_domain_2d_model.yaml",
+                variables={
+                    "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
+                    "RADAR_VARNAME": "Hourly rain accumulation",
+                    "MODEL_NAME": model_use,
+                    "RADAR_NAME": names_ids["radar_obs_ids"][0],
+                    "RADAR_LABEL": names_ids["radar_name"],
+                    "MASK_NAME": names_ids["radar_wts_ids"][0],
+                    "METHOD": "SEQ",
+                    "BOUNDARY_MARGIN": boundary_margin,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                },
+                model_ids=[
+                    names_ids["model_ids_list"][idx],
+                    names_ids["radar_obs_ids"][0],
+                    names_ids["radar_wts_ids"][0],
+                ],
+                aggregation=False,
+            )
 
-    # Timeseries plot of Nimrod hourly surface rainfall accumulation.
-    if conf.TIMESERIES_SURFACE_FIELD and accum_radars:
-        yield RawRecipe(
-            recipe="radar_mean_time_series.yaml",
-            # model_ids -> Becomes $INPUT_PATHS
-            model_ids=[radar["id"] for radar in accum_radars],
-            variables={
-                "VARNAME": next(radar["varname"] for radar in accum_radars),
-                "MODEL_NAME": [radar["name"] for radar in accum_radars],
-                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
-                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-            },
-            aggregation=False,
-        )
-
-    # Timeseries plot of Nimrod 5 minute rainfall rate.
-    if conf.TIMESERIES_SURFACE_FIELD and conf.NIMROD_COMP_5MIN:
-        yield RawRecipe(
-            recipe="radar_mean_time_series.yaml",
-            # model_ids -> Becomes $INPUT_PATHS
-            model_ids="Nimrod5min",
-            variables={
-                "VARNAME": "Rainfall rate Composite",
-                "MODEL_NAME": "Nimrod_5min",
-                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
-                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-            },
-            aggregation=False,
-        )
+    # Histogram sequence rainfall using common domain between
+    # model and Nimrod radar observations.
+    if (
+        conf.NIMROD_RADAR_OBS
+        and conf.PROCESS_RADAR_HISTOGRAMS
+        and (len(accum_radars) > 0)
+    ):
+        names_ids = _model_and_radar_names_ids(models, accum_radars)
+        for sequence, title in (
+            ("time", "sequence plots"),
+            ("realization", "case study"),
+        ):
+            yield RawRecipe(
+                recipe="radar_common_domain_histogram.yaml",
+                variables={
+                    "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
+                    "RADAR_VARNAME": "Hourly rain accumulation",
+                    "RADAR_WTS_VARNAME": "Hourly wts accumulation",
+                    "ALL_LABEL": names_ids["combined_names"],
+                    "SEQUENCE": sequence,
+                    "OUTPUTS": "all",
+                    "BOUNDARY_MARGIN": boundary_margin,
+                    "TITLE_STRING": title,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                },
+                model_ids=names_ids["combined_ids"],
+                aggregation=False,
+            )
