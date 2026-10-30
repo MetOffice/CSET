@@ -1412,37 +1412,34 @@ def _make_test_cube_stations(
     )
 
 
-def add_time_coords(cube, time_start, frt_dt, hour_step=1):
-    """Add time coordate to cube."""
-    time_units = cf_units.Unit("hours since 1970-01-01", calendar="360_day")
-    time_units = cf_units.Unit("hours since 1970-01-01", calendar="360_day")
-
-    """Add a per-row time coord (data_dims=0) and scalar frt coord to a cube, in place."""
-    n_times = cube.shape[0]
-    time_datetimes = [
-        time_start + datetime.timedelta(hours=hour_step * i) for i in range(n_times)
-    ]
-    cube.add_aux_coord(
-        AuxCoord(
-            points=time_units.date2num(time_datetimes),
-            standard_name="time",
-            units=time_units,
-        ),
-        data_dims=0,
-    )
-    cube.add_aux_coord(
-        AuxCoord(
-            points=time_units.date2num(frt_dt),
-            standard_name="forecast_reference_time",
-            units=time_units,
-        )
-    )
-    return cube
-
-
 @pytest.fixture
 def dummy_cubelist_obs_3_common_stations():
     """CubeList of [obs_cube1, obs_cube2] with time (per-row) and scalar forecast reference time coords."""
+    time_units = cf_units.Unit("hours since 1970-01-01", calendar="360_day")
+
+    def add_time_coords(cube, time_start, frt_dt, hour_step=1):
+        """Add a per-row time coord (data_dims=0) and scalar frt coord to a cube, in place."""
+        n_times = cube.shape[0]
+        time_datetimes = [
+            time_start + datetime.timedelta(hours=hour_step * i) for i in range(n_times)
+        ]
+        cube.add_aux_coord(
+            AuxCoord(
+                points=time_units.date2num(time_datetimes),
+                standard_name="time",
+                units=time_units,
+            ),
+            data_dims=0,
+        )
+        cube.add_aux_coord(
+            AuxCoord(
+                points=time_units.date2num(frt_dt),
+                standard_name="forecast_reference_time",
+                units=time_units,
+            )
+        )
+        return cube
+
     obs_cube1 = add_time_coords(
         _make_test_cube_stations(
             shape=(10, 3), seed=1, long_name="observed_temperature_at_screen_level"
@@ -1461,54 +1458,79 @@ def dummy_cubelist_obs_3_common_stations():
     return CubeList([obs_cube1, obs_cube2])
 
 
-@pytest.fixture
-def dummy_cube_1_station():
-    """Cube with 1 station, 5 lead times."""
-    obs_cube = add_time_coords(
-        _make_test_cube_stations(
-            shape=(5, 3), seed=1, long_name="observed_temperature_at_screen_level"
-        ),
-        time_start=cftime.datetime(2024, 1, 1, 6, 0, calendar="360_day"),
-        frt_dt=cftime.datetime(2024, 1, 1, 0, 0, calendar="360_day"),
+def _make_test_cube_multi_forecasts(
+    shape: tuple[int, int, int],
+    seed: int,
+    long_name: str,
+    standard_name: str | None = None,
+    model_name: str | None = None,
+):
+    rng = np.random.default_rng(seed)
+
+    frt = DimCoord(
+        np.arange(shape[0]),
+        standard_name="forecast_reference_time",
+        units="hours since 1970-01-01",
+    )
+    fp = DimCoord(
+        np.arange(shape[1]),
+        standard_name="forecast_period",
+        units="hours",
+    )
+    station = DimCoord(
+        np.arange(shape[2]),
+        long_name="station",
+        units="no_unit",
     )
 
-    return obs_cube
+    station_name_coord = iris.coords.AuxCoord(
+        points=np.array([f"st{i}" for i in range(shape[2])]),
+        long_name="Station_Name",
+        units="unknown",
+    )
 
+    latitude_coord = iris.coords.AuxCoord(
+        points=rng.uniform(50.0, 55.0, size=shape[2]),
+        standard_name="latitude",
+        units="degrees",
+    )
 
-@pytest.fixture()
-def make_hinton_test_cubes() -> iris.cube.CubeList:
-    """Create basic 2D iris cubes for testing hinton plot functionality."""
-    cubes = iris.cube.CubeList()
-    for c in [
-        [[1, 2, 3, 4, 5, 6, 7, 8], "air_temperature_at_screen_level", "UM"],
-        [[1.1, 3, 4, 3, 4, 6, 7.5, 8.9], "air_temperature_at_screen_level", "LF"],
-        [[1, 2, 3, 4, 5, 6, 7, 8], "relative_humidity_at_screen_level", "UM"],
-        [
-            [1.1, 1.9, 3, 2.5, 4.5, 6.6, 7.1, 7.9],
-            "relative_humidity_at_screen_level",
-            "LF",
+    longitude_coord = iris.coords.AuxCoord(
+        points=rng.uniform(-5.0, -2.0, size=shape[2]),
+        standard_name="longitude",
+        units="degrees",
+    )
+
+    data = rng.normal(loc=280, scale=5, size=shape)
+
+    return Cube(
+        data,
+        long_name=long_name,
+        standard_name=standard_name,
+        units="K",
+        dim_coords_and_dims=[(frt, 0), (fp, 1), (station, 2)],
+        attributes={"model_name": model_name},
+        aux_coords_and_dims=[
+            (station_name_coord, 2),
+            (latitude_coord, 2),
+            (longitude_coord, 2),
         ],
-        [
-            [1, 0, 0, 0, 1, 1, 1, 0],
-            "significance_relative_humidity_at_screen_level",
-            "None",
-        ],
-    ]:
-        cube = iris.cube.Cube(
-            np.array(c[0], dtype=float),
-            long_name=c[1],
-            dim_coords_and_dims=[
-                (
-                    iris.coords.DimCoord(range(len(c[0])), long_name="forecast_period"),
-                    0,
-                ),
-            ],
-        )
-        cube.attributes["model_name"] = c[2]
+    )
 
-        cubes.append(cube)
 
-    return cubes
+@pytest.fixture
+def dummy_cubelist_model_obs_multiple_forecasts():
+    """CubeList of [obs_cube, model_cube] with forecast reference time."""
+    obs_cube = _make_test_cube_multi_forecasts(
+        shape=(2, 10, 12), seed=1, long_name="observed_temperature_at_screen_level"
+    )
+    model_cube = _make_test_cube_multi_forecasts(
+        shape=(2, 10, 12),
+        seed=2,
+        long_name="temperature_at_screen_level",
+        model_name="model_a",
+    )
+    return CubeList([obs_cube, model_cube])
 
 
 @pytest.fixture()
@@ -1561,3 +1583,39 @@ def wind_cubelist_observed():
     )
 
     return wind_cubelist
+
+
+@pytest.fixture()
+def make_hinton_test_cubes() -> iris.cube.CubeList:
+    """Create basic 2D iris cubes for testing hinton plot functionality."""
+    cubes = iris.cube.CubeList()
+    for c in [
+        [[1, 2, 3, 4, 5, 6, 7, 8], "air_temperature_at_screen_level", "UM"],
+        [[1.1, 3, 4, 3, 4, 6, 7.5, 8.9], "air_temperature_at_screen_level", "LF"],
+        [[1, 2, 3, 4, 5, 6, 7, 8], "relative_humidity_at_screen_level", "UM"],
+        [
+            [1.1, 1.9, 3, 2.5, 4.5, 6.6, 7.1, 7.9],
+            "relative_humidity_at_screen_level",
+            "LF",
+        ],
+        [
+            [1, 0, 0, 0, 1, 1, 1, 0],
+            "significance_relative_humidity_at_screen_level",
+            "None",
+        ],
+    ]:
+        cube = iris.cube.Cube(
+            np.array(c[0], dtype=float),
+            long_name=c[1],
+            dim_coords_and_dims=[
+                (
+                    iris.coords.DimCoord(range(len(c[0])), long_name="forecast_period"),
+                    0,
+                ),
+            ],
+        )
+        cube.attributes["model_name"] = c[2]
+
+        cubes.append(cube)
+
+    return cubes
