@@ -610,22 +610,22 @@ def calc_array_stats(
     return array_min, array_max, array_mean
 
 
-def sort_cube_by_coord(cube: iris.cube.Cube, coord_name: str) -> iris.cube.Cube:
+def sort_cube_by_station_name(cube: iris.cube.Cube) -> iris.cube.Cube:
     """Sort a cube along one dimension by the values of a coordinate.
 
     Reordering makes the dimension's dim coord non-monotonic, so Iris
     demotes it to an aux coord (keeping its values and metadata). A fresh
     0..N-1 index named '<dim coord name>_index' becomes the new dim coord.
     """
-    if not cube.coords(coord_name):
+    if not cube.coords("Station_Name"):
         return cube
 
-    coord = cube.coord(coord_name)
+    coord = cube.coord("Station_Name")
     (dim,) = cube.coord_dims(coord)
 
     # save the coords name
     dim_coords = cube.coords(dimensions=dim, dim_coords=True)
-    dim_coord_name = dim_coords[0].name() if dim_coords else None
+    dim_station_name = dim_coords[0].name() if dim_coords else None
 
     order = sorted(
         range(len(coord.points)), key=lambda i: natural_sort_key(coord.points[i])
@@ -635,13 +635,13 @@ def sort_cube_by_coord(cube: iris.cube.Cube, coord_name: str) -> iris.cube.Cube:
     index[dim] = np.array(order)
     sorted_cube = cube[tuple(index)]
 
-    if dim_coord_name is not None and not sorted_cube.coords(
+    if dim_station_name is not None and not sorted_cube.coords(
         dimensions=dim, dim_coords=True
     ):
         sorted_cube.add_dim_coord(
             iris.coords.DimCoord(
                 np.arange(len(order), dtype=np.int32),
-                long_name=f"{dim_coord_name}_index",
+                long_name=f"{dim_station_name}_index",
                 units="1",
             ),
             dim,
