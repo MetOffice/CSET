@@ -3,10 +3,8 @@
 [scheduling]
     [[graph]]
     {% macro metplus_point_stat_graph() %}
-        metplus_prep_obs => metplus_ascii2nc
         {% for model in models %}
-            fetch_fcst_m{{model["id"]}} => metplus_prep_fcst_m{{model["id"]}}
-            metplus_prep_fcst_m{{model["id"]}} => metplus_point_stat_m{{model["id"]}}
+            fetch_fcst_m{{model["id"]}} => metplus_point_stat_m{{model["id"]}}
             metplus_ascii2nc => metplus_point_stat_m{{model["id"]}}
             metplus_point_stat_m{{model["id"]}} => metplus_point_stat_postproc_m{{model["id"]}}
         {% endfor %}
@@ -32,9 +30,6 @@
         """
 
 [runtime]
-    [[metplus_prep_obs]]
-        inherit = METPLUS
-
     [[metplus_ascii2nc]]
     # Runs METplus wrappers for ASCII to nc ingestion of obs.
         inherit = METPLUS
@@ -61,6 +56,7 @@
         [[[environment]]]
             MODEL_NAME = {{model["name"]}}
             MODEL_ID = m{{model["id"]}}
+            MODEL_NID = {{model["id"]}}
             model_name = {{model["name"] | lower}}
 
     [[metplus_point_stat_postproc_m{{model["id"]}}]]
