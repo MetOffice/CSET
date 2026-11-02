@@ -43,6 +43,8 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
+  - operator: misc.extract_common_time_points
+
   - operator: power_spectrum.calculate_power_spectrum
 
   - operator: plot.plot_line_series
