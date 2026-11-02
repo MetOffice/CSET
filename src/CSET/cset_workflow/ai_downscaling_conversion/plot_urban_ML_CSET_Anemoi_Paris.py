@@ -59,7 +59,14 @@ plot_from_all_realizations = True
 # Use a non-empty list to limit both saved and plot-prepared cubes.
 selected_frt_timestamps = []  # for specific forecast reference times do e.g., ["20240719210000"]
 # Plot exactly this forecast_reference_time when plot=True.
-plot_frt_timestamp = "20240719210000"
+# When `auto_select_rainiest_plot_frt` is True and varname is rainfall,
+# this value is used as a fallback only.
+plot_frt_timestamp = "20240813210000"
+auto_select_rainiest_plot_frt = False
+# 1 = rainiest forecast, 2 = second-rainiest, etc.
+rainy_plot_rank = 1
+# Choose model for raininess ranking; `_0p3km` uses target fields.
+rain_metric_model_suffix = "_0p3km"
 max_time_steps_per_frt = None
 
 # Variables intended for this workflow.
@@ -76,9 +83,10 @@ variables_to_save = list(variables_to_process)
 
 # Input/output locations for Paris Anemoi data.
 BASE_DIR = Path("/data/users/lewis.blunn/machine_learning/CSET/paris_anemoi_Q4_2026")
-PREDICTIONS_FILE = BASE_DIR / "predictions.nc"
+# Test predictions file.
+PREDICTIONS_FILE = BASE_DIR / "predictions_test.nc"
 CONDITIONING_SOURCE = Path(
-    "/data/users/lmtrials/unified_pipeline/datasets/urban_downscaling/paris_64x64/anemoi_zarr/val/paris-lres-pred-summer-downscaling-64x64-val-1h-v1.zarr"
+    "/data/users/lmtrials/unified_pipeline/datasets/urban_downscaling/paris_64x64/anemoi_zarr/test/paris-lres-pred-summer-downscaling-64x64-test-1h-v1.zarr"
 )
 
 output_data_dir = BASE_DIR / "ml_data_cset_paris"
@@ -520,6 +528,44 @@ def _frt_ref_to_timestamp(ref_value: float, units: cf_units.Unit) -> str:
     return filename_slugify(dt_str)
 
 
+def _cube_frt_timestamp(cube: iris.cube.Cube) -> str:
+    frt = cube.coord("forecast_reference_time")
+    return _frt_ref_to_timestamp(float(frt.points[0]), frt.units)
+
+
+def _select_rainy_forecast_timestamp(
+    cubes: iris.cube.CubeList,
+    rank: int = 1,
+) -> tuple[str, list[tuple[str, float, float, float]]]:
+    """Pick a forecast reference time with intense rainfall.
+
+    Ranking metric is based on high-end rainfall intensity (P99), with max and
+    mean as deterministic tie-breakers.
+    """
+    if rank < 1:
+        raise ValueError(f"rank must be >= 1, got {rank}")
+
+    scored: list[tuple[str, float, float, float]] = []
+    for cube in cubes:
+        data = np.ma.asarray(cube.data)
+        values = np.asarray(np.ma.filled(data, np.nan), dtype=np.float64)
+        finite = values[np.isfinite(values)]
+        if finite.size == 0:
+            continue
+
+        p99 = float(np.nanpercentile(finite, 99.0))
+        vmax = float(np.nanmax(finite))
+        mean = float(np.nanmean(finite))
+        scored.append((_cube_frt_timestamp(cube), p99, vmax, mean))
+
+    if not scored:
+        raise ValueError("No valid rainfall data found to rank forecast dates.")
+
+    scored.sort(key=lambda item: (item[1], item[2], item[3]), reverse=True)
+    idx = min(rank - 1, len(scored) - 1)
+    return scored[idx][0], scored
+
+
 def _limit_time_steps(cube: iris.cube.Cube) -> iris.cube.Cube:
     if max_time_steps_per_frt is None:
         return cube
@@ -894,7 +940,7 @@ selected_variables = [v for v in variables_to_process if v in variables_to_save]
 if not selected_variables:
     selected_variables = [varname]
 
-# Use predictions.nc as the reference date set for strict FRT matching.
+# Use test predictions file as the reference date set for strict FRT matching.
 pred_ref = _load_cube(PREDICTIONS_FILE, "pred_pr")
 _normalise_frt(pred_ref)
 expected_frt_keys = np.unique(_frt_ns_keys(pred_ref))
@@ -917,6 +963,8 @@ try:
                 )
 
         if plot and selected_varname in variables_to_plot:
+            selected_plot_frt_timestamp = plot_frt_timestamp
+
             if plot_from_all_realizations:
                 plot_produced = {}
                 for source_path, source_varname, suffix in model_sources:
@@ -931,15 +979,47 @@ try:
                         apply_reference_grid_coords=False,
                     )
 
-                cube_ml = _extract_frt_cube(plot_produced["_ML"], plot_frt_timestamp)
+                if (
+                    auto_select_rainiest_plot_frt
+                    and selected_varname == "surface_microphysical_rainfall_rate"
+                ):
+                    rank_source = plot_produced.get(rain_metric_model_suffix)
+                    if rank_source is None:
+                        raise KeyError(
+                            "Rainfall ranking source not available: "
+                            f"{rain_metric_model_suffix}"
+                        )
+
+                    selected_plot_frt_timestamp, ranked_frt = (
+                        _select_rainy_forecast_timestamp(
+                            rank_source,
+                            rank=rainy_plot_rank,
+                        )
+                    )
+                    print(
+                        "Selected rainy test forecast for plotting: "
+                        f"{selected_plot_frt_timestamp} (rank {min(rainy_plot_rank, len(ranked_frt))} "
+                        f"of {len(ranked_frt)})"
+                    )
+                    print(
+                        "Top rainy test forecasts (timestamp, p99, max, mean mm h-1):"
+                    )
+                    for ts, p99, vmax, mean in ranked_frt[:5]:
+                        print(f"  {ts}: p99={p99:.3f}, max={vmax:.3f}, mean={mean:.3f}")
+
+                cube_ml = _extract_frt_cube(
+                    plot_produced["_ML"], selected_plot_frt_timestamp
+                )
                 cube_ref = _extract_frt_cube(
-                    plot_produced["_0p3km"], plot_frt_timestamp
+                    plot_produced["_0p3km"], selected_plot_frt_timestamp
                 )
                 cube_cond = _extract_frt_cube(
-                    plot_produced["_2p2km"], plot_frt_timestamp
+                    plot_produced["_2p2km"], selected_plot_frt_timestamp
                 )
             else:
-                _frt_dt = dt.datetime.strptime(plot_frt_timestamp, "%Y%m%d%H%M%S")
+                _frt_dt = dt.datetime.strptime(
+                    selected_plot_frt_timestamp, "%Y%m%d%H%M%S"
+                )
                 _subdir = filename_slugify(_frt_dt.strftime("%Y-%m-%d %H:%M:%S"))
 
                 cube_ml = iris.load_cube(
