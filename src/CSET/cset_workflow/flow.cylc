@@ -200,7 +200,6 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         NIMROD_COMP_5KM = {{NIMROD_COMP_5KM}}
         NIMROD_COMP_1KM = {{NIMROD_COMP_1KM}}
         NIMROD_COMP_2KM = {{NIMROD_COMP_2KM}}
-        NIMROD_WEIGHTS = {{NIMROD_WEIGHTS}}
         NIMROD_COMP_5MIN = {{NIMROD_COMP_5MIN}}
     {% endif %}
 
