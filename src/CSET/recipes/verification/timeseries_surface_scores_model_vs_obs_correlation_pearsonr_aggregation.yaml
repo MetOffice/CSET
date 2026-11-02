@@ -55,10 +55,10 @@ steps:
             varname: observed_$VARNAME
 
   - operator: scoreswrappers.scores_correlation_pearsonr
-    preserved_coordinates: $PRESERVED_VARIABLE
+    preserved_coordinates: $$PRESERVED_COORD
 
   - operator: plot.plot_line_series
-    series_coordinate: $PRESERVED_VARIABLE
+    series_coordinate: $$PRESERVED_COORD
 
   - operator: write.write_cube_to_nc
     overwrite: True
