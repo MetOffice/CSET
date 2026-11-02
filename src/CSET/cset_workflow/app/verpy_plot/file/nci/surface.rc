@@ -1,0 +1,37 @@
+[VerPyPlot_surface_fs]
+comment = surface_fs
+jobid = surface_fs
+metadata = surface_fs/index
+system = MET
+type = cnt
+truth = Surface Obs
+stats = ["ME (FcVsObs)", "MSE (FcVsObs)"]
+param = ["TMP", "RH"]
+interp = NEAREST
+output = fcrseries
+
+[VerPyPlot_surface_ts]
+comment = surface_ts
+jobid = surface_ts
+metadata = surface_ts/index
+system = MET
+type = cnt
+truth = Surface Obs
+stats = ["ME (FcVsObs)", "MSE (FcVsObs)"]
+param = ["TMP", "RH"]
+interp = NEAREST
+output = timeseries
+aggopts = fcrs
+
+[VerPyPlot_surface_di]
+comment = surface_di
+jobid = surface_di
+metadata = surface_di/index
+system = MET
+type = cnt
+truth = Surface Obs
+stats = ["ME (FcVsObs)", "MSE (FcVsObs)"]
+param = ["TMP", "RH"]
+interp = NEAREST
+output = diurnal
+aggopts = fcrs
