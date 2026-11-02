@@ -66,13 +66,14 @@ def _get_scores_timeseries_methods(conf):
 def _get_scores_timeseries_methods_aggregated(conf):
     """Compile list of the required scores timeseries plots."""
     scores_timeseries_methods_aggregated = []
-    if conf.SCORES_TIMESERIES_RMSE_AGG or conf.SCORES_ALL:
+    print(conf.SCORES_TIMESERIES_RMSE)
+    if conf.SCORES_TIMESERIES_RMSE[1] or conf.SCORES_ALL:
         scores_timeseries_methods_aggregated.append("RMSE")
-    if conf.SCORES_TIMESERIES_AB_AGG or conf.SCORES_ALL:
+    if conf.SCORES_TIMESERIES_AB[1] or conf.SCORES_ALL:
         scores_timeseries_methods_aggregated.append("additive_bias")
-    if conf.SCORES_TIMESERIES_MAE_AGG or conf.SCORES_ALL:
+    if conf.SCORES_TIMESERIES_MAE[1] or conf.SCORES_ALL:
         scores_timeseries_methods_aggregated.append("MAE")
-    if conf.SCORES_TIMESERIES_PC_AGG or conf.SCORES_ALL:
+    if conf.SCORES_TIMESERIES_PC[1] or conf.SCORES_ALL:
         scores_timeseries_methods_aggregated.append("correlation_pearsonr")
     return scores_timeseries_methods_aggregated
 
@@ -92,16 +93,13 @@ def _get_scores_timeseries_methods_model_vs_obs(conf):
 def _get_scores_timeseries_methods_model_vs_obs_case_aggregated(conf):
     """Compile list of the required case aggregated scores model vs observations timeseries plots."""
     scores_timeseries_methods_model_vs_obs_case_aggregated = []
-    if (
-        conf.SCORES_TIMESERIES_RMSE_MODEL_VS_OBS_CASE_AGG
-        or conf.SCORES_ALL_MODEL_VS_OBS
-    ):
+    if conf.SCORES_TIMESERIES_RMSE_MODEL_VS_OBS[1] or conf.SCORES_ALL_MODEL_VS_OBS:
         scores_timeseries_methods_model_vs_obs_case_aggregated.append("RMSE")
-    if conf.SCORES_TIMESERIES_AB_MODEL_VS_OBS_CASE_AGG or conf.SCORES_ALL_MODEL_VS_OBS:
+    if conf.SCORES_TIMESERIES_AB_MODEL_VS_OBS[1] or conf.SCORES_ALL_MODEL_VS_OBS:
         scores_timeseries_methods_model_vs_obs_case_aggregated.append("additive_bias")
-    if conf.SCORES_TIMESERIES_MAE_MODEL_VS_OBS_CASE_AGG or conf.SCORES_ALL_MODEL_VS_OBS:
+    if conf.SCORES_TIMESERIES_MAE_MODEL_VS_OBS[1] or conf.SCORES_ALL_MODEL_VS_OBS:
         scores_timeseries_methods_model_vs_obs_case_aggregated.append("MAE")
-    if conf.SCORES_TIMESERIES_PC_MODEL_VS_OBS_CASE_AGG or conf.SCORES_ALL_MODEL_VS_OBS:
+    if conf.SCORES_TIMESERIES_PC_MODEL_VS_OBS[1] or conf.SCORES_ALL_MODEL_VS_OBS:
         scores_timeseries_methods_model_vs_obs_case_aggregated.append(
             "correlation_pearsonr"
         )
