@@ -63,6 +63,20 @@ def _get_scores_timeseries_methods(conf):
     return scores_timeseries_methods
 
 
+def _get_scores_timeseries_methods_aggregated(conf):
+    """Compile list of the required scores timeseries plots."""
+    scores_timeseries_methods_aggregated = []
+    if conf.SCORES_TIMESERIES_RMSE_AGG or conf.SCORES_ALL:
+        scores_timeseries_methods_aggregated.append("RMSE")
+    if conf.SCORES_TIMESERIES_AB_AGG or conf.SCORES_ALL:
+        scores_timeseries_methods_aggregated.append("additive_bias")
+    if conf.SCORES_TIMESERIES_MAE_AGG or conf.SCORES_ALL:
+        scores_timeseries_methods_aggregated.append("MAE")
+    if conf.SCORES_TIMESERIES_PC_AGG or conf.SCORES_ALL:
+        scores_timeseries_methods_aggregated.append("correlation_pearsonr")
+    return scores_timeseries_methods_aggregated
+
+
 def _get_scores_timeseries_methods_model_vs_obs(conf):
     """Compile list of the required scores model vs observations timeseries plots."""
     scores_timeseries_methods_model_vs_obs = []
@@ -232,6 +246,71 @@ def load(conf: Config):
             model_ids=["OBS"] + [model["id"] for model in models],
             aggregation=False,
         )
+    scores_timeseries_methods_aggregated = _get_scores_timeseries_methods_aggregated(
+        conf
+    )
+    if scores_timeseries_methods_aggregated:
+        # Produce timeseries plots of scores metrics averaged over the domain for each case study.
+        for field, scores_method in itertools.product(
+            conf.SURFACE_FIELDS, scores_timeseries_methods_aggregated
+        ):
+            yield RawRecipe(
+                recipe=f"timeseries_surface_difference_scores_{scores_method}_aggregated.yaml",
+                variables={
+                    "VARNAME": field,
+                    "BASE_MODEL": base_model["name"],
+                    "OTHER_MODELS": [model["name"] for model in models[1:]],
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "AGGREGATION_MODE": "Case Date",
+                    "PRESERVED_COORD": "forecast_period",
+                },
+                model_ids=[base_model["id"]] + [model["id"] for model in models[1:]],
+                aggregation=True,
+            )
+
+    if conf.SCORES_CRPS_FOR_ENSEMBLE:
+        for model, field in itertools.product(models, conf.SURFACE_FIELDS):
+            yield RawRecipe(
+                recipe="crps_for_ensemble.yaml",
+                variables={
+                    "VARNAME": field,
+                    "CONTROL_MEMBER": conf.CONTROL_MEMBER,
+                    "METHOD": conf.METHOD_FOR_CRPS,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[model["id"]],
+                aggregation=False,
+            )
+    scores_timeseries_methods_model_vs_obs = (
+        _get_scores_timeseries_methods_model_vs_obs(conf)
+    )
+
+    if scores_timeseries_methods_model_vs_obs:
+        # Produce model vs observation timeseries plots of scores metrics averaged over the domain for each case study.
+        for field, scores_method in itertools.product(
+            conf.POINT_OBS_FIELDS, scores_timeseries_methods_model_vs_obs
+        ):
+            yield RawRecipe(
+                recipe=f"timeseries_surface_scores_model_vs_obs_{scores_method}.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=["OBS"] + [model["id"] for model in models],
+                aggregation=False,
+            )
 
     scores_timeseries_methods_model_vs_obs_case_aggregated = (
         _get_scores_timeseries_methods_model_vs_obs_case_aggregated(conf)
@@ -253,7 +332,7 @@ def load(conf: Config):
                     if conf.SELECT_SUBAREA
                     else None,
                     "AGGREGATION_MODE": "Case Date",
-                    "PRESERVED_VARIABLE": "forecast_period",
+                    "PRESERVED_COORD": "forecast_period",
                 },
                 model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=True,

@@ -1004,7 +1004,7 @@ def test_pfd_gt_complete_miss(make_cube_categorical_testing):
 def test_rmse_multiple_forecasts_preserve_forecast_reference_time(
     dummy_cubelist_model_obs_multiple_forecasts,
 ):
-    """Testing RMSE aggregated by frt."""
+    """Testing RMSE preserving frt."""
     input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
     obs, model = input_cubelist
     data_obs = obs.data
@@ -1023,7 +1023,7 @@ def test_rmse_multiple_forecasts_preserve_forecast_reference_time(
 def test_rmse_multiple_forecasts_preserve_forecast_period(
     dummy_cubelist_model_obs_multiple_forecasts,
 ):
-    """Test RMSE aggregated by forecast period."""
+    """Test RMSE preserving forecast period."""
     input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
     obs, model = input_cubelist
     data_obs = obs.data
@@ -1079,7 +1079,7 @@ def test_rmse_multiple_forecasts_preserve_lat_lon(
 def test_mae_multiple_forecasts_preserve_forecast_reference_time(
     dummy_cubelist_model_obs_multiple_forecasts,
 ):
-    """Testing MAE aggregated by frt."""
+    """Testing MAE preserving frt."""
     input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
     obs, model = input_cubelist
     data_obs = obs.data
@@ -1096,7 +1096,7 @@ def test_mae_multiple_forecasts_preserve_forecast_reference_time(
 def test_mae_multiple_forecasts_preserve_forecast_period(
     dummy_cubelist_model_obs_multiple_forecasts,
 ):
-    """Test MAE aggregated by forecast period."""
+    """Test MAE preserving forecast period."""
     input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
     obs, model = input_cubelist
     data_obs = obs.data
@@ -1147,7 +1147,7 @@ def test_mae_multiple_forecasts_preserve_lat_lon(
 def test_additive_bias_multiple_forecasts_preserve_forecast_reference_time(
     dummy_cubelist_model_obs_multiple_forecasts,
 ):
-    """Testing additive bias aggregated by frt."""
+    """Testing additive bias preserving frt."""
     input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
     obs, model = input_cubelist
     data_obs = obs.data
@@ -1166,7 +1166,7 @@ def test_additive_bias_multiple_forecasts_preserve_forecast_reference_time(
 def test_additive_bias_multiple_forecasts_preserve_forecast_period(
     dummy_cubelist_model_obs_multiple_forecasts,
 ):
-    """Test additive bias aggregated by forecast period."""
+    """Test additive bias preserving forecast period."""
     input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
     obs, model = input_cubelist
     data_obs = obs.data
@@ -1217,7 +1217,7 @@ def test_additive_bias_multiple_forecasts_preserve_lat_lon(
 def test_correlation_pearsonr_multiple_forecasts_preserve_forecast_reference_time(
     dummy_cubelist_model_obs_multiple_forecasts,
 ):
-    """Testing Pearson correlation aggregated by frt."""
+    """Testing Pearson correlation preserving frt."""
     input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
     obs, model = input_cubelist
     data_obs = obs.data
@@ -1240,7 +1240,7 @@ def test_correlation_pearsonr_multiple_forecasts_preserve_forecast_reference_tim
 def test_correlation_pearsonr_multiple_forecasts_preserve_forecast_period(
     dummy_cubelist_model_obs_multiple_forecasts,
 ):
-    """Test Pearson correlation aggregated by forecast period."""
+    """Test Pearson correlation preserving forecast period."""
     input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
     obs, model = input_cubelist
     data_obs = obs.data
