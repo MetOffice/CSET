@@ -621,17 +621,33 @@ def get_time_coord(cube: Cube | CubeList) -> str | None:
 
 
 def ensure_common_time_points(base: Cube, other: Cube):
-    """If a time coordinate is present, raise if base and other don't have the same time points."""
+    """If a time coordinate is present, raise if base and other don't have the same time points.
+
+    If a forecast_reference_time coordinate is present, check each forecast reference time separately.
+    """
     time_coord = get_time_coord(base)
     if not time_coord:
         return
-    shared_times = get_shared_times(
-        base, other, time_coord
-    )  # raises if no shared times
-    n_base = len(base.coord(time_coord).points)
-    n_other = len(other.coord(time_coord).points)
-    if not len(shared_times) == n_base == n_other:
-        raise ValueError("Base and other cubes have different time points.")
+
+    if base.coords("forecast_reference_time"):
+        pairs = []
+        for base_slice in base.slices_over("forecast_reference_time"):
+            frt = base_slice.coord("forecast_reference_time").cell(0).point
+            other_slice = other.extract(iris.Constraint(forecast_reference_time=frt))
+            if other_slice is None:
+                raise ValueError(f"Other cube has no forecast_reference_time {frt}.")
+            pairs.append((base_slice, other_slice))
+    else:
+        pairs = [(base, other)]
+
+    for base_cube, other_cube in pairs:
+        shared_times = get_shared_times(
+            base_cube, other_cube, time_coord
+        )  # raises if no shared times
+        n_base = len(base_cube.coord(time_coord).points)
+        n_other = len(other_cube.coord(time_coord).points)
+        if not len(shared_times) == n_base == n_other:
+            raise ValueError("Base and other cubes have different time points.")
 
 
 def get_shared_times(base: Cube, other: Cube, time_coord: str) -> set[int]:
