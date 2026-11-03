@@ -22,7 +22,7 @@ operator, and will be used across multiple operators.
 import logging
 import os
 import re
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import iris
@@ -650,7 +650,7 @@ def ensure_common_time_points(base: Cube, other: Cube):
             raise ValueError("Base and other cubes have different time points.")
 
 
-def get_shared_times(base: Cube, other: Cube, time_coord: str) -> set[int]:
+def get_shared_times(base: Cube, other: Cube, time_coord: str) -> set[int | datetime]:
     """Extract common time points from cubes to allow comparison."""
     # Get the name of the first non-scalar time coordinate.
     base_time_coord = base.coord(time_coord)
