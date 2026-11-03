@@ -50,12 +50,26 @@ def get_radar_sources(conf) -> list[dict]:
                 "varname": "Hourly rain accumulation",
             }
         )
+        radar_sources.append(
+            {
+                "name": "Nimrod_1km_weights",
+                "id": "Nimrod1km_weights",
+                "varname": "Hourly wts accumulation",
+            }
+        )
     if conf.NIMROD_COMP_2KM:
         radar_sources.append(
             {
                 "name": "Nimrod_2km",
                 "id": "Nimrod2km",
                 "varname": "Hourly rain accumulation",
+            }
+        )
+        radar_sources.append(
+            {
+                "name": "Nimrod_2km_weights",
+                "id": "Nimrod2km_weights",
+                "varname": "Hourly wts accumulation",
             }
         )
     if conf.NIMROD_COMP_5KM:
@@ -66,23 +80,6 @@ def get_radar_sources(conf) -> list[dict]:
                 "varname": "Hourly rain accumulation",
             }
         )
-    if conf.NIMROD_COMP_1KM and conf.NIMROD_WEIGHTS:
-        radar_sources.append(
-            {
-                "name": "Nimrod_1km_weights",
-                "id": "Nimrod1km_weights",
-                "varname": "Hourly wts accumulation",
-            }
-        )
-    if conf.NIMROD_COMP_2KM and conf.NIMROD_WEIGHTS:
-        radar_sources.append(
-            {
-                "name": "Nimrod_2km_weights",
-                "id": "Nimrod2km_weights",
-                "varname": "Hourly wts accumulation",
-            }
-        )
-    if conf.NIMROD_COMP_5KM and conf.NIMROD_WEIGHTS:
         radar_sources.append(
             {
                 "name": "Nimrod_5km_weights",
