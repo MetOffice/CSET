@@ -33,19 +33,19 @@ def _get_needed_environment_variables_nimrod() -> dict:
     if os.environ["NIMROD_COMP_5MIN"] == "True":
         radar_sources.append("Nimrod_comp_5min")
 
-    # Set NIMROD_WEIGHTS to True if any radar rainfall accumulation
+    # Set nimrod_weights_needed to True if any radar rainfall accumulation
     # source has been selected.
-    os.environ["NIMROD_WEIGHTS"] = "False"
+    nimrod_weights_needed = False
     if (
         (os.environ["NIMROD_COMP_1KM"] == "True")
         or (os.environ["NIMROD_COMP_2KM"] == "True")
         or (os.environ["NIMROD_COMP_5KM"] == "True")
     ):
-        os.environ["NIMROD_WEIGHTS"] = "True"
+        nimrod_weights_needed = True
 
     variables = {
         "field": radar_sources,
-        "weights": os.environ["NIMROD_WEIGHTS"],
+        "weights": nimrod_weights_needed,
         "date_type": "initiation",
         "data_time": datetime.fromisoformat(os.environ["CYLC_TASK_CYCLE_POINT"]),
         "forecast_length": isodate.parse_duration(os.environ["ANALYSIS_LENGTH"]),
@@ -200,7 +200,7 @@ def retrieve_nimrod():
 
                 # Write the Nimrod weights to a NetCDF file if the switch
                 # for this is set in v["weights"].
-                if v["weights"] == "True" and nimrod_cube_weights is not None:
+                if v["weights"] and nimrod_cube_weights is not None:
                     filename_wei_nc = (
                         f"{nimrod_dir_wei}/{date_use.strftime('%Y%m%d%H%M')}"
                         f"_{nimrod_dict[nimrod_field]['obs_id']}_weights"
