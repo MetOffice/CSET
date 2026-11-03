@@ -623,10 +623,9 @@ def test_calculate_power_spectrum_no_realizations_or_forecast_reference_times():
     assert result is not None
 
 
-def test_calculate_power_spectrum_non_varying_realization_with_varying_frt():
-    """Check power spectrum can be calculated with non varying realization."""
-    # Create a cube forecast reference times 1 realization coord
-    # and varying frt
+def test_calculate_power_spectrum_no_frt():
+    """Check power spectrum can be calculated without frt coord."""
+    # Create a cube without frt
     # Time coord is forecast_period.
 
     data = np.random.rand(1, 3, 10, 10)
@@ -671,15 +670,6 @@ def test_calculate_power_spectrum_non_varying_realization_with_varying_frt():
         iris.coords.AuxCoord(
             [0, 1, 2],
             standard_name="time",
-            units="hours since 1970-01-01 00:00:00",
-        ),
-        data_dims=(1,),
-    )
-
-    cube.add_aux_coord(
-        iris.coords.AuxCoord(
-            [0, 1, 2],
-            standard_name="forecast_reference_time",
             units="hours since 1970-01-01 00:00:00",
         ),
         data_dims=(1,),
