@@ -709,7 +709,6 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                     var_name="latitude",
                     units="degrees",
                     coord_system=iris.coord_systems.GeogCS(6371229.0),
-                    circular=True,
                 ),
                 ny,
             )
@@ -722,7 +721,6 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                     var_name="longitude",
                     units="degrees",
                     coord_system=iris.coord_systems.GeogCS(6371229.0),
-                    circular=True,
                 ),
                 nx,
             )
