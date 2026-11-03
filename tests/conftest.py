@@ -1619,3 +1619,41 @@ def make_hinton_test_cubes() -> iris.cube.CubeList:
         cubes.append(cube)
 
     return cubes
+
+
+@pytest.fixture
+def make_simple_1d_time_cube():
+    """Make a minimal 1D cube with a single time-like dimension coordinate."""
+
+    def _make_cube(points, name, units):
+        coord = DimCoord(np.array(points, dtype=float), long_name=name, units=units)
+        return Cube(np.zeros(len(points)), dim_coords_and_dims=[(coord, 0)])
+
+    return _make_cube
+
+
+@pytest.fixture
+def make_frt_cube():
+    """Make a (forecast_reference_time, forecast_period) cube with 2D time."""
+
+    def _make_cube(frts, lead_times):
+        frt = np.array(frts, dtype=float)
+        fp = np.array(lead_times, dtype=float)
+        frt_coord = DimCoord(
+            frt,
+            standard_name="forecast_reference_time",
+            units="hours since 2026-01-01 00:00:00",
+        )
+        fp_coord = DimCoord(fp, standard_name="forecast_period", units="hours")
+        time_coord = AuxCoord(
+            frt[:, None] + fp[None, :],
+            standard_name="time",
+            units="hours since 2026-01-01 00:00:00",
+        )
+        return Cube(
+            np.zeros((len(frt), len(fp))),
+            dim_coords_and_dims=[(frt_coord, 0), (fp_coord, 1)],
+            aux_coords_and_dims=[(time_coord, (0, 1))],
+        )
+
+    return _make_cube
