@@ -66,7 +66,6 @@ def _get_scores_timeseries_methods(conf):
 def _get_scores_timeseries_methods_aggregated(conf):
     """Compile list of the required scores timeseries plots."""
     scores_timeseries_methods_aggregated = []
-    print(conf.SCORES_TIMESERIES_RMSE)
     if conf.SCORES_TIMESERIES_RMSE[1] or conf.SCORES_ALL:
         scores_timeseries_methods_aggregated.append("RMSE")
     if conf.SCORES_TIMESERIES_AB[1] or conf.SCORES_ALL:
