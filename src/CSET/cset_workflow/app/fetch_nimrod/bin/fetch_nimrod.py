@@ -33,6 +33,8 @@ def _get_needed_environment_variables_nimrod() -> dict:
     if os.environ["NIMROD_COMP_5MIN"] == "True":
         radar_sources.append("Nimrod_comp_5min")
 
+    # Set NIMROD_WEIGHTS to True if any radar rainfall accumulation
+    # source has been selected.
     os.environ["NIMROD_WEIGHTS"] = "False"
     if (
         (os.environ["NIMROD_COMP_1KM"] == "True")
