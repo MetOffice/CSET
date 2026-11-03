@@ -484,10 +484,10 @@ def interpolate_to_point_cube(
 
         if "time" in [coord.name() for coord in fld_point_cube.coords(dim_coords=True)]:
             fv_cube.add_dim_coord(
-                point_cube.coord("time"), point_cube.coord_dims("time")[0]
+                fld_point_cube.coord("time"), fld_point_cube.coord_dims("time")[0]
             )
         if "forecast_period" in [
-            coord.name() for coord in point_cube.coords(dim_coords=True)
+            coord.name() for coord in fld_point_cube.coords(dim_coords=True)
         ]:
             original_fp_index = fld_point_cube.coord_dims("forecast_period")[0]
             original_frt_index = fld_point_cube.coord_dims("forecast_reference_time")[0]
