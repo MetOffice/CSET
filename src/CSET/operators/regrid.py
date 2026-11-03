@@ -439,7 +439,6 @@ def interpolate_to_point_cube(
     # Iterate over all cubes and regrid.
     for cube in iter_maybe(fld):
         y_coord, x_coord = get_cube_yxcoordname(cube)
-
         # Rotate point_cube coords if required to match model coord rotation.
         if (
             isinstance(
