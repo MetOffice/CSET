@@ -542,8 +542,13 @@ def test_power_spectrum_non_overlapping():
     cube1 = make_power_spectrum_cube()
     cube2 = cube1.copy()
 
+    # Create 2 cubes that do not overlap in any dimension
+
     cube1.coord("time").points = np.array([0, 1, 2], dtype=np.int32)
     cube2.coord("time").points = np.array([3, 4, 5], dtype=np.int32)
+
+    cube1.coord("forecast_reference_time").points = 0.0
+    cube2.coord("forecast_reference_time").points = 1.0
 
     cubes = iris.cube.CubeList([cube1, cube2])
 

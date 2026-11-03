@@ -267,9 +267,10 @@ def test_power_spectrum_cube_regular_latlon_coords(cubes, tmp_working_dir, caplo
     assert "longitude coordinates for grid spacing calculation." in caplog.text
 
 
-def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_times():
+def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_times_no_fp():
     """Check power spectrum can be calculated for multiple forecast reference times and realizations."""
-    # Create a cube with multiple realizations and forecast reference times.
+    # Create a cube with multiple realizations and forecast reference times but no
+    # forecast_period.
     data = np.random.rand(2, 3, 10, 10)
 
     # Define coordinates to add to cube
@@ -313,6 +314,74 @@ def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_t
         iris.coords.AuxCoord(
             [0, 1, 2],
             standard_name="forecast_reference_time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(1,),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=("Cube does not have forecast_period dimension. "),
+    ):
+        power_spectrum.calculate_power_spectrum(cube)
+
+
+def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_times_fp():
+    """Check power spectrum can be calculated for multiple forecast reference times and realizations."""
+    # Create a cube with multiple realizations and forecast reference times and time coord
+    # but not forecast_period. Concatenation will not work.
+    data = np.random.rand(2, 3, 10, 10)
+
+    # Define coordinates to add to cube
+    realization_coord = iris.coords.DimCoord(
+        [0, 1],
+        long_name="realization",
+        units="1",
+    )
+
+    fp_coord = iris.coords.DimCoord(
+        [0, 1, 2],
+        standard_name="forecast_period",
+        units="hours",
+    )
+
+    y_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_latitude",
+        units="degrees",
+    )
+
+    x_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_longitude",
+        units="degrees",
+    )
+
+    # Create cube for testing power spectrum code
+    cube = iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[
+            (realization_coord, 0),
+            (fp_coord, 1),
+            (y_coord, 2),
+            (x_coord, 3),
+        ],
+        long_name="test_data",
+    )
+
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2],
+            standard_name="forecast_reference_time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(1,),
+    )
+
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2],
+            standard_name="time",
             units="hours since 1970-01-01 00:00:00",
         ),
         data_dims=(1,),
@@ -380,10 +449,10 @@ def test_calculate_power_spectrum_raises_for_different_multi_point_times():
         units="1",
     )
 
-    time_coord = iris.coords.DimCoord(
+    fp_coord = iris.coords.DimCoord(
         [0, 1, 2, 3, 4, 5],
-        standard_name="time",
-        units="hours since 1970-01-01 00:00:00",
+        standard_name="forecast_period",
+        units="hours",
     )
 
     frt_coord = iris.coords.AuxCoord(
@@ -408,7 +477,7 @@ def test_calculate_power_spectrum_raises_for_different_multi_point_times():
         data,
         dim_coords_and_dims=[
             (realization_coord, 0),
-            (time_coord, 1),
+            (fp_coord, 1),
             (y_coord, 2),
             (x_coord, 3),
         ],
@@ -416,6 +485,16 @@ def test_calculate_power_spectrum_raises_for_different_multi_point_times():
             (frt_coord, (1,)),
         ],
         long_name="test_data",
+    )
+
+    # require time coord but attach as aux coord
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2, 3, 4, 5],
+            standard_name="time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(1,),
     )
 
     with pytest.raises(
