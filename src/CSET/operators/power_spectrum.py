@@ -292,6 +292,7 @@ def calculate_power_spectrum(
             if len(member_power_spectra) == 1:
                 combined_cube = member_power_spectra[0]
             else:
+                # will this ever be reached?
                 combined_cube = member_power_spectra.concatenate_cube()
 
         combined_cube = iris.util.squeeze(combined_cube)
