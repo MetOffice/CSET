@@ -678,3 +678,69 @@ def test_calculate_power_spectrum_no_frt():
     result = power_spectrum.calculate_power_spectrum(cube)
 
     assert result is not None
+
+
+def test_calculate_power_spectrum_frt_not_vary():
+    """Check power spectrum can be calculated without frt coord."""
+    # Create a cube with non-varying frt and varying realization
+    # Time coord is forecast_period.
+
+    data = np.random.rand(2, 3, 10, 10)
+
+    realization_coord = iris.coords.DimCoord(
+        [0, 1],
+        long_name="realization",
+        units="1",
+    )
+
+    fp_coord = iris.coords.DimCoord(
+        [0, 1, 2],
+        standard_name="forecast_period",
+        units="hours",
+    )
+
+    y_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_latitude",
+        units="degrees",
+    )
+
+    x_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_longitude",
+        units="degrees",
+    )
+
+    # Create cube for testing power spectrum code
+    cube = iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[
+            (realization_coord, 0),
+            (fp_coord, 1),
+            (y_coord, 2),
+            (x_coord, 3),
+        ],
+        long_name="test_data",
+    )
+
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2],
+            standard_name="time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(1,),
+    )
+
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 0, 0],
+            standard_name="forecast_reference_time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(1,),
+    )
+
+    result = power_spectrum.calculate_power_spectrum(cube)
+
+    assert result is not None
