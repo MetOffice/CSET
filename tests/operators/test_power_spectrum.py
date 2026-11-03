@@ -507,3 +507,66 @@ def test_calculate_power_spectrum_raises_for_different_multi_point_times():
         ),
     ):
         power_spectrum.calculate_power_spectrum(cube)
+
+
+def test_multiple_frts_matching_forecast_period():
+    """Check error raised when FRTs have different multi-point time coords."""
+    data = np.random.rand(2, 6, 10, 10)
+
+    realization_coord = iris.coords.DimCoord(
+        [0, 1],
+        long_name="realization",
+        units="1",
+    )
+
+    fp_coord = iris.coords.AuxCoord(
+        [0, 1, 2, 0, 1, 2],
+        standard_name="forecast_period",
+        units="hours",
+    )
+
+    frt_coord = iris.coords.AuxCoord(
+        [0, 0, 0, 6, 6, 6],
+        standard_name="forecast_reference_time",
+        units="hours since 1970-01-01 00:00:00",
+    )
+
+    y_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_latitude",
+        units="degrees",
+    )
+
+    x_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_longitude",
+        units="degrees",
+    )
+
+    cube = iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[
+            (realization_coord, 0),
+            (y_coord, 2),
+            (x_coord, 3),
+        ],
+        aux_coords_and_dims=[
+            (fp_coord, (1,)),
+            (frt_coord, (1,)),
+        ],
+        long_name="test_data",
+    )
+
+    # require time coord but attach as aux coord
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2, 6, 7, 8],
+            standard_name="time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(1,),
+    )
+
+    result = power_spectrum.calculate_power_spectrum(cube)
+
+    assert result is not None
