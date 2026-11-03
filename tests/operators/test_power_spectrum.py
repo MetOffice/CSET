@@ -328,8 +328,9 @@ def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_t
 
 def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_times_fp():
     """Check power spectrum can be calculated for multiple forecast reference times and realizations."""
-    # Create a cube with multiple realizations and forecast reference times and time coord
-    # but not forecast_period. Concatenation will not work.
+    # Create a cube with multiple realizations and forecast reference times
+    # Time coord in forecast_period.
+
     data = np.random.rand(2, 3, 10, 10)
 
     # Define coordinates to add to cube
@@ -510,7 +511,7 @@ def test_calculate_power_spectrum_raises_for_different_multi_point_times():
 
 
 def test_multiple_frts_matching_forecast_period():
-    """Check error raised when FRTs have different multi-point time coords."""
+    """Check for success when multiple frt have matching forecast_period."""
     data = np.random.rand(2, 6, 10, 10)
 
     realization_coord = iris.coords.DimCoord(
@@ -562,6 +563,123 @@ def test_multiple_frts_matching_forecast_period():
         iris.coords.AuxCoord(
             [0, 1, 2, 6, 7, 8],
             standard_name="time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(1,),
+    )
+
+    result = power_spectrum.calculate_power_spectrum(cube)
+
+    assert result is not None
+
+
+def test_calculate_power_spectrum_no_realizations_or_forecast_reference_times():
+    """Check power spectrum can be calculated without realizations or frt coords."""
+    # Create a cube forecast reference times but no realization coord
+    # Time coord is forecast_period.
+
+    data = np.random.rand(3, 10, 10)
+
+    fp_coord = iris.coords.DimCoord(
+        [0, 1, 2],
+        standard_name="forecast_period",
+        units="hours",
+    )
+
+    y_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_latitude",
+        units="degrees",
+    )
+
+    x_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_longitude",
+        units="degrees",
+    )
+
+    # Create cube for testing power spectrum code
+    cube = iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[
+            (fp_coord, 0),
+            (y_coord, 1),
+            (x_coord, 2),
+        ],
+        long_name="test_data",
+    )
+
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2],
+            standard_name="time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(0,),
+    )
+
+    result = power_spectrum.calculate_power_spectrum(cube)
+
+    assert result is not None
+
+
+def test_calculate_power_spectrum_non_varying_realization_with_varying_frt():
+    """Check power spectrum can be calculated with non varying realization."""
+    # Create a cube forecast reference times 1 realization coord
+    # and varying frt
+    # Time coord is forecast_period.
+
+    data = np.random.rand(1, 3, 10, 10)
+
+    realization_coord = iris.coords.DimCoord(
+        [0],
+        long_name="realization",
+        units="1",
+    )
+
+    fp_coord = iris.coords.DimCoord(
+        [0, 1, 2],
+        standard_name="forecast_period",
+        units="hours",
+    )
+
+    y_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_latitude",
+        units="degrees",
+    )
+
+    x_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_longitude",
+        units="degrees",
+    )
+
+    # Create cube for testing power spectrum code
+    cube = iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[
+            (realization_coord, 0),
+            (fp_coord, 1),
+            (y_coord, 2),
+            (x_coord, 3),
+        ],
+        long_name="test_data",
+    )
+
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2],
+            standard_name="time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(1,),
+    )
+
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2],
+            standard_name="forecast_reference_time",
             units="hours since 1970-01-01 00:00:00",
         ),
         data_dims=(1,),
