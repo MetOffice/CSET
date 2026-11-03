@@ -1657,3 +1657,48 @@ def make_frt_cube():
         )
 
     return _make_cube
+
+
+@pytest.fixture
+def make_multi_frt_cube():
+    """Make a minimal (frt, forecast_period, grid_latitude, grid_longitude) cube.
+
+    time is a 2D aux coord equal to forecast_reference_time + forecast_period.
+    """
+    TIME_UNITS = "hours since 1970-01-01 00:00:00"
+
+    def _make(frts=(0, 12), lead_hours=(0, 1, 2), shape=(2, 2)):
+        frt = np.array(frts, dtype=float)
+        fp = np.array(lead_hours, dtype=float)
+        lat = np.arange(shape[0], dtype=float)
+        lon = np.arange(shape[1], dtype=float)
+        cube = Cube(
+            np.zeros((len(frt), len(fp), *shape)),
+            dim_coords_and_dims=[
+                (
+                    DimCoord(
+                        frt, standard_name="forecast_reference_time", units=TIME_UNITS
+                    ),
+                    0,
+                ),
+                (DimCoord(fp, standard_name="forecast_period", units="hours"), 1),
+                (DimCoord(lat, standard_name="grid_latitude", units="degrees"), 2),
+                (DimCoord(lon, standard_name="grid_longitude", units="degrees"), 3),
+            ],
+            aux_coords_and_dims=[
+                (
+                    AuxCoord(frt[:, None] + fp, standard_name="time", units=TIME_UNITS),
+                    (0, 1),
+                ),
+            ],
+        )
+        cs = iris.coord_systems.RotatedGeogCS(
+            grid_north_pole_latitude=37.5,
+            grid_north_pole_longitude=177.5,
+            ellipsoid=iris.coord_systems.GeogCS(6371229.0),
+        )
+        cube.coord("grid_latitude").coord_system = cs
+        cube.coord("grid_longitude").coord_system = cs
+        return cube
+
+    return _make

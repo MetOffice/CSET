@@ -526,6 +526,39 @@ def test_regrid_to_point_cube_latlon(cube):
     assert regrid_cube.data.mask.all()
 
 
+def test_regrid_to_point_cube_latlot_with_frt(make_multi_frt_cube):
+    """Test regridding 2D Cube to 1D Cube of lat/lon points with frt + forecast_period."""
+    cube = make_multi_frt_cube(shape=(20, 20))
+    point_cube = collapse.collapse(cube, ["grid_latitude"], "MEAN")
+    point_cube.remove_coord("grid_latitude")
+    point_cube.coord("grid_longitude").rename("station")
+    point_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            np.arange(len(point_cube.coord("station").points)).astype(str),
+            var_name="Station_Name",
+        ),
+        2,
+    )
+    point_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            cube.coord("grid_latitude").points[0:20], var_name="latitude"
+        ),
+        2,
+    )
+    point_cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            cube.coord("grid_longitude").points[0:20], var_name="longitude"
+        ),
+        2,
+    )
+    regrid_cube = regrid.interpolate_to_point_cube(cube, point_cube)
+    # Assert regridded cube has shape of point_cube.
+    assert isinstance(regrid_cube, iris.cube.Cube)
+    assert regrid_cube.shape == point_cube.shape
+    # Assert masked output as grid_lat, grid_lon data cube not overlapping with lat, lon point_cube
+    assert regrid_cube.data.mask.all()
+
+
 def test_vertical_interpolation(model_level_cube):
     """Test cube is vertically interpolated to a different level set."""
     # Create a target cube.
