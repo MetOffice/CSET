@@ -32,12 +32,15 @@ def _get_needed_environment_variables_nimrod() -> dict:
         radar_sources.append("Nimrod_comp_2km")
     if os.environ["NIMROD_COMP_5MIN"] == "True":
         radar_sources.append("Nimrod_comp_5min")
+
+    os.environ["NIMROD_WEIGHTS"] = "False"
     if (
         (os.environ["NIMROD_COMP_1KM"] == "True")
         or (os.environ["NIMROD_COMP_2KM"] == "True")
         or (os.environ["NIMROD_COMP_5KM"] == "True")
     ):
         os.environ["NIMROD_WEIGHTS"] = "True"
+
     variables = {
         "field": radar_sources,
         "weights": os.environ["NIMROD_WEIGHTS"],
