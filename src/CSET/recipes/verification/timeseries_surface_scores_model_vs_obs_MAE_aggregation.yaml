@@ -1,5 +1,5 @@
 category: Surface Model versus Observation Time Series Aggregation
-title: "$VARNAME\nscores MAE time series for model vs observation points $SUBAREA_NAME aggregation by $AGGREGATION_MODE"
+title: "$VARNAME\nscores MAE time series for model vs observation points aggregated by $AGGREGATION_MODE $SUBAREA_NAME"
 description: |
   The MAE is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.mae).
