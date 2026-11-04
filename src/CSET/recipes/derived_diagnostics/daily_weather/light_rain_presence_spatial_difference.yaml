@@ -24,7 +24,7 @@ steps:
 
   - operator: misc.extract_common_time_points
 
-  - operator: misc.multiplication
+  - operator: maths.multiplication
     multiplicand:
         operator: filters.generate_mask
         condition: 'gt'
