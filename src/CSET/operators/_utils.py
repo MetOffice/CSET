@@ -610,6 +610,57 @@ def calc_array_stats(
     return array_min, array_max, array_mean
 
 
+def sort_cube_by_station_name(cube: iris.cube.Cube) -> iris.cube.Cube:
+    """Sort a cube along one dimension by the values of a coordinate.
+
+    Reordering makes the dimension's dim coord non-monotonic, so Iris
+    demotes it to an aux coord (keeping its values and metadata). A fresh
+    0..N-1 index named '<dim coord name>_index' becomes the new dim coord.
+    """
+    if not cube.coords("Station_Name"):
+        return cube
+
+    coord = cube.coord("Station_Name")
+    (dim,) = cube.coord_dims(coord)
+
+    # save the coords name
+    dim_coords = cube.coords(dimensions=dim, dim_coords=True)
+    dim_station_name = dim_coords[0].name() if dim_coords else None
+
+    order = sorted(
+        range(len(coord.points)), key=lambda i: natural_sort_key(coord.points[i])
+    )
+
+    index = [slice(None)] * cube.ndim
+    index[dim] = np.array(order)
+    sorted_cube = cube[tuple(index)]
+
+    if dim_station_name is not None and not sorted_cube.coords(
+        dimensions=dim, dim_coords=True
+    ):
+        sorted_cube.add_dim_coord(
+            iris.coords.DimCoord(
+                np.arange(len(order), dtype=np.int32),
+                long_name=f"{dim_station_name}_index",
+                units="1",
+            ),
+            dim,
+        )
+    return sorted_cube
+
+
+def split_text_and_numbers(text):
+    """Split into alternating text and integer chunks: 'a10b' -> ('a', 10, 'b')."""
+    parts = re.compile(r"(\d+)").split(text)
+    return tuple(int(p) if i % 2 else p for i, p in enumerate(parts))
+
+
+def natural_sort_key(value):
+    text = str(value)
+    chunks = split_text_and_numbers(text.strip().casefold())
+    return chunks, text
+
+
 def get_time_coord(cube: Cube | CubeList) -> str | None:
     """Return the time coordinate name or None if no time coordinate is found."""
     cube = cube[0] if isinstance(cube, CubeList) else cube
