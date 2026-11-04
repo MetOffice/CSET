@@ -306,7 +306,7 @@ def extract_common_time_points(cubes: CubeList | Cube) -> CubeList | Cube:
     -------
     CubeList | Cube
         Either cubes containing only the time points common to all inputs
-        or original cube/cube list (no op if single cube or cubelsit of length 1 given)
+        or original cube/cube list (no op if single cube or cubelist of length 1 given)
 
     Raises
     ------
