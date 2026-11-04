@@ -1,0 +1,13 @@
+# Verpy plotting for precip verification at NCI
+
+[VerPyPlot_precip_ts]
+comment = precip_ts
+jobid = precip_ts
+metadata = precip_ts/index
+system = MET
+type = cnt
+truth = Surface Obs
+stats = ["ME (FcVsObs)"]
+param = ["apcp @ 3"]
+interp = NEAREST
+output = fcrseries
