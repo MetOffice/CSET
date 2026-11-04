@@ -24,7 +24,7 @@ steps:
     coordinate: [time]
     method: $METHOD
 
-  - operator: misc.subtraction
+  - operator: maths.subtraction
     minuend:
         operator: regrid.interpolate_to_point_cube
         fld:
