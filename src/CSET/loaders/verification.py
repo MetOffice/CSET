@@ -324,3 +324,74 @@ def load(conf: Config):
                 model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=False,
             )
+
+    if conf.HINTON_RMSE:
+        # Skip obs and control model, and iterate over experiments.
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="hinton_rmse.yaml",
+                variables={
+                    "BASE_MODEL": models[0]["name"],
+                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=["OBS", models[0]["id"], model["id"]],
+                aggregation=True,
+            )
+
+    if conf.HINTON_MSE:
+        # Skip obs and control model, and iterate over experiments.
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="hinton_mse.yaml",
+                variables={
+                    "BASE_MODEL": models[0]["name"],
+                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=["OBS", models[0]["id"], model["id"]],
+                aggregation=True,
+            )
+
+    if conf.HINTON_CRPS:
+        # Skip obs and control model, and iterate over experiments.
+        for model in models[1:]:
+            yield RawRecipe(
+                recipe="hinton_crps.yaml",
+                variables={
+                    "BASE_MODEL": models[0]["name"],
+                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=["OBS", models[0]["id"], model["id"]],
+                aggregation=True,
+            )
+
+    if conf.SCORES_TIMESERIES_RMSE_MODEL_VS_OBS_AGGREGATION:
+        for field in conf.POINT_OBS_FIELDS:
+            yield RawRecipe(
+                recipe="timeseries_surface_scores_model_vs_obs_RMSE_aggregation.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=["OBS"] + [model["id"] for model in models],
+                aggregation=True,
+            )
