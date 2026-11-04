@@ -49,6 +49,7 @@ from CSET.operators import (
     scoreswrappers,
     temperature,
     transect,
+    vorticity,
     wind,
     write,
 )
@@ -80,6 +81,7 @@ __all__ = [
     "scoreswrappers",
     "temperature",
     "transect",
+    "vorticity",
     "wind",
     "write",
 ]
