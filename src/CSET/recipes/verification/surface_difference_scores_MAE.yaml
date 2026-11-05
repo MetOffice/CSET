@@ -48,6 +48,8 @@ steps:
 
     # The preserved coordinates specifies whether or not the
     # MAE is to be computed over the entire case study.
+  - operator: misc.extract_common_time_points
+
   - operator: scoreswrappers.scores_mae
     preserved_coordinates: $PRESERVED_COORDS
 

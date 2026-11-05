@@ -41,6 +41,8 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
+  - operator: misc.extract_common_time_points
+
     # The preserved coordinates specifies whether or not the
     # ME is to be computed over the entire case study.
   - operator: scoreswrappers.scores_additive_bias
