@@ -31,6 +31,7 @@ import iris.cube
 import iris.exceptions
 import iris.util
 import numpy as np
+from iris.cube import Cube, CubeList
 from iris.time import PartialDateTime
 
 from CSET._common import iter_maybe
@@ -607,3 +608,54 @@ def calc_array_stats(
         array_max = np.nanmax(array)
         array_mean = np.nanmean(array)
     return array_min, array_max, array_mean
+
+
+def get_time_coord(cube: Cube | CubeList) -> str | None:
+    """Return the time coordinate name or None if no time coordinate is found."""
+    cube = cube[0] if isinstance(cube, CubeList) else cube
+    for name in ("time", "hour"):
+        coords = cube.coords(name)
+        if coords and len(coords[0].points) > 1:
+            return name
+    return None
+
+
+def ensure_common_time_points(base: Cube, other: Cube):
+    """If a time coordinate is present, raise if base and other don't have the same time points."""
+    time_coord = get_time_coord(base)
+    if not time_coord:
+        return
+    shared_times = get_shared_times(
+        base, other, time_coord
+    )  # raises if no shared times
+    n_base = len(base.coord(time_coord).points)
+    n_other = len(other.coord(time_coord).points)
+    if not len(shared_times) == n_base == n_other:
+        raise ValueError("Base and other cubes have different time points.")
+
+
+def get_shared_times(base: Cube, other: Cube, time_coord: str) -> set[int]:
+    """Extract common time points from cubes to allow comparison."""
+    # Get the name of the first non-scalar time coordinate.
+    base_time_coord = base.coord(time_coord)
+    other_time_coord = other.coord(time_coord)
+    logger.debug("Base: %s\nOther: %s", base_time_coord, other_time_coord)
+    if time_coord == "hour":
+        # We directly compare points when comparing coordinates with
+        # non-absolute units, such as hour. We can't just check the units are
+        # equal as iris automatically converts to datetime objects in the
+        # comparison for certain coordinate names.
+        base_times = base_time_coord.points
+        other_times = other_time_coord.points
+        shared_times = set.intersection(set(base_times), set(other_times))
+    else:
+        # Units don't match, so converting to datetimes for comparison.
+        base_times = base_time_coord.units.num2date(base_time_coord.points)
+        other_times = other_time_coord.units.num2date(other_time_coord.points)
+        shared_times = set.intersection(set(base_times), set(other_times))
+
+    logger.debug("Shared times: %s", shared_times)
+
+    if not shared_times:
+        raise ValueError("No common time points found!")
+    return shared_times

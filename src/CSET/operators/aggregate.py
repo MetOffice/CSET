@@ -200,7 +200,6 @@ def ensure_aggregatable_across_cases(
                 aggregatable_cube,
             )
         aggregatable_cubes.append(aggregatable_cube)
-
     return aggregatable_cubes
 
 

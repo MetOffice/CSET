@@ -29,6 +29,8 @@ steps:
     method: 'MAX'
     window: 24
 
+  - operator: misc.extract_common_time_points
+
   - operator: misc.difference
 
   - operator: aggregate.add_hour_coordinate
