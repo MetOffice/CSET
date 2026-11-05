@@ -19,9 +19,9 @@ def setup_verpy():
     from VerPy.stats import MET_STAT_IDS, get_statistic
 
     # Compute errors from MPR, adapting SL1L2 partial sums
-    me = get_statistic(stat=7051, system='MET', filetype='sl1l2')
-    me["type"] = 'mpr'
-    me["requires"] = [10-6000, 10-4000]
+    me = get_statistic(stat=7051, system="MET", filetype="sl1l2")
+    me["type"] = "mpr"
+    me["requires"] = [10 - 6000, 10 - 4000]
     MET_STAT_IDS.append(me)
 
 
@@ -43,7 +43,9 @@ def main():
     parser.add_argument("--start", required=True)
     parser.add_argument("--end", required=True)
     parser.add_argument("--expids", required=True, nargs="+")
-    parser.add_argument("--image-meta-tag", action="store_true", help="Index with image-meta-tag")
+    parser.add_argument(
+        "--image-meta-tag", action="store_true", help="Index with image-meta-tag"
+    )
 
     args = parser.parse_args()
 
@@ -86,7 +88,7 @@ def main():
             "category": "Metplus plots",
         }
         with open(f"{args.outdir}/meta.json", "wt") as jf:
-            json.dump(metadata, jf, indent=2)
+            json.dump(metadata_dict, jf, indent=2)
 
 
 if __name__ == "__main__":
