@@ -23,7 +23,7 @@ steps:
                 operator: constraints.generate_cell_methods_constraint
                 cell_methods: []
     masks:
-        operator: misc.addition
+        operator: maths.addition
         addend_1:
             operator: filters.generate_mask
             mask_field:
