@@ -75,3 +75,17 @@ output = roebber
 compare_on_plot = fcrs
 fcrs = [600, 1200, 1800, 2400]
 plottheme = split
+
+[VerPyPlot_surface_roebber]
+comment = surface_roebber
+jobid = surface_roebber
+system = MET
+type = ctc
+stats = [7921, 7922, 7923]
+truth = Surface Obs
+param = ["RH"]
+interp = NEAREST
+output = roebber
+compare_on_plot = fcrs
+fcrs = [600, 1200, 1800, 2400]
+plottheme = split
