@@ -28,6 +28,7 @@
     # Family grouping all metplus Post-processing
         inherit = METPLUS
         script = """
+            # Loop over all output streams created by metplus
             INPUT_DIR=${CYLC_TASK_SHARE_CYCLE_DIR}/${MET_TOOL}_${MODEL_NAME}
             STAT_TYPE_LIST="$(ls ${INPUT_DIR} | sed -n 's/.*_\(\S\+\)\.txt/\1/p' | sort -u)"
             for STAT_TYPE in ${STAT_TYPE_LIST}; do
@@ -44,8 +45,8 @@
     # Family grouping for all VerPy metloader tasks
         inherit = METPLUS
         script = """
+            # Loop over all output streams created by metplus
             INPUT_DIR=${CYLC_WORKFLOW_SHARE_DIR}/${MET_TOOL}/${MODEL_NAME}
-
             for STAT_TYPE in $(ls $INPUT_DIR); do
                 export STAT_TYPE
                 export SOURCE=$INPUT_DIR/$STAT_TYPE
