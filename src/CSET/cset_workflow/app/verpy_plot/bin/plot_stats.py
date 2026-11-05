@@ -78,6 +78,8 @@ def main():
         metadata_dict = {
             "title": "Metplus Point Stat plots",
             "category": "Metplus plots",
+            "jobid": options["jobid"],
+            "output": options["output"],
         }
         with open(json_filename, "w") as jf:
             json.dump(metadata_dict, jf, indent=2)
