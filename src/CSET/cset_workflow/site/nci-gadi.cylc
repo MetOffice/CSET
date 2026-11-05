@@ -1,6 +1,6 @@
 {% set PROJECT = PROJECT | default(environ['PROJECT']) %}
 {% set VERPY_DIR = VERPY_DIR | default("/g/data/dp9/saw562/ver/verpy") %}
-{% set CSET_VERSION = "26.9.0" %}
+{% set CSET_MODULE_VERSION = "26.9.1" %}
 
 # Site configuration for NCI Gadi
 #
@@ -14,14 +14,33 @@
 #   CUSTOM_ODB2_PATTERN # Path to custom ODB2 files if using
 #                       # 'custom' system
 #
-# Leave METPLUS_FCST_DIR and METPLUS_OBS_DIR unset
+#  Leave METPLUS_FCST_DIR and METPLUS_OBS_DIR unset
+
+{% set ODB2_PATTERNS = {
+    "access_c3_ad": "/g/data/ig2/odb2/access_c3/%Y/%m/%Y%m%dT%H%MZ/%Y%m%dT%H%MZ_ad_odb2.tar.zst@ukv_odb2/aircraftsondesurface.odb",
+    "access_c3_bn": "/g/data/ig2/odb2/access_c3/%Y/%m/%Y%m%dT%H%MZ/%Y%m%dT%H%MZ_bn_odb2.tar.zst@ukv_odb2/aircraftsondesurface.odb",
+    "access_c3_dn": "/g/data/ig2/odb2/access_c3/%Y/%m/%Y%m%dT%H%MZ/%Y%m%dT%H%MZ_dn_odb2.tar.zst@ukv_odb2/aircraftsondesurface.odb",
+    "access_c3_nq": "/g/data/ig2/odb2/access_c3/%Y/%m/%Y%m%dT%H%MZ/%Y%m%dT%H%MZ_nq_odb2.tar.zst@ukv_odb2/aircraftsondesurface.odb",
+    "access_c3_ph": "/g/data/ig2/odb2/access_c3/%Y/%m/%Y%m%dT%H%MZ/%Y%m%dT%H%MZ_ph_odb2.tar.zst@ukv_odb2/aircraftsondesurface.odb",
+    "access_c3_sy": "/g/data/ig2/odb2/access_c3/%Y/%m/%Y%m%dT%H%MZ/%Y%m%dT%H%MZ_sy_odb2.tar.zst@ukv_odb2/aircraftsondesurface.odb",
+    "access_c3_vt": "/g/data/ig2/odb2/access_c3/%Y/%m/%Y%m%dT%H%MZ/%Y%m%dT%H%MZ_vt_odb2.tar.zst@ukv_odb2/aircraftsondesurface.odb",
+    "access_c4_ad": "/g/data/ig2/odb2/access_c4/%Y/%m/%Y%m%dT%H%MZ/%Y%m%dT%H%MZ_ad_odb2.tgz@ukv_odb2/aircraftsondesurface.odb",
+    "access_c4_bn": "/g/data/ig2/odb2/access_c4/%Y/%m/%Y%m%dT%H%MZ/%Y%m%dT%H%MZ_bn_odb2.tgz@ukv_odb2/aircraftsondesurface.odb",
+    "access_c4_dn": "/g/data/ig2/odb2/access_c4/%Y/%m/%Y%m%dT%H%MZ/%Y%m%dT%H%MZ_dn_odb2.tgz@ukv_odb2/aircraftsondesurface.odb",
+    "access_c4_nq": "/g/data/ig2/odb2/access_c4/%Y/%m/%Y%m%dT%H%MZ/%Y%m%dT%H%MZ_nq_odb2.tgz@ukv_odb2/aircraftsondesurface.odb",
+    "access_c4_ph": "/g/data/ig2/odb2/access_c4/%Y/%m/%Y%m%dT%H%MZ/%Y%m%dT%H%MZ_ph_odb2.tgz@ukv_odb2/aircraftsondesurface.odb",
+    "access_c4_sy": "/g/data/ig2/odb2/access_c4/%Y/%m/%Y%m%dT%H%MZ/%Y%m%dT%H%MZ_sy_odb2.tgz@ukv_odb2/aircraftsondesurface.odb",
+    "access_c4_vt": "/g/data/ig2/odb2/access_c4/%Y/%m/%Y%m%dT%H%MZ/%Y%m%dT%H%MZ_vt_odb2.tgz@ukv_odb2/aircraftsondesurface.odb",
+    "access_g4": "/g/data/ig2/odb2/access_g4/%Y/%m/%Y%m%dT%H%MZ/glm_odb2/surface.odb.zst",
+    "custom": CUSTOM_ODB2_PATTERN | default("/dev/null"),
+} %}
 
 [runtime]
     [[root]]
         platform = gadi_background
         init-script = """
             module use /g/data/access/ngm/modules
-            module load cset/{{CSET_VERSION}}
+            module load cset/{{CSET_MODULE_VERSION}}
             """
         [[[ environment ]]]
             PROJECT = {{ PROJECT }}
@@ -36,11 +55,12 @@
         [[[ directives ]]]
             -P          = {{ PROJECT }}
             -q          = normal
-            -l ncpus    = 1
-            -l mem      = 4gb
+            -l ncpus    = 12
+            -l mem      = 48gb
             -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/ig2+scratch/dx2
             -W umask    = 0022
         [[[ environment ]]]
+            OMP_NUM_THREADS = $PBS_NCPUS
             ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
             # Shift valid times in METplus by this many seconds
             METPLUS_FCST_SHIFT  = {{METPLUS_FCST_SHIFT | default(0)}}
@@ -50,18 +70,7 @@
         {% else %}
             PYTHONPATH = {{VERPY_DIR}}
         {% endif %}
-
-    [[metplus_prep_obs]]
-        [[[ environment ]]]
-            OBS_TIMES = R{{ANALYSIS_LENGTH | duration_as('h') | int }}/$CYLC_TASK_CYCLE_POINT/PT1H
-        {% if METPLUS_OBS_SYSTEM != "custom" %}
-            # Forecast system to pull obs from (e.g. 'access_c3_dn')
-            METPLUS_OBS_SYSTEM = {{METPLUS_OBS_SYSTEM}}
-        {% else %}
-            # Read direct from ODB2 files
-            ROSE_APP_OPT_CONF_KEYS = "odb2"
-            CUSTOM_ODB2_PATTERN = {{CUSTOM_ODB2_PATTERN}}
-        {% endif %}
+            ODB2_TEMPLATE = {{ODB2_PATTERNS[METPLUS_OBS_SYSTEM]}}
 {% endif %}
 
     [[bake_recipes]]
