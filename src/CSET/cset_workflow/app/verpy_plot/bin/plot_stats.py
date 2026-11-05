@@ -15,10 +15,10 @@ import VerPy.conf2opts
 
 
 def setup_verpy():
-    """Custom Verpy configs."""
+    """Customise Verpy configs."""
     from VerPy.stats import MET_STAT_IDS, get_statistic
 
-    # Compute errors from MPR, adapting sl1l2 partial sums
+    # Compute errors from MPR, adapting SL1L2 partial sums
     me = get_statistic(stat=7051, system='MET', filetype='sl1l2')
     me["type"] = 'mpr'
     me["requires"] = [10-6000, 10-4000]
@@ -44,18 +44,13 @@ def main():
     parser.add_argument("--end", required=True)
     parser.add_argument("--expids", required=True, nargs="+")
     parser.add_argument("--image-meta-tag", action="store_true", help="Index with image-meta-tag")
-    parser.add_argument("--metadata", type=json.loads, default={"title": "Metplus plots"})
 
     args = parser.parse_args()
 
     os.makedirs(args.outdir, exist_ok=True)
-
     setup_verpy()
 
     opts_dicts, scard_dict = VerPy.conf2opts.conf2opts(args.conf)
-
-    metadata = args.metadata
-    metadata["category"] = "Metplus Plot"
 
     for options in opts_dicts:
         options["start"] = args.start
@@ -63,17 +58,11 @@ def main():
         options["expids"] = args.expids
 
         if options["system"] == "MET":
+            # Set up the database path for the current line type
             stream = options["type"]
             options["source"] = (
                 f"{os.getenv('MET_TOOL')}_{stream}@{os.getenv('DB_DIR')}/{stream}.db"
             )
-
-            # # Translate to MPR to SBV
-            # if options["type"] == "mpr":
-            #     options["system"] = "SDD"
-
-            #     if "fcrs" not in options:
-            #         options["fcrs"] = range(0, int(os.environ["FORECAST_LENGTH"])*100, 100)
 
         if args.image_meta_tag:
             options["metadata"] = "index"
@@ -81,15 +70,21 @@ def main():
         print(f"Options Dictionary: {options}")
         VerPy.job.run(args.outdir, options)
 
-        if not args.image_meta_tag:
-            # Create a json metadata file in outdir
-            json_filename = f"{args.outdir}/{options['jobid']}/meta.json"
-            print(f"writing metadata to json file: {json_filename}")
-            metadata_dict = {'jobid': options['jobid'], **metadata}
-            with open(json_filename, "w") as jf:
-                json.dump(metadata_dict, jf, indent=2)
+        # Create a json metadata file in outdir
+        json_filename = f"{args.outdir}/{options['jobid']}/meta.json"
+        print(f"writing metadata to json file: {json_filename}")
+        metadata_dict = {
+            "title": "Metplus Point Stat plots",
+            "category": "Metplus plots",
+        }
+        with open(json_filename, "w") as jf:
+            json.dump(metadata_dict, jf, indent=2)
 
     if args.image_meta_tag:
+        metadata_dict = {
+            "title": "Metplus ImageMetaTag",
+            "category": "Metplus plots",
+        }
         with open(f"{args.outdir}/meta.json", "wt") as jf:
             json.dump(metadata, jf, indent=2)
 
