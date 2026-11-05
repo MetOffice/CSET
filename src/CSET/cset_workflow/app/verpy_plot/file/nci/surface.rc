@@ -62,9 +62,9 @@ fcrs = [600, 1200, 1800, 2400]
 plottheme = split
 tayloropts = ['crmse_contour', 'normalized']
 
-[VerPyPlot_surface_roebber]
+[VerPyPlot_surface_roebber_tmp]
 comment = surface_roebber
-jobid = surface_roebber
+jobid = surface_roebber_tmp
 system = MET
 type = ctc
 stats = [7921, 7922, 7923]
@@ -76,9 +76,9 @@ compare_on_plot = fcrs
 fcrs = [600, 1200, 1800, 2400]
 plottheme = split
 
-[VerPyPlot_surface_roebber]
+[VerPyPlot_surface_roebber_rh]
 comment = surface_roebber
-jobid = surface_roebber
+jobid = surface_roebber_rh
 system = MET
 type = ctc
 stats = [7921, 7922, 7923]
