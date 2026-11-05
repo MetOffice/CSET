@@ -52,6 +52,34 @@ def generate_stash_constraint(stash: str, **kwargs) -> iris.AttributeConstraint:
     return stash_constraint
 
 
+def generate_prefix_constraint(varname, **kwargs):
+    """Generate a constraint for cube variable names with a given prefix.
+
+    The constraint selects cubes whose ``var_name`` starts with ``varname``.
+
+    Arguments
+    ---------
+    varname: str
+        Prefix to match against each cube's variable name.
+
+    Returns
+    -------
+    constraint: iris.Constraint
+        Constraint that selects matching cubes.
+    """
+
+    def matcher(cube):
+        print(
+            "CHECK",
+            cube.var_name,
+            cube.long_name,
+            cube.attributes.get("height"),
+        )
+        return cube.var_name is not None and cube.var_name.startswith(varname)
+
+    return iris.Constraint(cube_func=matcher)
+
+
 def generate_var_constraint(varname: str | list[str], **kwargs) -> iris.Constraint:
     """Generate constraint from variable name or STASH code.
 

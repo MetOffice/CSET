@@ -248,6 +248,9 @@ def test_process_cubes_for_verification_equalise_pressure(
     cube1 = transect_source_cube_readonly.copy()
     cube2 = transect_source_cube_readonly.copy()
 
+    cube1.attributes["model_name"] = "model1"
+    cube2.attributes["model_name"] = "model2"
+
     out = scoreswrappers._process_cubes_for_verification(cube1, cube2)
 
     assert np.allclose(
