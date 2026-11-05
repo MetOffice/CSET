@@ -288,7 +288,7 @@ def difference(cubes: CubeList):
     return difference
 
 
-def extract_common_time_points(cubes: CubeList) -> CubeList:
+def extract_common_time_points(cubes: CubeList | Cube) -> CubeList | Cube:
     """Return cubes restricted to their common time points.
 
     If the first cube has more than one FRT point, every cube must have identical
@@ -299,13 +299,14 @@ def extract_common_time_points(cubes: CubeList) -> CubeList:
 
     Parameters
     ----------
-    cubes: CubeList
+    cubes: CubeList | Cube
         Cubes to align in time. The first cube is used as the reference.
 
     Returns
     -------
-    CubeList
-        Cubes containing only the time points common to all inputs.
+    CubeList | Cube
+        Either cubes containing only the time points common to all inputs
+        or original cube/cube list (no op if single cube or cubelist of length 1 given)
 
     Raises
     ------
@@ -314,6 +315,10 @@ def extract_common_time_points(cubes: CubeList) -> CubeList:
         lacks a forecast_reference_time coordinate or has different FRT
         values (compared element-wise, so order matters).
     """
+    if isinstance(cubes, Cube) or len(cubes) == 1:
+        logger.debug("Only one cube provided, skipping equalisation.")
+        return cubes
+
     multi_frt = any(
         len(c.coord("forecast_reference_time").points) > 1
         for c in cubes
@@ -380,7 +385,6 @@ def _extract_common_time_points_one_frt(cubes: CubeList) -> CubeList:
 
     for other in iter_maybe(others):
         list_shared_times.append(get_shared_times(base, other, time_coord))
-
     shared_times_all = reduce(lambda x, y: x.intersection(y), list_shared_times)
 
     logger.debug("Shared times: %s", shared_times_all)

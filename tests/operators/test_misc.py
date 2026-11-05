@@ -554,3 +554,12 @@ def test_multiple_frt_common_time_coords_one_cube_no_frt(long_forecast_many_cube
         ValueError, match="All cubes must have a forecast_reference_time coordinate."
     ):
         misc.extract_common_time_points(cube_list_all)
+
+
+def test_extract_common_time_points_single_cube(cube):
+    """Test when single cube is given to extract_common_time_points."""
+    cb = cube.copy()
+    cb_list = CubeList([cb])
+
+    assert cb == misc.extract_common_time_points(cb)
+    assert cb_list == misc.extract_common_time_points(cb_list)
