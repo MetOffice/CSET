@@ -29,13 +29,14 @@ steps:
 
   - operator: aggregate.ensure_aggregatable_across_cases
 
+  - operator: misc.extract_common_time_points
+
   - operator: collapse.collapse
     coordinate: time
     method: MEAN
 
   - operator: misc.extract_common_points
     coordinate: $VERTICAL_COORDINATE
-
 
   - operator: misc.difference
 

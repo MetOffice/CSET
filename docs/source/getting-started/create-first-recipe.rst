@@ -28,8 +28,8 @@ YAML. Indentation should be done with two spaces.
 Making a new recipe
 -------------------
 
-We will now create a recipe from scratch. This recipe will plot a specific
-timestamp of the example air temperature data.
+We will now create a recipe from scratch. This recipe will plot the mean air
+temperature across the time coordinate of the example data.
 
 Start by opening a new file in your favourite text editor, and save it somewhere
 accessible as ``surface_air_temperature_spatial_plot.yaml``.
@@ -96,9 +96,12 @@ to the input data as its implicit input.
         file_paths: "$INPUT_PATHS"
 
 
-Once we have read the data, we need to filter them down to the data we require
-for our computations. ``filter.filter_cubes`` is the operator for that. It also
-ensures that the CubeList returned by ``read.read_cubes`` is turned into a Cube.
+Once we have read the data, we need to select the particular meteorological
+field we want to process. A NetCDF file may contain multiple variables,
+or different versions of the same variable (such as instantaneous and
+time-averaged fields). The ``filters.filter_cubes`` operator applies
+constraints to select the required field, converting the CubeList
+returned by ``read.read_cubes`` into a single Cube.
 
 .. code-block:: yaml
 
@@ -113,6 +116,22 @@ ensures that the CubeList returned by ``read.read_cubes`` is turned into a Cube.
             operator: constraints.generate_cell_methods_constraint
             cell_methods: []
 
+The filter combines two constraints, both of which must be satisfied.
+The ``stash_constraint`` selects the meteorological variable using its
+Met Office STASH code. STASH (Storage, Handling and Diagnostic System)
+is the system used to identify diagnostics in the Met Office Unified
+Model. The code ``m01s03i236`` identifies air temperature at 1.5 m:
+``m01`` identifies the atmospheric model, ``s03`` the diagnostic section,
+and ``i236`` the specific item. STASH codes can be looked up in the
+`Met Office STASH registry <https://reference.metoffice.gov.uk/um/stash>`_.
+
+The ``cell_methods_constraint`` distinguishes fields based on statistical
+processing recorded in their metadata, such as ``time: mean`` or
+``time: maximum``. Here, ``cell_methods: []`` selects a field with
+no recorded cell methods. This avoids selecting an already-aggregated
+field when the recipe intends to calculate its own time mean. An empty
+cell-method list does not necessarily guarantee instantaneous data.
+
 Unlike the ``read.read_cubes`` operator, we have many key-value pairs in this
 step. The other keys in the step are the named arguments that operator takes.
 Each operator implicitly takes its first argument from the previous step, but
@@ -125,6 +144,11 @@ Next we reduce the dimensionality of the data ahead of plotting. In this case we
 chose the mean of the time coordinate. The ``collapse.collapse`` operator allows
 us to do this, and takes as parameters the coordinate to collapse, and the
 method by which it is done.
+
+Unlike filtering, which selects the required field, collapsing performs
+a statistical operation on that field. Here, ``method: MEAN`` calculates
+the mean over all available time points, leaving a spatial temperature
+field for plotting.
 
 .. code-block:: yaml
 
