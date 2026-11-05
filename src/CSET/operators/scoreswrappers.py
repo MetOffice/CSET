@@ -30,12 +30,15 @@ from iris.cube import Cube, CubeList
 from iris.util import reverse
 
 from CSET._common import is_increasing
-from CSET.operators._utils import fully_equalise_attributes, get_cube_yxcoordname
+from CSET.operators._utils import (
+    ensure_common_time_points,
+    fully_equalise_attributes,
+    get_cube_yxcoordname,
+)
 from CSET.operators.constraints import (
     generate_realization_constraint,
     generate_remove_single_ensemble_member_constraint,
 )
-from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.read import _realization_callback
 from CSET.operators.regrid import regrid_onto_cube
 
@@ -79,7 +82,6 @@ def scores_rmse(
 
         scores_cube = _make_scores_cube(base, other, "rmse", preserved_coordinates)
 
-        scores_cube.rename(f"RMSE_of_{base.name()}")
         scores_cubelist.append(scores_cube)
 
     return scores_cubelist[0] if len(scores_cubelist) == 1 else scores_cubelist
@@ -115,13 +117,8 @@ def scores_mae(
 
     for other in others:
         base, other = _process_cubes_for_verification(base, other)
-
         scores_cube = _make_scores_cube(base, other, "mae", preserved_coordinates)
-
-        scores_cube.rename(f"MAE_of_{base.name()}")
         scores_cubelist.append(scores_cube)
-        model_name = other.attributes["model_name"]
-        scores_cube.attributes["model_name"] = model_name
 
     return scores_cubelist[0] if len(scores_cubelist) == 1 else scores_cubelist
 
@@ -378,7 +375,7 @@ def _scores_categorical_metric(
             raise ValueError(f"Unknown metric {metric}")
 
         scores_cube = xr.DataArray.to_iris(result)
-
+        _fix_spatial_coord(cubes[0], scores_cube)
         scores_cube.rename(f"{name}_{op_func}_{threshold}_{observed.name()}")
         scores_cube.units = "1"
         scores_cube.attributes["model_name"] = model.attributes["model_name"]
@@ -703,10 +700,21 @@ def _make_scores_cube(
     else:
         raise ValueError(f"Scores Unknown metric: {metric}")
 
+    _fix_spatial_coord(base, scores_cube)
     _attach_scaler_time_coord_maybe(scores_cube, base)
     model_name = other.attributes["model_name"]
     scores_cube.attributes["model_name"] = model_name
     return scores_cube
+
+
+def _fix_spatial_coord(base_cube: Cube, scores_cube: Cube):
+    if not scores_cube.coords("grid_latitude") or not base_cube.coords("grid_latitude"):
+        return
+    if not scores_cube.coord("grid_latitude").coord_system:
+        for xy_name in ("grid_latitude", "grid_longitude"):
+            scores_cube.coord(xy_name).coord_system = base_cube.coord(
+                xy_name
+            ).coord_system
 
 
 def _sort_cube_into_base_and_other(cubes: CubeList) -> tuple[Cube, CubeList]:
@@ -733,6 +741,38 @@ def _sort_cube_into_base_and_other(cubes: CubeList) -> tuple[Cube, CubeList]:
     )
 
     return base, others
+
+
+def _split_base_and_other(cubes: CubeList):
+    r"""Split the cube into base and other cubes.
+
+    Split depends on whether there
+    is an observed cube in the cubes.  If there is an observed cube,
+    then 'base' is the observed cube, if not then 'base' is the comparison
+    model cube.
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        Cubes to split into base and other cubes.
+
+    Returns
+    -------
+    tuple
+        A tuple containing a base cube, and other cube/cubelist.
+
+    """
+    obs_cube = [cb for cb in cubes if "observed" in (cb.long_name or "")]
+    if obs_cube:
+        if len(obs_cube) > 1:
+            raise ValueError(
+                f"Expected exactly one 'observed' cube, found {len(obs_cube)}"
+            )
+        base = obs_cube[0]
+        others = CubeList(cb for cb in cubes if cb is not base)
+        return base, others
+
+    return _sort_cube_into_base_and_other(cubes)
 
 
 def _ensure_increasing_pressure_coordinates(cubes: CubeList) -> CubeList:
@@ -782,12 +822,12 @@ def _process_cubes_for_verification(base: Cube, other: Cube) -> tuple[Cube, Cube
     is likely going to need to be refactored out of CSET and perhaps moved into
     `CSET._utils` given common code between here and `misc.difference`.
     """
+    # raises value error if cube time points don't match
+    ensure_common_time_points(base, other)
+
     # Set cubes into correct format using code from difference operator
 
-    # Extract just common time points.
     other_model_name = other.attributes["model_name"]
-
-    base, other = _extract_common_time_points(base, other)
 
     if base.coords("pressure") and other.coords("pressure"):
         common_pressure = np.intersect1d(
@@ -966,35 +1006,3 @@ def _attach_scaler_time_coord_maybe(scores_cube: Cube, base: Cube) -> None:
             )
     except iris.exceptions.CoordinateNotFoundError:
         pass
-
-
-def _split_base_and_other(cubes: CubeList):
-    r"""Split the cube into base and other cubes.
-
-    Split depends on whether there
-    is an observed cube in the cubes.  If there is an observed cube,
-    then 'base' is the observed cube, if not then 'base' is the comparison
-    model cube.
-
-    Parameters
-    ----------
-    cubes: iris.cube.CubeList
-        Cubes to split into base and other cubes.
-
-    Returns
-    -------
-    tuple
-        A tuple containing a base cube, and other cube/cubelist.
-
-    """
-    obs_cube = [cb for cb in cubes if "observed" in (cb.long_name or "")]
-    if obs_cube:
-        if len(obs_cube) > 1:
-            raise ValueError(
-                f"Expected exactly one 'observed' cube, found {len(obs_cube)}"
-            )
-        base = obs_cube[0]
-        others = CubeList(cb for cb in cubes if cb is not base)
-        return base, others
-
-    return _sort_cube_into_base_and_other(cubes)

@@ -20,7 +20,7 @@ steps:
   - operator: misc.extract_common_points
     coordinate: time
 
-  - operator: misc.subtraction
+  - operator: maths.subtraction
     minuend:
         operator: regrid.interpolate_to_point_cube
         fld:

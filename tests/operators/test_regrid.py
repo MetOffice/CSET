@@ -20,7 +20,7 @@ import iris.cube
 import numpy as np
 import pytest
 
-from CSET.operators import _utils, collapse, misc, read, regrid
+from CSET.operators import _utils, collapse, maths, read, regrid
 
 
 # Session scope fixtures, so the test data only has to be loaded once.
@@ -529,7 +529,7 @@ def test_regrid_to_point_cube_latlon(cube):
 def test_vertical_interpolation(model_level_cube):
     """Test cube is vertically interpolated to a different level set."""
     # Create a target cube.
-    target_cube = misc.differentiate(model_level_cube, "model_level_number")
+    target_cube = maths.differentiate(model_level_cube, "model_level_number")
     # Calculate the interpolation outside of the operator.
     expected_cube = model_level_cube.copy()
     expected_cube = expected_cube.interpolate(
@@ -560,7 +560,7 @@ def test_vertical_interpolation_cubelist(model_level_cube):
     # Create a CubeList by using repeat data.
     input_list = iris.cube.CubeList([model_level_cube, model_level_cube])
     # Create the target CubeList.
-    target_list = misc.differentiate(input_list, "model_level_number")
+    target_list = maths.differentiate(input_list, "model_level_number")
     # Use the operator to create an actual CubeList to check.
     actual_cubelist = regrid.vertical_interpolation(
         input_list, coordinate="model_level_number", target=target_list

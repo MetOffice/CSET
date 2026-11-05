@@ -55,6 +55,7 @@ from CSET.operators._utils import (
     check_sequence_coordinate,
     check_single_cube,
     check_stamp_coordinate,
+    ensure_common_time_points,
     fully_equalise_attributes,
     get_cube_yxcoordname,
     get_num_models,
@@ -64,7 +65,6 @@ from CSET.operators._utils import (
     validate_cubes_coords,
 )
 from CSET.operators.collapse import collapse
-from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.regrid import regrid_onto_cube
 
 logger = logging.getLogger(__name__)
@@ -409,8 +409,14 @@ def _set_title_and_filename(
             plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
 
     if model_name:
-        plot_filename = f"{model_name}_{plot_filename}"
-        plot_title = f"{model_name}_{plot_title}"
+        if "the comparison model" in plot_title:
+            plot_title = plot_title.replace("the comparison model", model_name)
+            plot_filename = slugify(
+                plot_filename.replace("the comparison model", model_name)
+            )
+        else:
+            plot_title = f"{model_name}_{plot_title}"
+            plot_filename = slugify(f"{model_name}_{plot_filename}")
 
     return plot_title, plot_filename
 
@@ -881,7 +887,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
                 vmin = min(levels)
                 vmax = max(levels)
             else:
-                raise TypeError("Unknown vmin and vmax range.")
+                logger.info("Unknown vmin and vmax range.")
                 vmin, vmax = None, None
             # pcolormesh plot of the field and ensure to use norm and not vmin/vmax
             # if levels are defined.
@@ -2726,7 +2732,8 @@ def qq_plot(
         base = regrid_onto_cube(base, other, method="Linear")
 
     # Extract just common time points.
-    base, other = _extract_common_time_points(base, other)
+    # raise value error if no shared time
+    ensure_common_time_points(base, other)
 
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])
