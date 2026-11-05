@@ -22,71 +22,77 @@ from CSET.recipes import Config, RawRecipe, get_models
 logger = logging.getLogger(__name__)
 
 
+CONTINUOUS_METHODS = {
+    "RMSE": "RMSE",
+    "AB": "additive_bias",
+    "MAE": "MAE",
+    "PC": "correlation_pearsonr",
+}
+SPATIAL_METHODS = {k: v for k, v in CONTINUOUS_METHODS.items() if k != "PC"}
+CATEGORICAL_METHODS = {"POD": "pod", "ETS": "ets", "FB": "fb", "PFD": "pfd"}
+
+
 def _get_scores_spatial_methods(conf):
     """Compile list of the required scores spatial plots."""
     scores_spatial_methods = []
-    if conf.SCORES_SPATIAL_RMSE or conf.SCORES_ALL:
-        scores_spatial_methods.append("RMSE")
-    if conf.SCORES_SPATIAL_AB or conf.SCORES_ALL:
-        scores_spatial_methods.append("additive_bias")
-    if conf.SCORES_SPATIAL_MAE or conf.SCORES_ALL:
-        scores_spatial_methods.append("MAE")
+    for key, value in SPATIAL_METHODS.items():
+        if getattr(conf, f"SCORES_SPATIAL_{key}") or conf.SCORES_ALL:
+            scores_spatial_methods.append(value)
     return scores_spatial_methods
+
+
+def _get_scores_spatial_methods_model_vs_obs(conf):
+    """Compile list of the required scores spatial plots."""
+    scores_spatial_methods_model_vs_obs = []
+    for key, value in SPATIAL_METHODS.items():
+        if (
+            getattr(conf, f"SCORES_SPATIAL_{key}_MODEL_VS_OBS")
+            or conf.SCORES_ALL_MODEL_VS_OBS
+        ):
+            scores_spatial_methods_model_vs_obs.append(value)
+    return scores_spatial_methods_model_vs_obs
 
 
 def _get_scores_timeseries_methods(conf):
     """Compile list of the required scores timeseries plots."""
     scores_timeseries_methods = []
-    if conf.SCORES_TIMESERIES_RMSE or conf.SCORES_ALL:
-        scores_timeseries_methods.append("RMSE")
-    if conf.SCORES_TIMESERIES_AB or conf.SCORES_ALL:
-        scores_timeseries_methods.append("additive_bias")
-    if conf.SCORES_TIMESERIES_MAE or conf.SCORES_ALL:
-        scores_timeseries_methods.append("MAE")
-    if conf.SCORES_TIMESERIES_PC or conf.SCORES_ALL:
-        scores_timeseries_methods.append("correlation_pearsonr")
+    for key, value in CONTINUOUS_METHODS.items():
+        if getattr(conf, f"SCORES_TIMESERIES_{key}") or conf.SCORES_ALL:
+            scores_timeseries_methods.append(value)
     return scores_timeseries_methods
 
 
 def _get_scores_timeseries_methods_model_vs_obs(conf):
     """Compile list of the required scores model vs observations timeseries plots."""
     scores_timeseries_methods_model_vs_obs = []
-
-    if conf.SCORES_TIMESERIES_RMSE_MODEL_VS_OBS or conf.SCORES_ALL_MODEL_VS_OBS:
-        scores_timeseries_methods_model_vs_obs.append("RMSE")
-    if conf.SCORES_TIMESERIES_AB_MODEL_VS_OBS or conf.SCORES_ALL_MODEL_VS_OBS:
-        scores_timeseries_methods_model_vs_obs.append("additive_bias")
-    if conf.SCORES_TIMESERIES_MAE_MODEL_VS_OBS or conf.SCORES_ALL_MODEL_VS_OBS:
-        scores_timeseries_methods_model_vs_obs.append("MAE")
-    if conf.SCORES_TIMESERIES_PC_MODEL_VS_OBS or conf.SCORES_ALL_MODEL_VS_OBS:
-        scores_timeseries_methods_model_vs_obs.append("correlation_pearsonr")
+    for key, value in CONTINUOUS_METHODS.items():
+        if (
+            getattr(conf, f"SCORES_TIMESERIES_{key}_MODEL_VS_OBS")
+            or conf.SCORES_ALL_MODEL_VS_OBS
+        ):
+            scores_timeseries_methods_model_vs_obs.append(value)
     return scores_timeseries_methods_model_vs_obs
 
 
 def _get_scores_timeseries_categorical(conf):
     """List of categorical scores metrics, all model vs obs."""
     scores_timeseries_categorical = []
-    if conf.SCORES_CATEGORICAL_POD or conf.SCORES_ALL:
-        scores_timeseries_categorical.append("pod")
-    if conf.SCORES_CATEGORICAL_ETS or conf.SCORES_ALL:
-        scores_timeseries_categorical.append("ets")
-    if conf.SCORES_CATEGORICAL_FB or conf.SCORES_ALL:
-        scores_timeseries_categorical.append("fb")
-    if conf.SCORES_CATEGORICAL_PFD or conf.SCORES_ALL:
-        scores_timeseries_categorical.append("pfd")
+    for key, value in CATEGORICAL_METHODS.items():
+        if getattr(conf, f"SCORES_CATEGORICAL_{key}") or conf.SCORES_ALL_MODEL_VS_OBS:
+            scores_timeseries_categorical.append(value)
     return scores_timeseries_categorical
 
 
-def _get_scores_spatial_methods_model_vs_obs(conf):
-    """Compile list of the required scores spatial plots."""
-    scores_spatial_methods_model_vs_obs = []
-    if conf.SCORES_SPATIAL_RMSE_MODEL_VS_OBS or conf.SCORES_ALL_MODEL_VS_OBS:
-        scores_spatial_methods_model_vs_obs.append("RMSE")
-    if conf.SCORES_SPATIAL_AB_MODEL_VS_OBS or conf.SCORES_ALL_MODEL_VS_OBS:
-        scores_spatial_methods_model_vs_obs.append("additive_bias")
-    if conf.SCORES_SPATIAL_MAE_MODEL_VS_OBS or conf.SCORES_ALL_MODEL_VS_OBS:
-        scores_spatial_methods_model_vs_obs.append("MAE")
-    return scores_spatial_methods_model_vs_obs
+def _collapse_settings(recipe_method):
+    preserved_coords = ["time", "grid_latitude", "grid_longitude"]
+    if recipe_method == "CASE":
+        preserved_coords.remove("time")
+        collapse_method = None
+    elif recipe_method == "SEQ":
+        collapse_method = None
+    else:
+        collapse_method = recipe_method
+    return collapse_method, preserved_coords
 
 
 def load(conf: Config):
@@ -99,6 +105,13 @@ def load(conf: Config):
     base_model = models[0]
 
     scores_spatial_methods = _get_scores_spatial_methods(conf)
+    scores_timeseries_methods = _get_scores_timeseries_methods(conf)
+    scores_timeseries_methods_model_vs_obs = (
+        _get_scores_timeseries_methods_model_vs_obs(conf)
+    )
+    scores_spatial_methods_model_vs_obs = _get_scores_spatial_methods_model_vs_obs(conf)
+    scores_timeseries_categorical = _get_scores_timeseries_categorical(conf)
+
     if scores_spatial_methods:
         # Produce 2D spatial plots of scores metrics.
         for model, field, recipe_method, scores_method in itertools.product(
@@ -107,11 +120,7 @@ def load(conf: Config):
             conf.SPATIAL_SCORES_FIELD_METHOD,
             scores_spatial_methods,
         ):
-            preserved_coords = ["time", "grid_latitude", "grid_longitude"]
-
-            if recipe_method == "CASE":
-                preserved_coords.remove("time")
-                recipe_method = ""
+            collapse_method, preserved_coords = _collapse_settings(recipe_method)
 
             yield RawRecipe(
                 recipe=f"surface_difference_scores_{scores_method}.yaml",
@@ -119,7 +128,7 @@ def load(conf: Config):
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODELS": model["name"],
-                    "METHOD": recipe_method,
+                    "COLLAPSE_METHOD": collapse_method,
                     "PRESERVED_COORDS": preserved_coords,
                     "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
@@ -131,7 +140,34 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    scores_timeseries_methods = _get_scores_timeseries_methods(conf)
+    if scores_spatial_methods_model_vs_obs:
+        # Produce 2D spatial plots of scores metrics.
+
+        for field, model, recipe_method, scores_method in itertools.product(
+            conf.POINT_OBS_FIELDS,
+            models,
+            conf.SPATIAL_SCORES_FIELD_METHOD_MODEL_VS_OBS,
+            scores_spatial_methods_model_vs_obs,
+        ):
+            collapse_method, preserved_coords = _collapse_settings(recipe_method)
+
+            yield RawRecipe(
+                recipe=f"surface_scores_model_vs_obs_{scores_method}.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": ["OBS"] + [model["name"]],
+                    "COLLAPSE_METHOD": collapse_method,
+                    "PRESERVED_COORDS": preserved_coords,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=["OBS"] + [model["id"]],
+                aggregation=False,
+            )
+
     if scores_timeseries_methods:
         # Produce timeseries plots of scores metrics averaged over the domain for each case study.
         for field, scores_method in itertools.product(
@@ -153,26 +189,6 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    if conf.SCORES_CRPS_FOR_ENSEMBLE:
-        for model, field in itertools.product(models, conf.SURFACE_FIELDS):
-            yield RawRecipe(
-                recipe="crps_for_ensemble.yaml",
-                variables={
-                    "VARNAME": field,
-                    "CONTROL_MEMBER": conf.CONTROL_MEMBER,
-                    "METHOD": conf.METHOD_FOR_CRPS,
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                model_ids=[model["id"]],
-                aggregation=False,
-            )
-    scores_timeseries_methods_model_vs_obs = (
-        _get_scores_timeseries_methods_model_vs_obs(conf)
-    )
-
     if scores_timeseries_methods_model_vs_obs:
         # Produce model vs observation timeseries plots of scores metrics averaged over the domain for each case study.
         for field, scores_method in itertools.product(
@@ -190,38 +206,6 @@ def load(conf: Config):
                     else None,
                 },
                 model_ids=["OBS"] + [model["id"] for model in models],
-                aggregation=False,
-            )
-
-    scores_spatial_methods_model_vs_obs = _get_scores_spatial_methods_model_vs_obs(conf)
-    if scores_spatial_methods_model_vs_obs:
-        # Produce 2D spatial plots of scores metrics.
-
-        for field, model, recipe_method, scores_method in itertools.product(
-            conf.POINT_OBS_FIELDS,
-            models,
-            conf.SPATIAL_SCORES_FIELD_METHOD_MODEL_VS_OBS,
-            scores_spatial_methods_model_vs_obs,
-        ):
-            preserved_coords = ["time", "latitude", "longitude"]
-            if recipe_method == "CASE":
-                preserved_coords.remove("time")
-                recipe_method = ""
-
-            yield RawRecipe(
-                recipe=f"surface_scores_model_vs_obs_{scores_method}.yaml",
-                variables={
-                    "VARNAME": field,
-                    "MODEL_NAME": ["OBS"] + [model["name"]],
-                    "METHOD": recipe_method,
-                    "PRESERVED_COORDS": preserved_coords,
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                model_ids=["OBS"] + [model["id"]],
                 aggregation=False,
             )
 
@@ -266,7 +250,6 @@ def load(conf: Config):
             )
 
     # Scores categorical metrics
-    scores_timeseries_categorical = _get_scores_timeseries_categorical(conf)
     if scores_timeseries_categorical:
         # Produce timeseries plots of scores categorical metrics for each model.
         for field_and_method, scores_method in itertools.product(
@@ -298,3 +281,23 @@ def load(conf: Config):
                 model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=False,
             )
+
+    if conf.SCORES_CRPS_FOR_ENSEMBLE:
+        for model, field in itertools.product(models, conf.SURFACE_FIELDS):
+            yield RawRecipe(
+                recipe="crps_for_ensemble.yaml",
+                variables={
+                    "VARNAME": field,
+                    "CONTROL_MEMBER": conf.CONTROL_MEMBER,
+                    "METHOD": conf.METHOD_FOR_CRPS,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                },
+                model_ids=[model["id"]],
+                aggregation=False,
+            )
+    scores_timeseries_methods_model_vs_obs = (
+        _get_scores_timeseries_methods_model_vs_obs(conf)
+    )
