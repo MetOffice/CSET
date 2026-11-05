@@ -83,13 +83,14 @@ def _get_scores_timeseries_categorical(conf):
     return scores_timeseries_categorical
 
 
-def _collapse_settings(recipe_method):
+def _collapse_settings(recipe_method: str) -> tuple[str, list[str]]:
+    """Get the collapse method and preserved coordinates for spatial scores metrics."""
     preserved_coords = ["time", "grid_latitude", "grid_longitude"]
     if recipe_method == "CASE":
         preserved_coords.remove("time")
-        collapse_method = None
+        collapse_method = ""
     elif recipe_method == "SEQ":
-        collapse_method = None
+        collapse_method = ""
     else:
         collapse_method = recipe_method
     return collapse_method, preserved_coords
