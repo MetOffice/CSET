@@ -18,10 +18,12 @@ import iris
 import iris.coords
 import iris.cube
 import numpy as np
+import pytest
 from cf_units import Unit
 
 from CSET.operators import fluxes
 from CSET.operators._atmospheric_constants import CPD, LV, RD
+from CSET.operators.fluxes import net_radiative_flux
 
 
 def _make_scalar_cube(
@@ -178,3 +180,123 @@ def test_latent_heat_units_unknown_units_passthrough():
     cube = _make_scalar_latent_cube(1.0, "unknown", units=None)
     out = fluxes.latent_heat_units(cube)
     assert out is cube
+
+
+def test_net_radiative_flux_calculation():
+    """Test net flux is computed as downwelling minus upwelling."""
+    down = _make_scalar_cube(
+        300.0,
+        var_name="lwrad_down",
+        standard_name="downwelling_longwave_flux_in_air",
+        units="W m-2",
+    )
+    up = _make_scalar_cube(
+        50.0,
+        var_name="lwrad_up",
+        standard_name="upwelling_longwave_flux_in_air",
+        units="W m-2",
+    )
+    result = net_radiative_flux(down, up)
+    assert result.data.item() == 250.0
+    assert result.units == down.units
+
+
+def test_net_shortwave_flux_name():
+    """Test shortwave inputs produce correct output name."""
+    down = _make_scalar_cube(
+        np.array([300.0]),
+        var_name="swrad_down",
+        standard_name="downwelling_shortwave_flux_in_air",
+        units="W m-2",
+    )
+    up = _make_scalar_cube(
+        np.array([100.0]),
+        var_name="swrad_up",
+        standard_name="upwelling_shortwave_flux_in_air",
+        units="W m-2",
+    )
+    result = net_radiative_flux(down, up)
+    assert result.name() == "net_downward_shortwave_flux"
+    assert result.var_name == "net_downward_shortwave_flux"
+
+
+def test_net_longwave_flux_name():
+    """Test longwave inputs produce correct output name."""
+    down = _make_scalar_cube(
+        np.array([300.0]),
+        var_name="lwrad_down",
+        standard_name="downwelling_longwave_flux_in_air",
+        units="W m-2",
+    )
+    up = _make_scalar_cube(
+        np.array([350.0]),
+        var_name="lwrad_up",
+        standard_name="upwelling_longwave_flux_in_air",
+        units="W m-2",
+    )
+    result = net_radiative_flux(down, up)
+    assert result.name() == "net_downward_longwave_flux"
+    assert result.var_name == "net_downward_longwave_flux"
+
+
+def test_mixed_shortwave_longwave_raises():
+    """Test incompatible flux types raise an error."""
+    down = _make_scalar_cube(
+        np.array([300.0]),
+        var_name="swrad_down",
+        standard_name="downwelling_shortwave_flux_in_air",
+        units="W m-2",
+    )
+    up = _make_scalar_cube(
+        np.array([100.0]),
+        var_name="lwrad_up",
+        standard_name="upwelling_longwave_flux_in_air",
+        units="W m-2",
+    )
+    with pytest.raises(
+        ValueError,
+        match="Cannot combine shortwave and longwave fluxes",
+    ):
+        net_radiative_flux(down, up)
+
+
+def test_net_radiative_flux_cubelist():
+    """Test CubeList input returns a CubeList."""
+    down = iris.cube.CubeList(
+        [
+            _make_scalar_cube(
+                np.array([300.0]),
+                var_name="lwrad_down",
+                standard_name="downwelling_longwave_flux_in_air",
+                units="W m-2",
+            ),
+            _make_scalar_cube(
+                np.array([400.0]),
+                var_name="lwrad_down",
+                standard_name="downwelling_longwave_flux_in_air",
+                units="W m-2",
+            ),
+        ]
+    )
+    up = iris.cube.CubeList(
+        [
+            _make_scalar_cube(
+                np.array([100.0]),
+                var_name="lwrad_up",
+                standard_name="upwelling_longwave_flux_in_air",
+                units="W m-2",
+            ),
+            _make_scalar_cube(
+                np.array([150.0]),
+                var_name="lwrad_up",
+                standard_name="upwelling_longwave_flux_in_air",
+                units="W m-2",
+            ),
+        ]
+    )
+
+    result = net_radiative_flux(down, up)
+    assert isinstance(result, iris.cube.CubeList)
+    assert len(result) == 2
+    assert result[0].data.item() == 200.0
+    assert result[1].data.item() == 250.0
