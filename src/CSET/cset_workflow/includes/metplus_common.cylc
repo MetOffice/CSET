@@ -1,4 +1,12 @@
 {% if RUN_METPLUS_GRID_STAT|default(False) or RUN_METPLUS_POINT_STAT|default(False) or RUN_METPLUS_ENSEMBLE_STAT|default(False)%}
+
+[scheduling]
+    [[queues]]
+        # Run metloader tasks one at a time to avoid db conflicts
+        [[[VERPY_METLOADER]]]
+            limit = 1
+            members = VERPY_METLOADER
+
 [runtime]
 
     [[METPLUS]]
@@ -16,9 +24,51 @@
         TASK_END_TIME = $(cylc cyclepoint --offset {{ANALYSIS_LENGTH}} --template CCYYMMDDThh)
         VERPY_DIR = {{VERPY_DIR|default("")}}
 
+    [[METPLUS_POSTPROC]]
+    # Family grouping all metplus Post-processing
+        inherit = METPLUS
+        script = """
+            INPUT_DIR=${CYLC_TASK_SHARE_CYCLE_DIR}/${MET_TOOL}_${MODEL_NAME}
+            STAT_TYPE_LIST="$(ls ${INPUT_DIR} | sed -n 's/.*_\(\S\+\)\.txt/\1/p' | sort -u)"
+            for STAT_TYPE in ${STAT_TYPE_LIST}; do
+                OUTPUT_DIR=${CYLC_WORKFLOW_SHARE_DIR}/${MET_TOOL}/${MODEL_NAME}/${STAT_TYPE}
+                mkdir -p "${OUTPUT_DIR}"
+
+                gzip ${INPUT_DIR}/*_${STAT_TYPE}.txt
+                files_list=$(ls ${INPUT_DIR}/*_${STAT_TYPE}.txt.gz | xargs -n 1 basename)
+                tar -rf ${OUTPUT_DIR}/${CYLC_TASK_CYCLE_POINT}.tar -C ${INPUT_DIR} $files_list
+            done
+        """
+
     [[VERPY_METLOADER]]
     # Family grouping for all VerPy metloader tasks
         inherit = METPLUS
-        script = rose task-run -v --app-key=verpy_metloader
+        script = """
+            INPUT_DIR=${CYLC_WORKFLOW_SHARE_DIR}/${MET_TOOL}/${MODEL_NAME}
 
+            for STAT_TYPE in $(ls $INPUT_DIR); do
+                export STAT_TYPE
+                export SOURCE=$INPUT_DIR/$STAT_TYPE
+                rose task-run -v --app-key=verpy_metloader
+            done
+        """
+
+    [[VERPY_PLOT]]
+    # Family grouping for all VerPy plotting tasks
+        inherit = METPLUS
+        script = rose task-run -v --app-key=verpy_plot
+        [[[environment]]]
+            PLOT_DIR = ${CYLC_WORKFLOW_SHARE_DIR}/web/plots
+            START_DATE = $(isodatetime $CYLC_WORKFLOW_INITIAL_CYCLE_POINT --print-format %Y%m%d)
+            END_DATE = $(isodatetime $CYLC_WORKFLOW_FINAL_CYCLE_POINT --offset {{ANALYSIS_LENGTH}} --print-format %Y%m%d)
+            MODEL_NAMES = {{ models | map(attribute='name') | join(' ') }}
+
+    {% for model in models %}
+    [[METPLUS_M{{model["id"]}}]]
+        [[[environment]]]
+            MODEL_NAME = {{model["name"]}}
+            MODEL_ID = m{{model["id"]}}
+            MODEL_NID = {{model["id"]}}
+            #model_name = {{model["name"] | lower}}
+    {% endfor %}
 {% endif %}

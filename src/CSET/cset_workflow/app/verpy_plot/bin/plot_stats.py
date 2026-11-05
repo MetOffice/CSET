@@ -14,6 +14,17 @@ import VerPy
 import VerPy.conf2opts
 
 
+def setup_verpy():
+    """Custom Verpy configs."""
+    from VerPy.stats import MET_STAT_IDS, get_statistic
+
+    # Compute errors from MPR, adapting sl1l2 partial sums
+    me = get_statistic(stat=7051, system='MET', filetype='sl1l2')
+    me["type"] = 'mpr'
+    me["requires"] = [10-6000, 10-4000]
+    MET_STAT_IDS.append(me)
+
+
 def main():
     """
     Produce Verpy Plots.
@@ -37,6 +48,10 @@ def main():
 
     args = parser.parse_args()
 
+    os.makedirs(args.outdir, exist_ok=True)
+
+    setup_verpy()
+
     opts_dicts, scard_dict = VerPy.conf2opts.conf2opts(args.conf)
 
     metadata = args.metadata
@@ -46,9 +61,20 @@ def main():
         options["start"] = args.start
         options["end"] = args.end
         options["expids"] = args.expids
-        options["source"] = (
-            f"{os.getenv('TABLENAME')}@{os.getenv('DB_DIR')}/{os.getenv('DB_NAME')}"
-        )
+
+        if options["system"] == "MET":
+            stream = options["type"]
+            options["source"] = (
+                f"{os.getenv('MET_TOOL')}_{stream}@{os.getenv('DB_DIR')}/{stream}.db"
+            )
+
+            # # Translate to MPR to SBV
+            # if options["type"] == "mpr":
+            #     options["system"] = "SDD"
+
+            #     if "fcrs" not in options:
+            #         options["fcrs"] = range(0, int(os.environ["FORECAST_LENGTH"])*100, 100)
+
         if args.image_meta_tag:
             options["metadata"] = "index"
 
