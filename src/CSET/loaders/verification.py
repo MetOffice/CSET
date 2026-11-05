@@ -96,6 +96,23 @@ def _collapse_settings(recipe_method: str) -> tuple[str, list[str]]:
     return collapse_method, preserved_coords
 
 
+def _subarea_variables(conf):
+    """Get the subarea variables required for recipes."""
+    if conf.SELECT_SUBAREA:
+        subarea_vars = {
+            "SUBAREA_NAME": conf.SUBAREA_NAME,
+            "SUBAREA_TYPE": conf.SUBAREA_TYPE,
+            "SUBAREA_EXTENT": conf.SUBAREA_EXTENT,
+        }
+    else:
+        subarea_vars = {
+            "SUBAREA_NAME": "",
+            "SUBAREA_TYPE": None,
+            "SUBAREA_EXTENT": None,
+        }
+    return subarea_vars
+
+
 def load(conf: Config):
     """Yield recipes from the given workflow configuration."""
     # Load a list of model detail dictionaries.
@@ -113,102 +130,82 @@ def load(conf: Config):
     scores_spatial_methods_model_vs_obs = _get_scores_spatial_methods_model_vs_obs(conf)
     scores_timeseries_categorical = _get_scores_timeseries_categorical(conf)
 
-    if scores_spatial_methods:
-        # Produce 2D spatial plots of scores metrics.
-        for model, field, recipe_method, scores_method in itertools.product(
-            models[1:],
-            conf.SURFACE_FIELDS,
-            conf.SPATIAL_SCORES_FIELD_METHOD,
-            scores_spatial_methods,
-        ):
-            collapse_method, preserved_coords = _collapse_settings(recipe_method)
+    subarea_vars = _subarea_variables(conf)
 
-            yield RawRecipe(
-                recipe=f"surface_difference_scores_{scores_method}.yaml",
-                variables={
-                    "VARNAME": field,
-                    "BASE_MODEL": base_model["name"],
-                    "OTHER_MODELS": model["name"],
-                    "COLLAPSE_METHOD": collapse_method,
-                    "PRESERVED_COORDS": preserved_coords,
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                model_ids=[base_model["id"], model["id"]],
-                aggregation=False,
-            )
+    # Produce 2D spatial plots of scores metrics.
+    for model, field, recipe_method, scores_method in itertools.product(
+        models[1:],
+        conf.SURFACE_FIELDS,
+        conf.SPATIAL_SCORES_FIELD_METHOD,
+        scores_spatial_methods,
+    ):
+        collapse_method, preserved_coords = _collapse_settings(recipe_method)
 
-    if scores_spatial_methods_model_vs_obs:
-        # Produce 2D spatial plots of scores metrics.
+        yield RawRecipe(
+            recipe=f"surface_difference_scores_{scores_method}.yaml",
+            variables={
+                "VARNAME": field,
+                "BASE_MODEL": base_model["name"],
+                "OTHER_MODELS": model["name"],
+                "COLLAPSE_METHOD": collapse_method,
+                "PRESERVED_COORDS": preserved_coords,
+                **subarea_vars,
+            },
+            model_ids=[base_model["id"], model["id"]],
+            aggregation=False,
+        )
 
-        for field, model, recipe_method, scores_method in itertools.product(
-            conf.POINT_OBS_FIELDS,
-            models,
-            conf.SPATIAL_SCORES_FIELD_METHOD_MODEL_VS_OBS,
-            scores_spatial_methods_model_vs_obs,
-        ):
-            collapse_method, preserved_coords = _collapse_settings(recipe_method)
+    for field, model, recipe_method, scores_method in itertools.product(
+        conf.POINT_OBS_FIELDS,
+        models,
+        conf.SPATIAL_SCORES_FIELD_METHOD_MODEL_VS_OBS,
+        scores_spatial_methods_model_vs_obs,
+    ):
+        collapse_method, preserved_coords = _collapse_settings(recipe_method)
 
-            yield RawRecipe(
-                recipe=f"surface_scores_model_vs_obs_{scores_method}.yaml",
-                variables={
-                    "VARNAME": field,
-                    "MODEL_NAME": ["OBS"] + [model["name"]],
-                    "COLLAPSE_METHOD": collapse_method,
-                    "PRESERVED_COORDS": preserved_coords,
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                model_ids=["OBS"] + [model["id"]],
-                aggregation=False,
-            )
+        yield RawRecipe(
+            recipe=f"surface_scores_model_vs_obs_{scores_method}.yaml",
+            variables={
+                "VARNAME": field,
+                "MODEL_NAME": ["OBS"] + [model["name"]],
+                "COLLAPSE_METHOD": collapse_method,
+                "PRESERVED_COORDS": preserved_coords,
+                **subarea_vars,
+            },
+            model_ids=["OBS"] + [model["id"]],
+            aggregation=False,
+        )
 
-    if scores_timeseries_methods:
-        # Produce timeseries plots of scores metrics averaged over the domain for each case study.
-        for field, scores_method in itertools.product(
-            conf.SURFACE_FIELDS, scores_timeseries_methods
-        ):
-            yield RawRecipe(
-                recipe=f"timeseries_surface_difference_scores_{scores_method}.yaml",
-                variables={
-                    "VARNAME": field,
-                    "BASE_MODEL": base_model["name"],
-                    "OTHER_MODELS": [model["name"] for model in models[1:]],
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                model_ids=[base_model["id"]] + [model["id"] for model in models[1:]],
-                aggregation=False,
-            )
+    # Produce timeseries plots of scores metrics averaged over the domain for each case study.
+    for field, scores_method in itertools.product(
+        conf.SURFACE_FIELDS, scores_timeseries_methods
+    ):
+        yield RawRecipe(
+            recipe=f"timeseries_surface_difference_scores_{scores_method}.yaml",
+            variables={
+                "VARNAME": field,
+                "BASE_MODEL": base_model["name"],
+                "OTHER_MODELS": [model["name"] for model in models[1:]],
+                **subarea_vars,
+            },
+            model_ids=[base_model["id"]] + [model["id"] for model in models[1:]],
+            aggregation=False,
+        )
 
-    if scores_timeseries_methods_model_vs_obs:
-        # Produce model vs observation timeseries plots of scores metrics averaged over the domain for each case study.
-        for field, scores_method in itertools.product(
-            conf.POINT_OBS_FIELDS, scores_timeseries_methods_model_vs_obs
-        ):
-            yield RawRecipe(
-                recipe=f"timeseries_surface_scores_model_vs_obs_{scores_method}.yaml",
-                variables={
-                    "VARNAME": field,
-                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                model_ids=["OBS"] + [model["id"] for model in models],
-                aggregation=False,
-            )
+    # Produce model vs observation timeseries plots of scores metrics averaged over the domain for each case study.
+    for field, scores_method in itertools.product(
+        conf.POINT_OBS_FIELDS, scores_timeseries_methods_model_vs_obs
+    ):
+        yield RawRecipe(
+            recipe=f"timeseries_surface_scores_model_vs_obs_{scores_method}.yaml",
+            variables={
+                "VARNAME": field,
+                "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
+                **subarea_vars,
+            },
+            model_ids=["OBS"] + [model["id"] for model in models],
+            aggregation=False,
+        )
 
     # including AGGREGATION_MODE in the variables dictionary to allow for clearer labeling of plots.
     if conf.SCORES_RMSE_VERTICAL_PROFILES:
@@ -221,10 +218,7 @@ def load(conf: Config):
                     "OTHER_MODELS": model["name"],
                     "PRESERVED_COORDS": ["pressure"],
                     "AGGREGATION_MODE": "Case-study RMSE",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
+                    **subarea_vars,
                 },
                 model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
@@ -241,10 +235,7 @@ def load(conf: Config):
                     "OTHER_MODEL": model["name"],
                     "PRESERVED_COORDS": ["time", "pressure"],
                     "AGGREGATION_MODE": "Time-step RMSE",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
+                    **subarea_vars,
                 },
                 model_ids=[base_model["id"], model["id"]],
                 aggregation=False,
@@ -273,11 +264,7 @@ def load(conf: Config):
                     "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
                     "THRESHOLD": value,
                     "OPERATOR": op,
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
+                    **subarea_vars,
                 },
                 model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=False,
@@ -291,10 +278,7 @@ def load(conf: Config):
                     "VARNAME": field,
                     "CONTROL_MEMBER": conf.CONTROL_MEMBER,
                     "METHOD": conf.METHOD_FOR_CRPS,
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
+                    **subarea_vars,
                 },
                 model_ids=[model["id"]],
                 aggregation=False,
