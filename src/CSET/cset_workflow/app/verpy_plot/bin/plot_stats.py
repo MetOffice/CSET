@@ -66,23 +66,24 @@ def main():
                 f"{os.getenv('MET_TOOL')}_{stream}@{os.getenv('DB_DIR')}/{stream}.db"
             )
 
-        if args.image_meta_tag:
+        if args.image_meta_tag and "metadata" not in options:
             options["metadata"] = "index"
 
         print(f"Options Dictionary: {options}")
         VerPy.job.run(args.outdir, options)
 
-        # Create a json metadata file in outdir
-        json_filename = f"{args.outdir}/{options['jobid']}/meta.json"
-        print(f"writing metadata to json file: {json_filename}")
-        metadata_dict = {
-            "title": "Metplus Point Stat plots",
-            "category": "Metplus plots",
-            "jobid": options["jobid"],
-            "output": options["output"],
-        }
-        with open(json_filename, "w") as jf:
-            json.dump(metadata_dict, jf, indent=2)
+        if not args.image_meta_tag:
+            # Create a json metadata file in outdir
+            json_filename = f"{args.outdir}/{options['jobid']}/meta.json"
+            print(f"writing metadata to json file: {json_filename}")
+            metadata_dict = {
+                "title": "Metplus Point Stat plots",
+                "category": "Metplus plots",
+                "jobid": options["jobid"],
+                "output": options["output"],
+            }
+            with open(json_filename, "w") as jf:
+                json.dump(metadata_dict, jf, indent=2)
 
     if args.image_meta_tag:
         metadata_dict = {

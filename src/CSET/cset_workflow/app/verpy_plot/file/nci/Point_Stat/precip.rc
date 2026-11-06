@@ -1,0 +1,66 @@
+[VerPy_common]
+comment = common defs
+system = MET
+truth = Surface Obs
+interp = NEAREST
+param = ["APCP @ 3"]
+
+[VerPyPlot_ps_precip_fs]
+comment = ps_precip_fs
+jobid = ps_precip_fs
+inherit = VerPy_common
+type = cnt
+stats = ["ME (FcVsObs)", "MSE (FcVsObs)"]
+output = fcrseries
+
+[VerPyPlot_ps_precip_ts]
+comment = ps_precip_ts
+jobid = ps_precip_ts
+inherit = VerPy_common
+type = cnt
+stats = ["ME (FcVsObs)", "MSE (FcVsObs)"]
+output = timeseries
+aggopts = fcrs
+
+[VerPyPlot_ps_precip_di]
+comment = ps_precip_di
+jobid = ps_precip_di
+inherit = VerPy_common
+type = cnt
+stats = ["ME (FcVsObs)", "MSE (FcVsObs)"]
+output = diurnal
+aggopts = fcrs
+
+[VerPyPlot_ps_precip_em]
+comment = ps_precip_em
+jobid = ps_precip_em
+inherit = VerPy_common
+type = mpr
+stats = ["ME (FcVsObs)"]
+output = errormap
+aggopts = ["dateranges", "fcrs"]
+plottheme = "diffmap"
+
+[VerPyPlot_ps_precip_taylor]
+comment = ps_precip_taylor
+jobid = ps_precip_taylor
+inherit = VerPy_common
+type = sl1l2
+stats = [7758, 1756, 3756]
+output = taylor
+compare_on_plot = fcrs
+fcrs = [600, 1200, 1800, 2400]
+plottheme = split
+tayloropts = ['crmse_contour', 'normalized']
+
+[VerPyPlot_ps_precip_roebber]
+comment = ps_precip_roebber
+jobid = ps_precip_roebber_tmp
+inherit = VerPy_common
+type = ctc
+stats = [7921, 7922, 7923]
+interp = NEAREST
+output = roebber
+compare_on_plot = fcrs
+fcrs = [600, 1200, 1800, 2400]
+plottheme = split

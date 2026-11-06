@@ -1,6 +1,12 @@
 {% set PROJECT = PROJECT | default(environ['PROJECT']) %}
 {% set VERPY_DIR = VERPY_DIR | default("/g/data/dp9/saw562/ver/verpy") %}
 {% set CSET_MODULE_VERSION = "26.9.1" %}
+{% set NCI_STORAGE = [
+    'scratch/'~PROJECT,
+    'gdata/'~PROJECT,
+    'gdata/access',
+    'gdata/hr22',
+] + (NCI_STORAGE|default([]))%}
 
 # Site configuration for NCI Gadi
 #
@@ -57,7 +63,6 @@
             -q          = normal
             -l ncpus    = 12
             -l mem      = 48gb
-            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/ig2+scratch/dx2
             -W umask    = 0022
         [[[ environment ]]]
             OMP_NUM_THREADS = ${PBS_NCPUS:-1}
@@ -65,12 +70,24 @@
             # Shift valid times in METplus by this many seconds
             METPLUS_FCST_SHIFT  = {{METPLUS_FCST_SHIFT | default(0)}}
             VERPY_DIR = {{VERPY_DIR}}
-        {% if CSET_DIR is defined %}
+       {% if CSET_DIR is defined %}
             PYTHONPATH = {{CSET_DIR}}:{{VERPY_DIR}}
         {% else %}
             PYTHONPATH = {{VERPY_DIR}}
         {% endif %}
             ODB2_TEMPLATE = {{ODB2_PATTERNS[METPLUS_OBS_SYSTEM]}}
+
+    {# Data sources for verification #}
+    {% do NCI_STORAGE.append("gdata/dp9") %} {# Verpy, Precip #}
+    {% if RUN_METPLUS_POINT_STAT|default(False) %}
+        {% do NCI_STORAGE.append("gdata/ig2") %} {# ODB2 #}
+    {% endif %}
+    {% if RUN_METPLUS_GRID_STAT|default(False) and METPLUS_VERIFY_PRECIP|default(False) %}
+        {% do NCI_STORAGE.append("gdata/rq0") %} {# Rainfields3 #}
+    [[METPLUS]]
+        [[[ environment ]]]
+            RAINFIELDS3_SITE = {{RAINFIELDS3_SITE}}
+    {% endif %}
 {% endif %}
 
     [[bake_recipes]]
@@ -81,7 +98,6 @@
             -q          = normal
             -l ncpus    = 48
             -l mem      = 180gb
-            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/xp65+scratch/dx2
             -W umask    = 0022
         [[[ environment ]]]
             BUNCH_POOL_SIZE = $PBS_NCPUS
@@ -94,7 +110,10 @@
             -q          = normal
             -l ncpus    = 48
             -l mem      = 180gb
-            -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/xp65+scratch/dx2
             -W umask    = 0022
         [[[ environment ]]]
             BUNCH_POOL_SIZE = $PBS_NCPUS
+
+    [[root]]
+        [[[ directives ]]]
+            -l storage = {{ NCI_STORAGE | join('+') }}

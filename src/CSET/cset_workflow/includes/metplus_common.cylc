@@ -58,29 +58,16 @@
                 rose task-run -v --app-key=verpy_metloader
             done
         """
-        script = rose task-run -v --app-key=verpy_metloader
-        [[[environment]]]
-            VERPY_DIR = {{VERPY_DIR|default("")}}
-            METLOADER_CONF_FILE = metloader.conf
-
-{% if METPLUS_VERIFY_PRECIP %}
-    [[METPLUS]]
-        [[[environment]]]
-            METPLUS_VERIFY_PRECIP = TRUE
-            METPLUS_PRECIP_FCST_VARIABLE = {{METPLUS_PRECIP_FCST_VARIABLE}}
-            METPLUS_PRECIP_FCST_ACCUM_H = {{METPLUS_PRECIP_FCST_ACCUM | duration_as('h') | int}}
-            METPLUS_PRECIP_VERIFY_ACCUM_H = {{METPLUS_PRECIP_VERIFY_ACCUM | duration_as('h') | int}}
-{% endif %}
 
     [[VERPY_PLOT]]
     # Family grouping for all VerPy plotting tasks
         inherit = METPLUS
-        script = rose task-run -v --app-key=verpy_plot
         [[[environment]]]
             PLOT_DIR = ${CYLC_WORKFLOW_SHARE_DIR}/web/plots
             START_DATE = $(isodatetime $CYLC_WORKFLOW_INITIAL_CYCLE_POINT --print-format %Y%m%d)
             END_DATE = $(isodatetime $CYLC_WORKFLOW_FINAL_CYCLE_POINT --offset {{ANALYSIS_LENGTH}} --print-format %Y%m%d)
             MODEL_NAMES = {{ models | map(attribute='name') | join(' ') }}
+            ROSE_TASK_APP = verpy_plot
 
     {% for model in models %}
     [[METPLUS_M{{model["id"]}}]]
@@ -89,5 +76,18 @@
             MODEL_ID = m{{model["id"]}}
             MODEL_NID = {{model["id"]}}
             #model_name = {{model["name"] | lower}}
+
+        {% if METPLUS_VERIFY_PRECIP %}
+    [[METPLUS_M{{model["id"]}}]]
+        [[[environment]]]
+            METPLUS_VERIFY_PRECIP = TRUE
+            {% if METPLUS_PRECIP_FCST_VARIABLE is string %}
+            METPLUS_PRECIP_FCST_VARIABLE = {{METPLUS_PRECIP_FCST_VARIABLE}}
+            {% else %}
+            METPLUS_PRECIP_FCST_VARIABLE = {{METPLUS_PRECIP_FCST_VARIABLE[model["id"]-1]}}
+            {% endif %}
+            METPLUS_PRECIP_FCST_ACCUM_H = {{METPLUS_PRECIP_FCST_ACCUM | duration_as('h') | int}}
+            METPLUS_PRECIP_VERIFY_ACCUM_H = {{METPLUS_PRECIP_VERIFY_ACCUM | duration_as('h') | int}}
+        {% endif %}
     {% endfor %}
 {% endif %}
