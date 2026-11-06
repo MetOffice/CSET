@@ -84,16 +84,16 @@ def _get_scores_timeseries_categorical(conf):
     return scores_timeseries_categorical
 
 
-def _collapse_settings(recipe_method: str) -> tuple[str, list[str]]:
+def _collapse_settings(method_from_recipe: str) -> tuple[str, list[str]]:
     """Get the collapse method and preserved coordinates for spatial scores metrics."""
     preserved_coords = ["time", "grid_latitude", "grid_longitude"]
-    if recipe_method == "CASE":
+    if method_from_recipe == "CASE":
         preserved_coords.remove("time")
         collapse_method = ""
-    elif recipe_method == "SEQ":
+    elif method_from_recipe == "SEQ":
         collapse_method = ""
     else:
-        collapse_method = recipe_method
+        collapse_method = method_from_recipe
     return collapse_method, preserved_coords
 
 
@@ -134,13 +134,13 @@ def load(conf: Config):
     subarea_vars = _subarea_variables(conf)
 
     # Produce 2D spatial plots of scores metrics.
-    for model, field, recipe_method, scores_method in itertools.product(
+    for model, field, method_from_recipe, scores_method in itertools.product(
         models[1:],
         conf.SURFACE_FIELDS,
         conf.SPATIAL_SCORES_FIELD_METHOD,
         scores_spatial_methods,
     ):
-        collapse_method, preserved_coords = _collapse_settings(recipe_method)
+        collapse_method, preserved_coords = _collapse_settings(method_from_recipe)
 
         yield RawRecipe(
             recipe=f"surface_difference_scores_{scores_method}.yaml",
@@ -156,13 +156,13 @@ def load(conf: Config):
             aggregation=False,
         )
 
-    for field, model, recipe_method, scores_method in itertools.product(
+    for field, model, method_from_recipe, scores_method in itertools.product(
         conf.POINT_OBS_FIELDS,
         models,
         conf.SPATIAL_SCORES_FIELD_METHOD_MODEL_VS_OBS,
         scores_spatial_methods_model_vs_obs,
     ):
-        collapse_method, preserved_coords = _collapse_settings(recipe_method)
+        collapse_method, preserved_coords = _collapse_settings(method_from_recipe)
 
         yield RawRecipe(
             recipe=f"surface_scores_model_vs_obs_{scores_method}.yaml",
