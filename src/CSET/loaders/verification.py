@@ -138,9 +138,13 @@ def _get_scores_timeseries_categorical(conf):
     return scores_timeseries_categorical
 
 
-def _collapse_settings(method_from_recipe: str) -> tuple[str, list[str]]:
+def _collapse_settings(method_from_recipe: str, obs=False) -> tuple[str, list[str]]:
     """Get the collapse method and preserved coordinates for spatial scores metrics."""
-    preserved_coords = ["time", "grid_latitude", "grid_longitude"]
+    if obs:
+        preserved_coords = ["time", "latitude", "longitude"]
+    else:
+        preserved_coords = ["time", "grid_latitude", "grid_longitude"]
+
     if method_from_recipe == "CASE":
         preserved_coords.remove("time")
         collapse_method = ""
@@ -218,7 +222,9 @@ def load(conf: Config):
         conf.SPATIAL_SCORES_FIELD_METHOD_MODEL_VS_OBS,
         scores_spatial_methods_model_vs_obs,
     ):
-        collapse_method, preserved_coords = _collapse_settings(method_from_recipe)
+        collapse_method, preserved_coords = _collapse_settings(
+            method_from_recipe, obs=True
+        )
 
         yield RawRecipe(
             recipe=f"surface_scores_model_vs_obs_{scores_method}.yaml",
