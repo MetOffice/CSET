@@ -6,7 +6,7 @@ steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names:
-      - Obs (30min)
+      - $OBS_NAME
       - $MODEL_NAME
     constraint: ['$OBS_VARNAME', '$VARNAME']
 
@@ -27,10 +27,7 @@ steps:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
         varname: $OBS_VARNAME
-      height_constraint:
-        operator: constraints.generate_attribute_constraint
-        attribute: 'height'
-        value: $HEIGHT
+
 
     $MODEL_NAME:
       operator: constraints.combine_constraints
