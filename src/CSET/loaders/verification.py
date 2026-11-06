@@ -303,11 +303,7 @@ def load(conf: Config):
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
+                    **subarea_vars,
                 },
                 model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=False,
@@ -327,13 +323,9 @@ def load(conf: Config):
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
                     "AGGREGATION_MODE": "Case Date",
                     "PRESERVED_COORD": "forecast_period",
+                    **subarea_vars,
                 },
                 model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=True,
