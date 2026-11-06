@@ -535,6 +535,10 @@ def custom_colormap_precipitation(cube: iris.cube.Cube, cmap, levels, norm):
         # Normalize the levels
         norm = mcolors.BoundaryNorm(levels, cmap.N)
         logger.info("Using custom rainfall colourmap.")
+
+        # Set any Nan values to be plotted a light grey.
+        cmap.set_bad("#dcdcdc")
+
     return cmap, levels, norm
 
 
@@ -567,6 +571,7 @@ def custom_colourmap_nimrod_weights(cube: iris.cube.Cube, cmap, levels, norm):
         ]
         norm = mcolors.BoundaryNorm(levels, cmap.N)
         colours = [
+            "#dcdcdc",
             "#d10000",
             "purple",
             "#8f00d6",
@@ -579,7 +584,6 @@ def custom_colourmap_nimrod_weights(cube: iris.cube.Cube, cmap, levels, norm):
             "#37a648",
             "#8edc64",
             "#c5ffc5",
-            "#dcdcdc",
             "#ffffff",
         ]
         # Create a custom colormap.

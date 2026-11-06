@@ -1,0 +1,27 @@
+category: Surface Spatial Plot
+title: "$RADAR_NAME $VARNAME $SUBAREA_NAME"
+description: |
+  Extracts and plots radar rainfall data.
+  ATTENTION: the radar data can be 1 hour accumulation amounts in [mm]. Because showers
+  typically advect, on a 2D plot of accumulated rainfall, showers show
+  as streaks i.e. lower intensity rainfall over a greater area than a
+  plot of instantaneous rainfall rate. This results in accumulated rainfall
+  being damped in intensity compared to rainfall rates so caution is
+  required when comparing model rainfall rate with observed rainfall accumulation.
+
+steps:
+  - operator: read.read_cube
+    file_paths: $INPUT_PATHS
+    constraint:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+    subarea_type: $SUBAREA_TYPE
+    subarea_extent: $SUBAREA_EXTENT
+
+  - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: time
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
