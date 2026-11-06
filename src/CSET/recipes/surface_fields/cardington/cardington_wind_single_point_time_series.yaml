@@ -60,6 +60,7 @@ steps:
           stash_constraint:
             operator: constraints.generate_attribute_constraint
             attribute: STASH
+            values: [ $U_VARNAME ]
 
       v:
         operator: filters.filter_multiple_cubes
@@ -79,6 +80,7 @@ steps:
            stash_constraint:
              operator: constraints.generate_attribute_constraint
              attribute: STASH
+             values: [ $V_VARNAME ]
 
   - operator: write.write_cube_to_nc
     overwrite: True
