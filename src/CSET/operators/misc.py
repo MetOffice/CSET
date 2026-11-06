@@ -365,8 +365,7 @@ def _ensure_same_frt(cubes: CubeList) -> None:
 
 
 def _extract_common_time_points_one_frt(cubes: CubeList) -> CubeList:
-
-    # typehints
+    """Extract common time points from cubes where there is only one frt."""
     obs: Cube | None
     models: CubeList
     obs, models = split_obs_and_models(cubes)
