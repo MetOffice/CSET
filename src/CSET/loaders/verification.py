@@ -35,6 +35,7 @@ CATEGORICAL_METHODS = {"POD": "pod", "ETS": "ets", "FB": "fb", "PFD": "pfd"}
 def _get_scores_spatial_methods(conf):
     """Compile list of the required scores spatial plots."""
     scores_spatial_methods = []
+
     for key, value in SPATIAL_METHODS.items():
         if getattr(conf, f"SCORES_SPATIAL_{key}") or conf.SCORES_ALL:
             scores_spatial_methods.append(value)
