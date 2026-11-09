@@ -270,7 +270,7 @@ def round_data(cubes: Cube | CubeList, decimals: int) -> Cube | CubeList:
         The rounded cube, or a CubeList of rounded cubes if more than one
         cube was given.
     """
-    if not isinstance(decimals, int) or isinstance(decimals, bool):
+    if not isinstance(decimals, int):
         raise TypeError(
             f"decimals must be an integer, got {type(decimals).__name__}: {decimals!r}"
         )
