@@ -928,9 +928,12 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
     # Convert visibility diagnostic units if required.
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("visibility" in name for name in varnames) and cube.units == "m":
-        _log_once("Converting visibility units m to km.", level=logging.DEBUG)
-        # Convert the units to km.
-        cube.convert_units("km")
+        if cube.var_name == "visibility_belfort_2m":
+            # Cardington Belfort values are already in km despite their metadata.
+            cube.units = "km"
+        else:
+            _log_once("Converting visibility units m to km.", level=logging.DEBUG)
+            cube.convert_units("km")
 
     return cube
 
