@@ -71,7 +71,7 @@ steps:
 
   - operator: collapse.collapse
     coordinate: ["time"]
-    method: $METHOD
+    method: $COLLAPSE_METHOD
 
   - operator: plot.spatial_pcolormesh_plot
 
