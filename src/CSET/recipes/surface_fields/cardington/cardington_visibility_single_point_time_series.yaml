@@ -6,8 +6,7 @@ steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
     model_names:
-      - $CARDINGTON_05_LABEL
-      - $CARDINGTON_30_LABEL
+      - $OBS_NAME
       - $MODEL_NAME
 
   - operator: filters.filter_multiple_cubes
@@ -37,7 +36,8 @@ steps:
       - date
       - date_created
 
-  - operator: misc.convert_visibility_to_km
+  - operator: misc.convert_units
+    units: km
 
   - operator: regrid.regrid_to_single_point
     lat_pt: 52.10438
@@ -50,3 +50,4 @@ steps:
     overwrite: True
 
   - operator: plot.plot_line_series
+    ymin: 0
