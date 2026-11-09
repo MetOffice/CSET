@@ -1,0 +1,36 @@
+category: Cellstats
+title: "Feature max $VARNAME over all times.\n Threshold $CELLTRACK_THRESHOLD (under_threshold = $CELLTRACK_UNDER_THRESHOLD)"
+description: |
+  Uses the feature.cell_stats operator to calculate max cell values for
+  identified features.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names: $MODEL_NAME
+
+  - operator: filters.filter_multiple_cubes
+    constraint:
+      operator: constraints.combine_constraints
+      variable_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+
+
+  - operator: feature.cell_stats
+    threshold: $CELLTRACK_THRESHOLD
+    min_size: $CELLTRACK_MIN_SIZE
+    under_threshold: $CELLTRACK_UNDER_THRESHOLD
+
+  # Filter tracking cubelist to one of "feature_mean", "feature_max", or "feature_size"
+  - operator: filters.filter_multiple_cubes
+    constraint:
+      operator: constraints.generate_var_constraint
+      varname: feature_max
+
+  - operator: plot.plot_histogram_series
+    sequence_coordinate: realization
