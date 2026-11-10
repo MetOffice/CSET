@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Tool</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>My Tool</h1>
+  <p>A short description of what this is and who it's for.</p>
+
+  <a href="index.html">Go to index →</a>
+
+<button type="button" class="preset" data-query='field=temperature'>Temperature</button>
+<button type="button" class="preset" data-query='histogram AND field:temperature'>Temperature histograms</button>
+<button type="button" class="preset" data-query='field=x_wind OR field=y_wind'>Wind</button>
+
+<script>
+  document.querySelectorAll(".preset").forEach(btn =>
+    btn.addEventListener("click", () => {
+      window.location.href = "index.html?query=" + encodeURIComponent(btn.dataset.query);
+    })
+  );
+</script>
+</body>
+</html>
