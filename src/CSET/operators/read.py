@@ -446,7 +446,6 @@ def _clean_unwanted_cube_attributes(
         "cset_comparison_base",
         "STASH",
         "um_stash_source",
-        "height",
     ]
 
     # Iterate through each cube and check each attribute.
