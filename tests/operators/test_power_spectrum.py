@@ -329,7 +329,7 @@ def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_t
 def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_times_fp():
     """Check power spectrum can be calculated for multiple forecast reference times and realizations."""
     # Create a cube with multiple realizations and forecast reference times
-    # Time coord in forecast_period.
+    # Time coord is forecast_period.
 
     data = np.random.rand(2, 3, 10, 10)
 

@@ -462,37 +462,6 @@ def test_collapse_by_proportion_less_than(ensemble_cube):
     assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)
 
 
-# new test
-
-
-# def make_power_spectrum_cube():
-#    """Create dummy power spectrum cube."""
-#    data = np.random.rand(3, 10)
-#
-#    time = DimCoord(
-#        np.array([0, 1, 2], dtype=np.int32),
-#        standard_name="time",
-#        units="hours since 2000-01-01 00:00:00",
-#    )
-#
-#    physical_wavenumber = DimCoord(
-#        np.arange(10, dtype=np.float64),
-#        long_name="physical_wavenumber",
-#        units="1",
-#    )
-#
-#    cube = iris.cube.Cube(
-#        data,
-#        long_name="power_spectrum",
-#        dim_coords_and_dims=[
-#            (time, 0),
-#            (physical_wavenumber, 1),
-#        ],
-#    )
-#
-#    return cube
-
-
 def make_power_spectrum_cube():
     """Create dummy power spectrum cube."""
     data = np.random.rand(3, 10)
