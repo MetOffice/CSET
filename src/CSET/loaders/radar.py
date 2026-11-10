@@ -28,8 +28,7 @@ def select_radar_source(input_source_list: list[str]) -> str:
     # Note: xkm is 5km gridded Nimrod.
     nimrod_preference = ["Nimrod2km", "Nimrodxkm", "Nimrod1km"]
 
-    empty_string = ""
-    preferred_nimrod = empty_string
+    preferred_nimrod = ""
     for prefer in reversed(nimrod_preference):
         if any(prefer in source for source in input_source_list):
             preferred_nimrod = prefer
