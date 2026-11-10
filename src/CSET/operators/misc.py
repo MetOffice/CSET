@@ -131,194 +131,6 @@ def remove_scalar_coords(
     return cubes
 
 
-def addition(addend_1, addend_2):
-    """Addition of two fields.
-
-    Parameters
-    ----------
-    addend_1: Cube
-        Any field to have another field added to it.
-    addend_2: Cube
-        Any field to be added to another field.
-
-    Returns
-    -------
-    Cube
-
-    Raises
-    ------
-    ValueError, iris.exceptions.NotYetImplementedError
-        When the cubes are not compatible.
-
-    Notes
-    -----
-    This is a simple operator designed for combination of diagnostics or
-    creating new diagnostics by using recipes.
-
-    Examples
-    --------
-    >>> field_addition = misc.addition(kinetic_energy_u, kinetic_energy_v)
-
-    """
-    return addend_1 + addend_2
-
-
-def subtraction(
-    minuend: Cube | CubeList, subtrahend: Cube | CubeList
-) -> Cube | CubeList:
-    """Subtraction of two fields.
-
-    Parameters
-    ----------
-    minuend: Cube | CubeList
-        Any field(s) to have another field subtracted from it.
-    subtrahend: Cube | CubeList
-        Any field(s) to be subtracted from to another field.
-
-    Returns
-    -------
-    Cube | CubeList
-
-    Raises
-    ------
-    ValueError, iris.exceptions.NotYetImplementedError
-        When the cubes are not compatible.
-
-    Notes
-    -----
-    This is a simple operator designed for combination of diagnostics or
-    creating new diagnostics by using recipes. It can be used for model
-    differences to allow for comparisons between the same field in different
-    models or model configurations.
-
-    If called with 2 Cubes as input, will return a difference cube.
-    If called with 2 CubeLists as input, with return a CubeList of differences.
-    If called with CubeList as minuend and Cube as subtrahend, will return CubeList of differences subtracting Cube from each element of input CubeList.
-    If called with Cube as minuend and CubeList as subtrahend, will return CubeList of differences subtracting each element on CubeList from input Cube.
-
-    Examples
-    --------
-    >>> model_diff = misc.subtraction(temperature_model_A, temperature_model_B)
-
-    """
-
-    def subtract_preserve_attributes(cube_a: Cube, cube_b: Cube) -> Cube:
-        result = cube_a - cube_b
-        result.attributes.update(cube_a.attributes)
-        return result
-
-    # Case where both inputs are single cubes
-    if isinstance(minuend, iris.cube.Cube) and isinstance(subtrahend, iris.cube.Cube):
-        return subtract_preserve_attributes(minuend, subtrahend)
-
-    # Check if minuend is iterable
-    cubes_a = iter_maybe(minuend)
-
-    # Case: subtrahend also iterable
-    if isinstance(subtrahend, iris.cube.CubeList):
-        cubes_b = iter_maybe(subtrahend)
-        if isinstance(minuend, iris.cube.CubeList):
-            # Case: subtract cubelist from cubelist - assume both same sizes
-            result = iris.cube.CubeList(
-                [
-                    subtract_preserve_attributes(cube_a, cube_b)
-                    for cube_a, cube_b in zip(cubes_a, cubes_b, strict=True)
-                ]
-            )
-        else:
-            # Case: subtract each element of subtrahend from single cube
-            result = iris.cube.CubeList(
-                [subtract_preserve_attributes(minuend, cube_b) for cube_b in cubes_b]
-            )
-    else:
-        # Case: subtract single cube from each minuend
-        result = iris.cube.CubeList(
-            [subtract_preserve_attributes(cube_a, subtrahend) for cube_a in cubes_a]
-        )
-
-    # Return single cube if only one result, else return CubeList
-    return result[0] if len(result) == 1 else result
-
-
-def division(numerator, denominator):
-    """Division of two fields.
-
-    Parameters
-    ----------
-    numerator: Cube
-        Any field to have the ratio taken with respect to another field.
-    denominator: Cube
-        Any field used to divide another field or provide the reference
-        value in a ratio.
-
-    Returns
-    -------
-    Cube
-
-    Raises
-    ------
-    ValueError
-        When the cubes are not compatible.
-
-    Notes
-    -----
-    This is a simple operator designed for combination of diagnostics or
-    creating new diagnostics by using recipes.
-
-    Examples
-    --------
-    >>> bowen_ratio = misc.division(sensible_heat_flux, latent_heat_flux)
-
-    """
-    return numerator / denominator
-
-
-def multiplication(
-    multiplicand: Cube | CubeList, multiplier: Cube | CubeList
-) -> Cube | CubeList:
-    """Multiplication of two fields.
-
-    Parameters
-    ----------
-    multiplicand: Cube | CubeList
-        Any field to be multiplied by another field.
-    multiplier: Cube | CubeList
-        Any field to be multiplied to another field.
-
-    Returns
-    -------
-    Cube | CubeList
-        The result of multiplicand x multiplier.
-
-    Raises
-    ------
-    ValueError
-        When the cubes are not compatible.
-
-    Notes
-    -----
-    This is a simple operator designed for combination of diagnostics or
-    creating new diagnostics by using recipes. CubeLists are multiplied
-    on a strict ordering (e.g. first cube with first cube).
-
-    Examples
-    --------
-    >>> filtered_CAPE_ratio = misc.multiplication(CAPE_ratio, inflow_layer_properties)
-
-    """
-    new_cubelist = iris.cube.CubeList([])
-    for cube_a, cube_b in zip(
-        iter_maybe(multiplicand), iter_maybe(multiplier), strict=True
-    ):
-        multiplied_cube = cube_a * cube_b
-        multiplied_cube.rename(f"{cube_a.name()}_x_{cube_b.name()}")
-        new_cubelist.append(multiplied_cube)
-    if len(new_cubelist) == 1:
-        return new_cubelist[0]
-    else:
-        return new_cubelist
-
-
 def combine_cubes_into_cubelist(first: Cube | CubeList, **kwargs) -> CubeList:
     """Operator that combines multiple cubes or CubeLists into one.
 
@@ -346,6 +158,7 @@ def combine_cubes_into_cubelist(first: Cube | CubeList, **kwargs) -> CubeList:
     """
     # Create empty CubeList to store cubes/CubeList.
     all_cubes = CubeList()
+
     # Combine all CubeLists into a single flat iterable.
     for item in itertools.chain(iter_maybe(first), *map(iter_maybe, kwargs.values())):
         # Check each item is a Cube, erroring if not.
@@ -354,6 +167,7 @@ def combine_cubes_into_cubelist(first: Cube | CubeList, **kwargs) -> CubeList:
             all_cubes.append(item)
         else:
             raise TypeError("Not a Cube or CubeList!", item)
+
     return all_cubes
 
 
@@ -474,7 +288,7 @@ def difference(cubes: CubeList):
     return difference
 
 
-def extract_common_time_points(cubes: CubeList) -> CubeList:
+def extract_common_time_points(cubes: CubeList | Cube) -> CubeList | Cube:
     """Return cubes restricted to their common time points.
 
     If the first cube has more than one FRT point, every cube must have identical
@@ -485,13 +299,14 @@ def extract_common_time_points(cubes: CubeList) -> CubeList:
 
     Parameters
     ----------
-    cubes: CubeList
+    cubes: CubeList | Cube
         Cubes to align in time. The first cube is used as the reference.
 
     Returns
     -------
-    CubeList
-        Cubes containing only the time points common to all inputs.
+    CubeList | Cube
+        Either cubes containing only the time points common to all inputs
+        or original cube/cube list (no op if single cube or cubelist of length 1 given)
 
     Raises
     ------
@@ -500,18 +315,26 @@ def extract_common_time_points(cubes: CubeList) -> CubeList:
         lacks a forecast_reference_time coordinate or has different FRT
         values (compared element-wise, so order matters).
     """
-    frt_coord = cubes[0].coords("forecast_reference_time")
+    if isinstance(cubes, Cube) or len(cubes) == 1:
+        logger.debug("Only one cube provided, skipping equalisation.")
+        return cubes
 
-    _ensure_same_frt(cubes)
+    multi_frt = any(
+        len(c.coord("forecast_reference_time").points) > 1
+        for c in cubes
+        if c.coords("forecast_reference_time")
+    )
 
-    if frt_coord and len(frt_coord[0].points) > 1:
+    if multi_frt:
         for cb in cubes[1:]:
             cb_frt_coord = cb.coords("forecast_reference_time")
             if not cb_frt_coord:
                 raise ValueError(
                     "All cubes must have a forecast_reference_time coordinate."
                 )
-        return extract_common_points(cubes, "forecast_period")
+        cubes_common = extract_common_points(cubes, "forecast_period")
+
+        return cubes_common
     else:
         return _extract_common_time_points_one_frt(cubes)
 
@@ -562,7 +385,6 @@ def _extract_common_time_points_one_frt(cubes: CubeList) -> CubeList:
 
     for other in iter_maybe(others):
         list_shared_times.append(get_shared_times(base, other, time_coord))
-
     shared_times_all = reduce(lambda x, y: x.intersection(y), list_shared_times)
 
     logger.debug("Shared times: %s", shared_times_all)
@@ -762,48 +584,7 @@ def extract_common_points(cubes: iris.cube.CubeList, coordinate: str):
     common_cubes = iris.cube.CubeList()
     for cube in cubes:
         common_cubes.append(_slice_cube_on_levels(cube, coordinate, common_points))
-
     return common_cubes
-
-
-def differentiate(
-    cubes: iris.cube.Cube | iris.cube.CubeList, coordinate: str, **kwargs
-) -> iris.cube.Cube | iris.cube.CubeList:
-    """Differentiate a cube on a specified coordinate.
-
-    Arguments
-    ---------
-    cubes: iris.cube.Cube | iris.cube.CubeList
-        A Cube or CubeList of a field that is to be differentiated.
-
-    coordinate: str
-        The coordinate that is to be differentiated over.
-
-    Returns
-    -------
-    iris.cube.Cube | iris.cube.CubeList
-        The differential of the cube along the specified coordinate.
-
-    Notes
-    -----
-    The differential is calculated based on a carteisan grid. This calculation
-    is then suitable for vertical and temporal derivatives. It is not sensible
-    for horizontal derivatives if they are based on spherical coordinates (e.g.
-    latitude and longitude). In essence this operator is a CSET wrapper around
-    `iris.analysis.calculus.differentiate <https://scitools-iris.readthedocs.io/en/stable/generated/api/iris.analysis.calculus.html#iris.analysis.calculus.differentiate>`_.
-
-    Examples
-    --------
-    >>> dT_dz = misc.differentiate(temperature, "altitude")
-    """
-    new_cubelist = iris.cube.CubeList([])
-    for cube in iter_maybe(cubes):
-        dcube = iris.analysis.calculus.differentiate(cube, coordinate)
-        new_cubelist.append(dcube)
-    if len(new_cubelist) == 1:
-        return new_cubelist[0]
-    else:
-        return new_cubelist
 
 
 def split_obs_and_models(cubes: CubeList) -> tuple[Cube | None, CubeList]:
