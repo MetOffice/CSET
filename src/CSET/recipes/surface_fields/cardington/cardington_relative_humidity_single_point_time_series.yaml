@@ -1,37 +1,55 @@
 category: Time series of relative humidity at Cardington single point
-title: Time series of 'relative humidity' at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint.
-description: Plots a time series of the relative humidity at a selected Cardington gridpoint.
+title: Time series of $HEIGHT m relative humidity at Cardington [52.10438N, -0.42286E].
+description: Plots a time series of relative humidity at gridpoint nearest to ardington .
 
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: ['Cardington','$MODEL_NAME']
+    model_names:
+      - $OBS_NAME
+      - $MODEL_NAME
     constraint:
+      - $OBS_VARNAME
+      - $STASH
+
+  - operator: filters.apply_mask
+    mask:
+      operator: filters.generate_mask
+      condition: 'lt'
+      value: 1.0e+10
+
+  - operator: filters.filter_multiple_cubes
+    Cardington:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: 'relative_humidity'
+        varname: $OBS_VARNAME
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-        varname: 'relative_humidity'
+        varname: $OBS_VARNAME
+
+
+    $MODEL_NAME:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         levels: []
         coordinate: "pressure"
+      stash_constraint:
+        operator: constraints.generate_attribute_constraint
+        attribute: STASH
+        value: $STASH
 
   - operator: misc.remove_attribute
     attribute: ['time_coverage_end', 'time_coverage_start', 'valid_min', 'valid_max', 'date', 'date_created']
-
-  - operator: filters.filter_multiple_cubes
-    cardington:
-        operator: constraints.generate_attribute_constraint
-        attribute: 'height'
-        value: 1.2
-    model:
-        operator: constraints.generate_attribute_constraint
-        # This currently only works for UM. Maybe we need another operator to make this nicer?
-        attribute: STASH
 
   - operator: regrid.regrid_to_single_point
     lat_pt: 52.10438
