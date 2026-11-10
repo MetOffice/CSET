@@ -141,10 +141,8 @@ def retrieve_nimrod():
             # the time stamps for these files mark the end of the
             # accumulation period rather than the beginning.
             radar_offset = timedelta(hours=1.0)
-
-             if nimrod_field == "Nimrod_comp_5min:
-                 radar_offset = timedelta(hours=0.0)
-                
+            if nimrod_field == "Nimrod_comp_5min":
+                radar_offset = timedelta(hours=0.0)
 
             date_start_offset = v["data_time"] + radar_offset
 
