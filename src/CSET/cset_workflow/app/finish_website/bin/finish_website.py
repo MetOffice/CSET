@@ -133,7 +133,7 @@ def bust_cache(www_content: Path):
     """
     # Search and replace the string "CACHEBUSTER" with a time-based cache key.
     cache_key = str(int(time.time()))
-    with open(www_content / "index.html", "r+t") as fp:
+    with open(www_content / "viewer.html", "r+t") as fp:
         content = fp.read()
         new_content = content.replace("CACHEBUSTER", cache_key)
         fp.seek(0)
