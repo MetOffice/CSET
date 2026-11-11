@@ -184,16 +184,31 @@ def load(conf: Config):
     scores_spatial_methods = _get_scores_spatial_methods(conf)
     scores_spatial_methods_model_vs_obs = _get_scores_spatial_methods_model_vs_obs(conf)
 
+    scores_spatial_methods_aggregated = _get_scores_spatial_methods_aggregated(conf)
+    scores_spatial_methods_model_vs_obs_aggregated = (
+        _get_scores_spatial_methods_model_vs_obs_aggregated(conf)
+    )
+
     scores_timeseries_methods = _get_scores_timeseries_methods(conf)
     scores_timeseries_methods_model_vs_obs = (
         _get_scores_timeseries_methods_model_vs_obs(conf)
+    )
+
+    scores_timeseries_methods_aggregated = _get_scores_timeseries_methods_aggregated(
+        conf
+    )
+    scores_timeseries_methods_model_vs_obs_aggregated = (
+        _get_scores_timeseries_methods_model_vs_obs_aggregated(conf)
     )
 
     scores_timeseries_categorical = _get_scores_timeseries_categorical(conf)
 
     subarea_vars = _subarea_variables(conf)
 
-    # Produce 2D spatial plots of scores metrics.
+    # ==================================================================
+    # 1. SPATIAL SCORES
+    # ==================================================================
+
     for model, field, method_from_recipe, scores_method in itertools.product(
         models[1:],
         conf.SURFACE_FIELDS,
@@ -239,7 +254,47 @@ def load(conf: Config):
             aggregation=False,
         )
 
-    # Produce timeseries plots of scores metrics averaged over the domain for each case study.
+    for model, field, scores_method in itertools.product(
+        models[1:],
+        conf.SURFACE_FIELDS,
+        scores_spatial_methods_aggregated,
+    ):
+        yield RawRecipe(
+            recipe=f"surface_difference_scores_{scores_method}_aggregated.yaml",
+            variables={
+                "VARNAME": field,
+                "BASE_MODEL": base_model["name"],
+                "OTHER_MODELS": model["name"],
+                "AGGREGATION_MODE": "Case Date",
+                "PRESERVED_COORD": "forecast_period",
+                **subarea_vars,
+            },
+            model_ids=[base_model["id"], model["id"]],
+            aggregation=True,
+        )
+
+    for field, model, scores_method in itertools.product(
+        conf.POINT_OBS_FIELDS,
+        models,
+        scores_spatial_methods_model_vs_obs_aggregated,
+    ):
+        yield RawRecipe(
+            recipe=f"surface_scores_model_vs_obs_{scores_method}_aggregated.yaml",
+            variables={
+                "VARNAME": field,
+                "MODEL_NAME": ["OBS"] + [model["name"]],
+                "AGGREGATION_MODE": "Case Date",
+                "PRESERVED_COORD": "forecast_period",
+                **subarea_vars,
+            },
+            model_ids=["OBS"] + [model["id"]],
+            aggregation=True,
+        )
+
+    # ==================================================================
+    # 2. TIME SERIES SPATIAL SCORES
+    # ==================================================================
+
     for field, scores_method in itertools.product(
         conf.SURFACE_FIELDS, scores_timeseries_methods
     ):
@@ -255,7 +310,6 @@ def load(conf: Config):
             aggregation=False,
         )
 
-    # Produce model vs observation timeseries plots of scores metrics averaged over the domain for each case study.
     for field, scores_method in itertools.product(
         conf.POINT_OBS_FIELDS, scores_timeseries_methods_model_vs_obs
     ):
@@ -269,9 +323,7 @@ def load(conf: Config):
             model_ids=["OBS"] + [model["id"] for model in models],
             aggregation=False,
         )
-    scores_timeseries_methods_aggregated = _get_scores_timeseries_methods_aggregated(
-        conf
-    )
+
     if scores_timeseries_methods_aggregated:
         # Produce timeseries plots of scores metrics averaged over the domain for each case study.
         for field, scores_method in itertools.product(
@@ -283,21 +335,13 @@ def load(conf: Config):
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODELS": [model["name"] for model in models[1:]],
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
                     "AGGREGATION_MODE": "Case Date",
                     "PRESERVED_COORD": "forecast_period",
+                    **subarea_vars,
                 },
                 model_ids=[base_model["id"]] + [model["id"] for model in models[1:]],
                 aggregation=True,
             )
-
-    scores_timeseries_methods_model_vs_obs = (
-        _get_scores_timeseries_methods_model_vs_obs(conf)
-    )
 
     if scores_timeseries_methods_model_vs_obs:
         # Produce model vs observation timeseries plots of scores metrics averaged over the domain for each case study.
@@ -315,14 +359,10 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    scores_timeseries_methods_model_vs_obs_case_aggregated = (
-        _get_scores_timeseries_methods_model_vs_obs_aggregated(conf)
-    )
-
-    if scores_timeseries_methods_model_vs_obs_case_aggregated:
+    if scores_timeseries_methods_model_vs_obs_aggregated:
         for field, scores_method in itertools.product(
             conf.POINT_OBS_FIELDS,
-            scores_timeseries_methods_model_vs_obs_case_aggregated,
+            scores_timeseries_methods_model_vs_obs_aggregated,
         ):
             yield RawRecipe(
                 recipe=f"timeseries_surface_scores_model_vs_obs_{scores_method}_aggregation.yaml",
@@ -337,7 +377,10 @@ def load(conf: Config):
                 aggregation=True,
             )
 
-    # including AGGREGATION_MODE in the variables dictionary to allow for clearer labeling of plots.
+    # ==================================================================
+    # 3. VERTICAL PROFILE SCORES
+    # ==================================================================
+
     if conf.SCORES_RMSE_VERTICAL_PROFILES:
         for model, field in itertools.product(models[1:], conf.PRESSURE_LEVEL_FIELDS):
             yield RawRecipe(
@@ -371,7 +414,10 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-    # Scores categorical metrics
+    # ==================================================================
+    # 4. SCORES CATEGORICAL METRICS
+    # ==================================================================
+
     if scores_timeseries_categorical:
         # Produce timeseries plots of scores categorical metrics for each model.
         for field_and_method, scores_method in itertools.product(
@@ -399,6 +445,9 @@ def load(conf: Config):
                 model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=False,
             )
+    # ==================================================================
+    # 5. SCORES ENSEMBLE METHODS
+    # ==================================================================
 
     if conf.SCORES_CRPS_FOR_ENSEMBLE:
         for model, field in itertools.product(models, conf.SURFACE_FIELDS):
@@ -413,6 +462,3 @@ def load(conf: Config):
                 model_ids=[model["id"]],
                 aggregation=False,
             )
-    scores_timeseries_methods_model_vs_obs = (
-        _get_scores_timeseries_methods_model_vs_obs(conf)
-    )

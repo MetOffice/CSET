@@ -1,4 +1,4 @@
-category: Scores
+category: Scores Time Series
 title: "$VARNAME\nScores Mean Absolute Error timeseries between models and $BASE_MODEL $SUBAREA_NAME"
 description: |
   Extracts and plots the Mean Absolute Error in $VARNAME

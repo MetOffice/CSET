@@ -1,4 +1,4 @@
-category: Surface Model vs Observation
+category: Scores Model vs Observation
 title: "$VARNAME scores rmse spatial plot for model vs observation points $SUBAREA_NAME"
 description: |
   Extracts and plot a spatial plot of the RMSE of $VARNAME for all

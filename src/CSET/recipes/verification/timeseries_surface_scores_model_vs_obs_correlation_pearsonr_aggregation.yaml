@@ -1,4 +1,4 @@
-category: Surface Model versus Observation Time Series Aggregation
+category: Scores Model versus Observation Time Series Aggregation
 title: "$VARNAME\nscores Pearson's Correlation time series for model vs observation points aggregated by $AGGREGATION_MODE $SUBAREA_NAME"
 description: |
   Extracts and plots the Pearson's Correlation coefficient in $VARNAME

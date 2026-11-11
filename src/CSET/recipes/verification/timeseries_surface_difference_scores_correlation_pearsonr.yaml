@@ -1,4 +1,4 @@
-category: Scores
+category: Scores Time Series
 title: "$VARNAME\nScores Pearson's Correlation timeseries between models and $BASE_MODEL $SUBAREA_NAME"
 description: |
   Extracts and plots the Pearson's Correlation coefficient in $VARNAME

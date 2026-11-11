@@ -1,4 +1,4 @@
-category: Scores
+category: Scores Time Series
 title: "$VARNAME\nScores Mean Error timeseries between models and $BASE_MODEL $SUBAREA_NAME"
 description: |
   Extracts and plots the Mean Error (also known as the Additive Bias) in $VARNAME

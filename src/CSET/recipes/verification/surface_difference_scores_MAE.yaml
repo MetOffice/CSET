@@ -1,4 +1,4 @@
-category: Scores
+category: Scores Spatial
 title: "$COLLAPSE_METHOD $VARNAME\nScores Mean Absolute Error between the comparison model and $BASE_MODEL $SUBAREA_NAME"
 description: |
   Extracts and plots the Mean Absolute Error in $COLLAPSE_METHOD of $VARNAME.
