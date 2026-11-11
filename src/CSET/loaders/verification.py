@@ -405,7 +405,7 @@ def load(conf: Config):
                 variables={
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
-                    "OTHER_MODEL": model["name"],
+                    "OTHER_MODELS": model["name"],
                     "PRESERVED_COORDS": ["time", "pressure"],
                     "AGGREGATION_MODE": "Time-step RMSE",
                     **subarea_vars,
