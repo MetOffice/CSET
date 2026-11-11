@@ -1,4 +1,4 @@
-category: Scores Model versus Observation Time Series Aggregation
+category: Scores Model vs Observation Time Series Aggregation
 title: "$VARNAME\nscores MAE time series for model vs observation points aggregated by $AGGREGATION_MODE $SUBAREA_NAME"
 description: |
   The mean absolute error (MAE) is calculated based on that used in the
