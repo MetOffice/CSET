@@ -1,10 +1,10 @@
 category: Scores Model versus Observation Time Series Aggregation
 title: "$VARNAME\nscores MAE time series for model vs observation points aggregated by $AGGREGATION_MODE $SUBAREA_NAME"
 description: |
-  The MAE is calculated based on that used in the
+  The mean absolute error (MAE) is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.mae).
 
-  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the MAE is
+  This recipe allows the preservation of the time coordinate to produce a time series. Therefore, the MAE is
   collapsed over all other coordinates in the cube and calculated for every timestep.
 
 

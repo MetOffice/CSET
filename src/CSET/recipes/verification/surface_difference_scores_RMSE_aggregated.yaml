@@ -5,11 +5,7 @@ description: |
   The RMSE is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.rmse).
 
-  This recipe can preserve the time, latitude and longitude coordinates, in which case
-  a sequence of spatial plots of the RMSE are produced according to the averaging
-  method i.e. SEQ, MAX and MIN.
-
-  This recipe calculates the MAE across all the case studies.
+  This recipe calculates the RMSE across all the case studies.
 
   A larger RMSE implies a greater error than a smaller RMSE. An
   RMSE of zero indicates the two fields match. The RMSE is calculated

@@ -2,7 +2,7 @@ category: Scores Categorical
 title: Time Series of POD for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
 description: |
 
-  Extracts and plots the POD for $VARNAME for each model against observations as a timeseries.
+  Extracts and plots the POD for $VARNAME for each model against observations as a time series.
 
   The probability of detection (POD)  in [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.probability_of_detection)
   calculates the proportion of observed events that meet a threshold that were correctly forecast by the model.

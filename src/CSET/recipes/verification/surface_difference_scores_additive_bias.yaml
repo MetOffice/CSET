@@ -8,14 +8,12 @@ description: |
   This means a sequence of spatial plots of the ME can be produced.
   Currently only working for deterministic models.
 
-  This recipe calculates the ME and can either keep or
-  collapse the time dimension:
-
-  METHOD = SEQ (or left blank): keeps the time, latitude and
-  longitude coordinates and produces a sequence of spatial ME
-  plots, one per time point.
-  METHOD = MIN, MAX or MEAN: collapses the time dimension to a
-  single time point per case using that statistic, then plots it.
+  This recipe calculates the ME. By default
+  (COLLAPSE_METHOD = SEQ, or left blank), it keeps the time, latitude and
+  longitude coordinates and produces a sequence of spatial ME plots, one
+  per time point. Setting COLLAPSE_METHOD to MEAN, MAX, MIN, etc. instead
+  collapses the time coordinate using that statistic, giving a single
+  spatial plot per case study.
 
   A larger ME implies a greater error than a smaller ME. Although a near zero ME could be indicative
   of a good match between two fields, this could also arise if there are large compensating

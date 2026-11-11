@@ -2,10 +2,10 @@ category: Scores Model verus Observation Time Series
 title: "$VARNAME scores pearson correlation time series for model vs observation points $SUBAREA_NAME"
 description: |
 
-  Extracts and plots the Pearson's Correlation coefficient in $VARNAME
+  Extracts and plots the Pearson's Correlation (PC) coefficient in $VARNAME
   computed over the domain for each timestep. The PC is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.correlation.pearsonr).
-  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the PC is
+  This recipe allows the preservation of the time coordinate to produce a time series. Therefore, the PC is
   collapsed over all other coordinates in the cube and calculated for every timestep.
 
   The PC coefficient provides information on the linear relationship between two fields.

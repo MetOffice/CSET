@@ -2,7 +2,7 @@ category: Scores Categorical
 title: Time Series of FB for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
 description: |
 
-    Extracts and plots the FB for $VARNAME for each model against observations as a timeseries.
+    Extracts and plots the FB for $VARNAME for each model against observations as a time series.
 
     The Frequency Bias (FB) in [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.frequency_bias) measures whether a forecasting system predicts an
     event too frequently or too infrequently compared to observations. Unlike

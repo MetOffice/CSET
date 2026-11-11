@@ -2,10 +2,10 @@ category: Scores Model verus Observation Time Series
 title: "$VARNAME scores rmse time series for model vs observation points $SUBAREA_NAME"
 description: Extracts and plot a time series of $VARNAME for all times based on RMSE between given models and observation points.
 
- The RMSE is calculated based on that used in the
+  The root mean square error (RMSE) is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.rmse).
 
-  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the RMSE is
+  This recipe allows the preservation of the time coordinate to produce a time series. Therefore, the RMSE is
   collapsed over all other coordinates in the cube and calculated for every timestep.
 
 

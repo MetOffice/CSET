@@ -1,10 +1,10 @@
 category: Scores Time Series
-title: "$VARNAME\nScores Mean Absolute Error timeseries between models and $BASE_MODEL $SUBAREA_NAME"
+title: "$VARNAME\nScores Mean Absolute Error time series between models and $BASE_MODEL $SUBAREA_NAME"
 description: |
-  Extracts and plots the Mean Absolute Error in $VARNAME
+  Extracts and plots the Mean Absolute Error (MAE) in $VARNAME
   computed over the domain for each timestep. The MAE is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.mae).
-  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the MAE is
+  This recipe allows the preservation of the time coordinate to produce a time series. Therefore, the MAE is
   collapsed over all other coordinates in the cube and calculated for every timestep.
 
   A larger MAE implies a greater error than a smaller MAE. An
