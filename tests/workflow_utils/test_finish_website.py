@@ -29,7 +29,7 @@ def test_install_website_skeleton(tmp_path):
     skeleton_dir = Path("src/CSET/cset_workflow/app/finish_website/file/html")
     finish_website.install_website_skeleton(www_root_link, www_content, skeleton_dir)
     assert www_content.is_dir()
-    assert (www_content / "index.html").is_file()
+    assert (www_content / "viewer.html").is_file()
     assert (www_content / "script.js").is_file()
     assert www_root_link.is_symlink()
     assert www_root_link.resolve() == www_content.resolve()
@@ -50,11 +50,11 @@ def test_copy_rose_config(monkeypatch, tmp_path):
 
 def test_bust_cache(tmp_path):
     """Cache busting query string is added where requested."""
-    with open(tmp_path / "index.html", "wt") as fp:
+    with open(tmp_path / "viewer.html", "wt") as fp:
         fp.write('<img href="image.jpg?v=CACHEBUSTER" />\n')
     finish_website.bust_cache(tmp_path)
     # Check cache busting query has been added.
-    with open(tmp_path / "index.html", "rt") as fp:
+    with open(tmp_path / "viewer.html", "rt") as fp:
         content = fp.read()
     assert "CACHEBUSTER" not in content
     assert re.search(r"\?v=\d+", content)
