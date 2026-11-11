@@ -681,7 +681,14 @@ function setup_clear_search_button() {
 
 // Track the current timeout for search debouncing.
 let searchTimeoutID = undefined;
-
+// Fixed filter from the landing page, always applied on top of the user's query.
+const base_query = new URLSearchParams(document.location.search).get("base") || "";
+// Page title from the landing page button, if given.
+const page_title = new URLSearchParams(document.location.search).get("title");
+if (page_title) {
+  document.getElementById("page-title").textContent = page_title;
+  document.title = `${page_title} – CSET`;
+}
 // Filter the displayed diagnostics by the query.
 function doSearch() {
   // Clear timeout to prevent searching on both input and change events.
@@ -697,7 +704,13 @@ function doSearch() {
   console.log("Search query:", query);
   let condition;
   try {
-    condition = query2condition(query);
+     let full_query = query;
+    if (base_query && query) {
+      full_query = `(${base_query}) AND (${query})`;
+    } else if (base_query) {
+      full_query = base_query;
+    }
+    condition = query2condition(full_query);
     // Set to an empty string to mark as valid.
     queryElem.setCustomValidity("");
   } catch (error) {

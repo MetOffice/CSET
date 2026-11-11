@@ -14,12 +14,15 @@
 
 <button type="button" class="preset" data-query='VARNAME:temperature'>Temperature</button>
 <button type="button" class="preset" data-query='case_date="20250815T0000Z"'>20250815T0000Z</button>
-<button type="button" class="preset" data-query='case_date="20250815T0000Z"+OTHER_MODEL="cci"'>20250815T0000Z + cci</button>
+<button type="button" class="preset"
+        data-query='case_date="20250815T0000Z" OTHER_MODEL="cci"'
+        data-title="15 Aug 2025 case: CCI vs control">20250815T0000Z + cci</button>
 
 <script>
   document.querySelectorAll(".preset").forEach(btn =>
     btn.addEventListener("click", () => {
-      window.location.href = "viewer.html?q=" + encodeURIComponent(btn.dataset.query);
+      window.location.href = "viewer.html?base=" + encodeURIComponent(btn.dataset.query)
+        + "&title=" + encodeURIComponent(btn.dataset.title || btn.textContent);
     })
   );
 </script>
