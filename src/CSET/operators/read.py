@@ -23,8 +23,8 @@ import logging
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Literal
-import cartopy.crs as ccrs
 
+import cartopy.crs as ccrs
 import dask
 import iris
 import iris.coord_systems
@@ -413,13 +413,17 @@ def _cutout_cubes(
         x = cube.coord(axis="X", dim_coords=True)
         y = cube.coord(axis="Y", dim_coords=True)
 
-        if x.name() == "projection_x_coordinate" and y.name() == "projection_y_coordinate":
-
+        if (
+            x.name() == "projection_x_coordinate"
+            and y.name() == "projection_y_coordinate"
+        ):
             cs_x = cube.coord("projection_x_coordinate").coord_system
             cs_y = cube.coord("projection_y_coordinate").coord_system
 
             if cs_x is None or cs_y is None:
-                raise ValueError(f"{cube.name()!r} has no coordinate system on its projection coordinates.")
+                raise ValueError(
+                    f"{cube.name()!r} has no coordinate system on its projection coordinates."
+                )
             if cs_x != cs_y:
                 raise ValueError(
                     f"{cube.name()!r} has mismatched coordinate systems: x={cs_x}, y={cs_y}."
@@ -429,10 +433,16 @@ def _cutout_cubes(
 
             Lx, Ly = crs.transform_point(lats[0], lons[0], ccrs.PlateCarree())
             Ux, Uy = crs.transform_point(lats[0], lons[0], ccrs.PlateCarree())
-            cutout_cubes.append(cube.extract(iris.Constraint(coord_values={
-                x.name(): lambda c: Lx <= c.point <= Ux,
-                y.name(): lambda c: Ly <= c.point <= Uy,
-            })))
+            cutout_cubes.append(
+                cube.extract(
+                    iris.Constraint(
+                        coord_values={
+                            x.name(): lambda c: Lx <= c.point <= Ux,
+                            y.name(): lambda c: Ly <= c.point <= Uy,
+                        }
+                    )
+                )
+            )
             breakpoint()
         else:
             breakpoint()
