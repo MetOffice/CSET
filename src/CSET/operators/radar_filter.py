@@ -26,6 +26,16 @@ from CSET.operators.filters import apply_mask, generate_mask
 def mask_list(model_names: list[str]) -> list[str]:
     """Determine the Nimrod weights files to use.
 
+    The Nimrod weights files act as Quality Assurance for their associated
+    rainfall accumulation estimates. Hourly accumulations are computed by
+    summing 5 minute rainfall rates. Ideally, at each grid point thirteen 5
+    minute rainfall rates contribute to estimating the rainfall accumulation over
+    the past hour. Fewer than thirteen rainfall rates may be used with
+    interpolation for the missing data. The Nimrod weights are a record of
+    how many 5 minute rainfall rates were used to compute each accumulation.
+    For an hourly accumulation to be accepted as valid data at least 11
+    5 minute rainfall rates have to have been used for its construction.
+
     Parameters
     ----------
     model_names: list[str]
