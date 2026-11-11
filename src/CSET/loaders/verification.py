@@ -314,7 +314,7 @@ def load(conf: Config):
         conf.POINT_OBS_FIELDS, scores_timeseries_methods_model_vs_obs
     ):
         yield RawRecipe(
-            recipe=f"timeseries_surface_scores_model_vs_obs_{scores_method}.yaml",
+            recipe=f"timeseries_scores_model_vs_obs_{scores_method}.yaml",
             variables={
                 "VARNAME": field,
                 "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
@@ -330,7 +330,7 @@ def load(conf: Config):
             conf.SURFACE_FIELDS, scores_timeseries_methods_aggregated
         ):
             yield RawRecipe(
-                recipe=f"timeseries_surface_difference_scores_{scores_method}_aggregated.yaml",
+                recipe=f"timeseries_difference_scores_{scores_method}_aggregated.yaml",
                 variables={
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
@@ -349,7 +349,7 @@ def load(conf: Config):
             conf.POINT_OBS_FIELDS, scores_timeseries_methods_model_vs_obs
         ):
             yield RawRecipe(
-                recipe=f"timeseries_surface_scores_model_vs_obs_{scores_method}.yaml",
+                recipe=f"timeseries_scores_model_vs_obs_{scores_method}.yaml",
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
@@ -365,7 +365,7 @@ def load(conf: Config):
             scores_timeseries_methods_model_vs_obs_aggregated,
         ):
             yield RawRecipe(
-                recipe=f"timeseries_surface_scores_model_vs_obs_{scores_method}_aggregation.yaml",
+                recipe=f"timeseries_scores_model_vs_obs_{scores_method}_aggregation.yaml",
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
