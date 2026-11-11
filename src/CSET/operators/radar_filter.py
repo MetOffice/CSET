@@ -46,6 +46,8 @@ def mask_list(model_names: list[str]) -> list[str]:
           "Nimrodxkm", "Nimrod_xkm".
           "Nimrod1km", "Nimrod_1km".
 
+        Note the Nimrod IDs using "xkm" point towards Nimrod 5km gridded data.
+
     Returns
     -------
     list[str]
@@ -128,7 +130,8 @@ def mask_by_weights(
         A list of the model_names or radar sources to mask.
     weights_names: list[str]
         A list of radar weights sources to use as masks. There should be an entry
-        in weights_names to correspond with every entry in model_names.
+        in weights_names to correspond with every entry in model_names. These weights
+        are QC rather than geographical masks.
 
     Returns
     -------
