@@ -199,6 +199,30 @@ def load(conf: Config):
                         },
                         model_ids=second_cardington_model_ids,
                     )
+                elif plot_field == "relative humidity":
+                    yield make_recipe(
+                        recipe="cardington_relative_humidity_single_point_time_series.yaml",
+                        variables={
+                            "OBS_NAME": [m["name"] for m in cardington_models],
+                            "OBS_VARNAME": varname,
+                            "VARNAME": model_field,
+                            "STASH": "m01s03i245",
+                            "HEIGHT": ht,
+                            "PLOT_VARNAME": plot_field,
+                        },
+                    )
+                elif plot_field == "dew point":
+                    yield make_recipe(
+                        recipe="cardington_dewpoint_temperature_single_point_time_series.yaml",
+                        variables={
+                            "OBS_NAME": [m["name"] for m in cardington_models],
+                            "OBS_VARNAME": varname,
+                            "VARNAME": model_field,
+                            "STASH": model_field,
+                            "HEIGHT": ht,
+                            "PLOT_VARNAME": plot_field,
+                        },
+                    )
                 elif "temperature" in model_field or "temperature" in card_field:
                     yield make_recipe(
                         recipe="cardington_temperature_single_point_time_series.yaml",
