@@ -23,6 +23,7 @@ import logging
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Literal
+import cartopy.crs as ccrs
 
 import dask
 import iris
@@ -409,17 +410,43 @@ def _cutout_cubes(
         else:
             raise ValueError("Unknown subarea_type:", subarea_type)
 
-        # Do cutout and add to cutout_cubes.
-        intersection_args = {lat_name: lats, lon_name: lons}
-        logger.debug("Cutting out coords: %s", intersection_args)
-        try:
-            cutout_cubes.append(cube.intersection(**intersection_args))
-        except IndexError as err:
-            raise ValueError(
-                "Region cutout error. Check and update SUBAREA_EXTENT."
-                "Cutout region requested should be contained within data area. "
-                "Also check if cutout region requested is smaller than input grid spacing."
-            ) from err
+        x = cube.coord(axis="X", dim_coords=True)
+        y = cube.coord(axis="Y", dim_coords=True)
+
+        if x.name() == "projection_x_coordinate" and y.name() == "projection_y_coordinate":
+
+            cs_x = cube.coord("projection_x_coordinate").coord_system
+            cs_y = cube.coord("projection_y_coordinate").coord_system
+
+            if cs_x is None or cs_y is None:
+                raise ValueError(f"{cube.name()!r} has no coordinate system on its projection coordinates.")
+            if cs_x != cs_y:
+                raise ValueError(
+                    f"{cube.name()!r} has mismatched coordinate systems: x={cs_x}, y={cs_y}."
+                )
+
+            crs = cs_x.as_cartopy_crs()
+
+            Lx, Ly = crs.transform_point(lats[0], lons[0], ccrs.PlateCarree())
+            Ux, Uy = crs.transform_point(lats[0], lons[0], ccrs.PlateCarree())
+            cutout_cubes.append(cube.extract(iris.Constraint(coord_values={
+                x.name(): lambda c: Lx <= c.point <= Ux,
+                y.name(): lambda c: Ly <= c.point <= Uy,
+            })))
+            breakpoint()
+        else:
+            breakpoint()
+            # Do cutout and add to cutout_cubes.
+            intersection_args = {lat_name: lats, lon_name: lons}
+            logger.debug("Cutting out coords: %s", intersection_args)
+            try:
+                cutout_cubes.append(cube.intersection(**intersection_args))
+            except IndexError as err:
+                raise ValueError(
+                    "Region cutout error. Check and update SUBAREA_EXTENT."
+                    "Cutout region requested should be contained within data area. "
+                    "Also check if cutout region requested is smaller than input grid spacing."
+                ) from err
 
     return cutout_cubes
 
