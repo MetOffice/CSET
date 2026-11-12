@@ -1,0 +1,89 @@
+[VerPy_common]
+comment = common defs
+system = MET
+truth = ["GPM", "Rainfields3"]
+interp = NEAREST
+param = ["APCP @ 3"]
+
+[VerPyPlot_gs_precip_fs]
+comment = gs_precip_fs
+jobid = gs_precip_fs
+inherit = VerPy_common
+type = cnt
+stats = ["ME (FcVsObs)", "MSE (FcVsObs)"]
+output = fcrseries
+
+[VerPyPlot_gs_precip_ts]
+comment = gs_precip_ts
+jobid = gs_precip_ts
+inherit = VerPy_common
+type = cnt
+stats = ["ME (FcVsObs)", "MSE (FcVsObs)"]
+output = timeseries
+aggopts = fcrs
+
+[VerPyPlot_gs_precip_di]
+comment = gs_precip_di
+jobid = gs_precip_di
+inherit = VerPy_common
+type = cnt
+stats = ["ME (FcVsObs)", "MSE (FcVsObs)"]
+output = diurnal
+aggopts = fcrs
+
+[VerPyPlot_gs_precip_nbr_fs]
+comment = gs_precip_fs
+jobid = gs_precip_fs
+inherit = VerPy_common
+type = nbrcnt
+interp = NBRHD_SQUARE
+scales = [1]
+stats = ["FSS (FcVsObs)"]
+output = fcrseries
+
+[VerPyPlot_gs_precip_nbr_ts]
+comment = gs_precip_ts
+jobid = gs_precip_ts
+inherit = VerPy_common
+type = nbrcnt
+interp = NBRHD_SQUARE
+scales = [1]
+stats = ["FSS (FcVsObs)"]
+output = timeseries
+aggopts = fcrs
+
+[VerPyPlot_gs_precip_nbr_di]
+comment = gs_precip_di
+jobid = gs_precip_di
+inherit = VerPy_common
+type = nbrcnt
+interp = NBRHD_SQUARE
+scales = [1]
+stats = ["FSS (FcVsObs)"]
+output = diurnal
+aggopts = fcrs
+
+# [VerPyPlot_gs_precip_taylor]
+# comment = gs_precip_taylor
+# jobid = gs_precip_taylor
+# inherit = VerPy_common
+# type = sl1l2
+# stats = [7758, 1756, 3756]
+# output = taylor
+# compare_on_plot = fcrs
+# # fcrs = [600, 1200, 1800, 2400]
+# plottheme = split
+# tayloropts = ['crmse_contour', 'normalized']
+
+[VerPyPlot_gs_precip_roebber]
+comment = gs_precip_roebber
+jobid = gs_precip_roebber
+inherit = VerPy_common
+type = ctc
+stats = [7921, 7922, 7923]
+interp = NEAREST
+output = roebber
+compare_on_plot = fcrs
+fcrs = [600, 1200, 1800, 2400]
+plottheme = split
+

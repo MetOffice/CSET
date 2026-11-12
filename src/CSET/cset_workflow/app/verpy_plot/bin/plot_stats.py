@@ -16,13 +16,32 @@ import VerPy.conf2opts
 
 def setup_verpy():
     """Customise Verpy configs."""
+    from VerPy.datafiles.metmaps import MET_TRUTHS
     from VerPy.stats import MET_STAT_IDS, get_statistic
+    from VerPy.truthtype import TRUTHTYPES
 
     # Compute errors from MPR, adapting SL1L2 partial sums
-    me = get_statistic(stat=7051, system="MET", filetype="sl1l2")
+    me = get_statistic(stat=7051, system="MET", filetype="sl1l2").copy()
     me["type"] = "mpr"
     me["requires"] = [10 - 6000, 10 - 4000]
     MET_STAT_IDS.append(me)
+
+    # Add FSS vs OBS
+    fss = get_statistic(stat=6765, system="MET", filetype="nbrcnt").copy()
+    fss["classes"] = [7]
+    MET_STAT_IDS.append(fss)
+    for sid in [2768, 2780]:
+        stat = get_statistic(stat=sid, system="MET", filetype="nbrcnt").copy()
+        stat["classes"] = [3]
+        MET_STAT_IDS.append(stat)
+
+    # Additional truth types
+    MET_TRUTHS["GPM"] = "GPM"
+    MET_TRUTHS["Rainfields3"] = "Rainfields3"
+    TRUTHTYPES.extend([
+        {'type': 'satellite', 'name': 'GPM', 'code': 20050, 'short': 'GPM'},
+        {'type': 'surface', 'name': 'Rainfields3', 'code': 10650, 'short': 'Rainfields3'},
+        ])
 
 
 def main():
@@ -43,6 +62,7 @@ def main():
     parser.add_argument("--start", required=True)
     parser.add_argument("--end", required=True)
     parser.add_argument("--expids", required=True, nargs="+")
+    parser.add_argument("--title", default="Metplus Plots")
     parser.add_argument(
         "--image-meta-tag", action="store_true", help="Index with image-meta-tag"
     )
@@ -77,7 +97,7 @@ def main():
             json_filename = f"{args.outdir}/{options['jobid']}/meta.json"
             print(f"writing metadata to json file: {json_filename}")
             metadata_dict = {
-                "title": "Metplus Point Stat plots",
+                "title": args.title,
                 "category": "Metplus plots",
                 "jobid": options["jobid"],
                 "output": options["output"],
@@ -87,7 +107,7 @@ def main():
 
     if args.image_meta_tag:
         metadata_dict = {
-            "title": "Metplus ImageMetaTag",
+            "title": args.title,
             "category": "Metplus plots",
         }
         with open(f"{args.outdir}/meta.json", "wt") as jf:
