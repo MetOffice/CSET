@@ -42,7 +42,7 @@ steps:
 
   - operator: misc.extract_common_time_points
 
-    # The preserved coordinates specifies whether or not the
+    # The preserved coordinates specify whether or not the
     # ME is to be computed over the entire case study.
   - operator: scoreswrappers.scores_additive_bias
     preserved_coordinates: $PRESERVED_COORDS

@@ -37,7 +37,7 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-    # The preserved coordinates specifies whether or not the
+    # The preserved coordinates specify whether or not the
     # RMSE is to be computed over the entire case study.
 
   - operator: misc.extract_common_time_points
