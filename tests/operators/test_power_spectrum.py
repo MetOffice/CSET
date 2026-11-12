@@ -267,9 +267,10 @@ def test_power_spectrum_cube_regular_latlon_coords(cubes, tmp_working_dir, caplo
     assert "longitude coordinates for grid spacing calculation." in caplog.text
 
 
-def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_times():
+def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_times_no_fp():
     """Check power spectrum can be calculated for multiple forecast reference times and realizations."""
-    # Create a cube with multiple realizations and forecast reference times.
+    # Create a cube with multiple realizations and forecast reference times but no
+    # forecast_period.
     data = np.random.rand(2, 3, 10, 10)
 
     # Define coordinates to add to cube
@@ -313,6 +314,75 @@ def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_t
         iris.coords.AuxCoord(
             [0, 1, 2],
             standard_name="forecast_reference_time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(1,),
+    )
+
+    with pytest.raises(
+        ValueError,
+        match=("Cube does not have forecast_period dimension. "),
+    ):
+        power_spectrum.calculate_power_spectrum(cube)
+
+
+def test_calculate_power_spectrum_multiple_realizations_and_forecast_reference_times_fp():
+    """Check power spectrum can be calculated for multiple forecast reference times and realizations."""
+    # Create a cube with multiple realizations and forecast reference times
+    # Time coord is forecast_period.
+
+    data = np.random.rand(2, 3, 10, 10)
+
+    # Define coordinates to add to cube
+    realization_coord = iris.coords.DimCoord(
+        [0, 1],
+        long_name="realization",
+        units="1",
+    )
+
+    fp_coord = iris.coords.DimCoord(
+        [0, 1, 2],
+        standard_name="forecast_period",
+        units="hours",
+    )
+
+    y_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_latitude",
+        units="degrees",
+    )
+
+    x_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_longitude",
+        units="degrees",
+    )
+
+    # Create cube for testing power spectrum code
+    cube = iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[
+            (realization_coord, 0),
+            (fp_coord, 1),
+            (y_coord, 2),
+            (x_coord, 3),
+        ],
+        long_name="test_data",
+    )
+
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2],
+            standard_name="forecast_reference_time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(1,),
+    )
+
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2],
+            standard_name="time",
             units="hours since 1970-01-01 00:00:00",
         ),
         data_dims=(1,),
@@ -380,10 +450,10 @@ def test_calculate_power_spectrum_raises_for_different_multi_point_times():
         units="1",
     )
 
-    time_coord = iris.coords.DimCoord(
+    fp_coord = iris.coords.DimCoord(
         [0, 1, 2, 3, 4, 5],
-        standard_name="time",
-        units="hours since 1970-01-01 00:00:00",
+        standard_name="forecast_period",
+        units="hours",
     )
 
     frt_coord = iris.coords.AuxCoord(
@@ -408,7 +478,7 @@ def test_calculate_power_spectrum_raises_for_different_multi_point_times():
         data,
         dim_coords_and_dims=[
             (realization_coord, 0),
-            (time_coord, 1),
+            (fp_coord, 1),
             (y_coord, 2),
             (x_coord, 3),
         ],
@@ -416,6 +486,16 @@ def test_calculate_power_spectrum_raises_for_different_multi_point_times():
             (frt_coord, (1,)),
         ],
         long_name="test_data",
+    )
+
+    # require time coord but attach as aux coord
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2, 3, 4, 5],
+            standard_name="time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(1,),
     )
 
     with pytest.raises(
@@ -428,3 +508,173 @@ def test_calculate_power_spectrum_raises_for_different_multi_point_times():
         ),
     ):
         power_spectrum.calculate_power_spectrum(cube)
+
+
+def test_multiple_frts_matching_forecast_period():
+    """Check for success when multiple frt have matching forecast_period."""
+    data = np.random.rand(2, 6, 10, 10)
+
+    realization_coord = iris.coords.DimCoord(
+        [0, 1],
+        long_name="realization",
+        units="1",
+    )
+
+    fp_coord = iris.coords.AuxCoord(
+        [0, 1, 2, 0, 1, 2],
+        standard_name="forecast_period",
+        units="hours",
+    )
+
+    frt_coord = iris.coords.AuxCoord(
+        [0, 0, 0, 6, 6, 6],
+        standard_name="forecast_reference_time",
+        units="hours since 1970-01-01 00:00:00",
+    )
+
+    y_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_latitude",
+        units="degrees",
+    )
+
+    x_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_longitude",
+        units="degrees",
+    )
+
+    cube = iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[
+            (realization_coord, 0),
+            (y_coord, 2),
+            (x_coord, 3),
+        ],
+        aux_coords_and_dims=[
+            (fp_coord, (1,)),
+            (frt_coord, (1,)),
+        ],
+        long_name="test_data",
+    )
+
+    # require time coord but attach as aux coord
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2, 6, 7, 8],
+            standard_name="time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(1,),
+    )
+
+    result = power_spectrum.calculate_power_spectrum(cube)
+
+    assert result is not None
+
+
+def test_calculate_power_spectrum_no_realizations_or_forecast_reference_times():
+    """Check power spectrum can be calculated without realizations or frt coords."""
+    # Create a cube forecast reference times but no realization coord
+    # Time coord is forecast_period.
+
+    data = np.random.rand(3, 10, 10)
+
+    fp_coord = iris.coords.DimCoord(
+        [0, 1, 2],
+        standard_name="forecast_period",
+        units="hours",
+    )
+
+    y_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_latitude",
+        units="degrees",
+    )
+
+    x_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_longitude",
+        units="degrees",
+    )
+
+    # Create cube for testing power spectrum code
+    cube = iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[
+            (fp_coord, 0),
+            (y_coord, 1),
+            (x_coord, 2),
+        ],
+        long_name="test_data",
+    )
+
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2],
+            standard_name="time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(0,),
+    )
+
+    result = power_spectrum.calculate_power_spectrum(cube)
+
+    assert result is not None
+
+
+def test_calculate_power_spectrum_no_frt():
+    """Check power spectrum can be calculated without frt coord."""
+    # Create a cube without frt
+    # Time coord is forecast_period.
+
+    data = np.random.rand(1, 3, 10, 10)
+
+    realization_coord = iris.coords.DimCoord(
+        [0],
+        long_name="realization",
+        units="1",
+    )
+
+    fp_coord = iris.coords.DimCoord(
+        [0, 1, 2],
+        standard_name="forecast_period",
+        units="hours",
+    )
+
+    y_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_latitude",
+        units="degrees",
+    )
+
+    x_coord = iris.coords.DimCoord(
+        np.arange(10),
+        long_name="grid_longitude",
+        units="degrees",
+    )
+
+    # Create cube for testing power spectrum code
+    cube = iris.cube.Cube(
+        data,
+        dim_coords_and_dims=[
+            (realization_coord, 0),
+            (fp_coord, 1),
+            (y_coord, 2),
+            (x_coord, 3),
+        ],
+        long_name="test_data",
+    )
+
+    cube.add_aux_coord(
+        iris.coords.AuxCoord(
+            [0, 1, 2],
+            standard_name="time",
+            units="hours since 1970-01-01 00:00:00",
+        ),
+        data_dims=(1,),
+    )
+
+    result = power_spectrum.calculate_power_spectrum(cube)
+
+    assert result is not None
