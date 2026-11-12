@@ -296,4 +296,17 @@ loading-throbber {
   }
 }
 
+/* Hide the sidebar when collapsed. */
+body.sidebar-collapsed #plot-selector {
+  display: none;
+}
+
+/* Keep the toggle button pinned in the bottom-left corner. */
+#sidebar-toggle {
+  position: fixed;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  z-index: 10;
+}
+
 /* End loading throbber. */
