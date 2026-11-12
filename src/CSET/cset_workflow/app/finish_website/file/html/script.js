@@ -655,6 +655,21 @@ function setup_plots_sidebar() {
     });
 }
 
+// Show/hide the whole left-hand sidebar.
+function setup_sidebar_toggle() {
+  const toggle_button = document.getElementById("sidebar-toggle");
+  // Skip if there is no toggle on page.
+  if (!toggle_button) {
+    return;
+  }
+  toggle_button.addEventListener("click", () => {
+    // toggle() adds the class if missing, removes it if present,
+    // and returns true if it is now present.
+    const collapsed = document.body.classList.toggle("sidebar-collapsed");
+    toggle_button.textContent = collapsed ? "» Show list" : "« Hide list";
+  });
+}
+
 function setup_clear_view_button() {
   // Reset frames to placeholder view.
   function clear_frames() {
@@ -774,6 +789,7 @@ function setup_search() {
 
 // Run everything.
 setup_description_toggle_button();
+setup_sidebar_toggle();
 setup_clear_view_button();
 setup_clear_search_button();
 setup_search();
