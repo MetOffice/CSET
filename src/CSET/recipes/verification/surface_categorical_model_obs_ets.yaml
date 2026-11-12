@@ -1,8 +1,8 @@
 category: Scores Categorical
-title: Timeseries of ETS for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
+title: Time Series of ETS for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
 description: |
 
-    Extracts and plots the ETS for $VARNAME for each model against observations as a timeseries.
+    Extracts and plots the ETS for $VARNAME for each model against observations as a time series.
 
     The Equitable Threat Score (ETS) in [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.equitable_threat_score)
     evaluates the accuracy of forecasts for events that meet a specified threshold,

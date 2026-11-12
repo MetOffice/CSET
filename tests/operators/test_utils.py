@@ -14,7 +14,7 @@
 
 """Tests for common operator functionality across CSET."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import iris
 import iris.coords
@@ -713,3 +713,69 @@ def test_calc_array_stats_masked_array():
     assert array_min == 1.0
     assert array_max == 3.0
     assert array_mean == 2.0
+
+
+def test_get_shared_times_different_units(make_simple_1d_time_cube):
+    """Shared times are found when the cubes' time units differ."""
+    base = make_simple_1d_time_cube(
+        [0, 6, 12, 18], "time", "hours since 2026-01-01 00:00:00"
+    )
+    other = make_simple_1d_time_cube(
+        [0.25, 0.5, 1.0], "time", "days since 2026-01-01 00:00:00"
+    )
+    shared = operator_utils.get_shared_times(base, other, "time")
+    shared_py = {datetime(t.year, t.month, t.day, t.hour) for t in shared}
+    assert shared_py == {
+        datetime(2026, 1, 1, 6),
+        datetime(2026, 1, 1, 12),
+    }
+
+
+def test_get_shared_times_same_units_hours(make_simple_1d_time_cube):
+    """Shared times are found when the cubes time coords are `hour`."""
+    base = make_simple_1d_time_cube(
+        [0, 6, 12, 18, 24], "hour", "hours since 2026-01-01 00:00:00"
+    )
+    other = make_simple_1d_time_cube(
+        [0, 12, 24], "hour", "hours since 2026-01-01 00:00:00"
+    )
+    shared = operator_utils.get_shared_times(base, other, "hour")
+    assert shared == {0, 12, 24}
+
+
+def test_ensure_common_time_points_matching(make_simple_1d_time_cube):
+    """No error when both cubes have identical time points."""
+    base = make_simple_1d_time_cube(
+        [0, 6, 12], "time", "hours since 2026-01-01 00:00:00"
+    )
+    other = make_simple_1d_time_cube(
+        [0, 6, 12], "time", "hours since 2026-01-01 00:00:00"
+    )
+    assert operator_utils.ensure_common_time_points(base, other) is None
+
+
+def test_ensure_common_time_points_other_cube_no_frt(
+    make_frt_cube, make_simple_1d_time_cube
+):
+    """Error when base cube has a frt and the other doesn't."""
+    base = make_frt_cube([0, 24], [0, 6, 12])
+    other = make_simple_1d_time_cube(
+        [0, 6, 12], "time", "hours since 2026-01-01 00:00:00"
+    )
+    with pytest.raises(
+        ValueError,
+        match="Other cube has no forecast_reference_time 2026-01-01 00:00:00.",
+    ):
+        operator_utils.ensure_common_time_points(base, other)
+
+
+def test_ensure_common_time_points_different_time_points(
+    make_frt_cube, make_simple_1d_time_cube
+):
+    """Error when cubes have different time points."""
+    base = make_frt_cube([0, 24], [0, 6, 12])
+    other = make_frt_cube([0, 24], [0, 2, 4, 6, 8, 10, 12])
+    with pytest.raises(
+        ValueError, match="Base and other cubes have different time points."
+    ):
+        operator_utils.ensure_common_time_points(base, other)
