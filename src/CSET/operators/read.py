@@ -317,7 +317,7 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
                     files.append(input_path)
 
         # If files not found, test if aiming to read ancillary directory path
-        if len(files) == 0 or not any(f.endswith((".pp", ".nc")) for f in str(files)):
+        if len(files) == 0 or any(str(f).endswith(".nl") for f in files):
             files = _check_ancillary_path(raw_filename)
 
     files.sort()
