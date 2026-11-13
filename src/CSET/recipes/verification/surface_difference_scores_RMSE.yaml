@@ -1,13 +1,16 @@
-category: Scores
-title: "$METHOD $VARNAME\nScores RMSE between $OTHER_MODEL and $BASE_MODEL $SUBAREA_NAME"
+category: Scores Spatial
+title: "$COLLAPSE_METHOD $VARNAME\nScores RMSE between the comparison model and $BASE_MODEL $SUBAREA_NAME"
 description: |
-  Extracts and plots the Root Mean Square Error in $METHOD of $VARNAME.
+  Extracts and plots the Root Mean Square Error (RMSE) in $COLLAPSE_METHOD of $VARNAME.
   The RMSE is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.rmse).
 
-  This recipe can preserve the time, latitude and longitude coordinates, in which case
-  a sequence of spatial plots of the RMSE are produced according to the averaging
-  method i.e. SEQ, MAX and MIN.
+  This recipe calculates the RMSE. By default
+  (COLLAPSE_METHOD = SEQ, or left blank), it keeps the time, latitude and
+  longitude coordinates and produces a sequence of spatial RMSE plots, one
+  per time point. Setting COLLAPSE_METHOD to MEAN, MAX, MIN, etc. instead
+  collapses the time coordinate using that statistic, giving a single
+  spatial plot per case study.
 
   Alternatively, the RMSE can be computed over all time points in the case study, i.e.
   preserving just the latitude and longitude coordinates, by selecting the method CASE.
@@ -19,7 +22,7 @@ description: |
   information about where the differences are, or if placement errors
   are domininating the score (usually indicated by dipoles).
 
-  For RMSE values computed across an entire casse study, the computation
+  For RMSE values computed across an entire case study, the computation
   is done within the scores RMSE module, rather than trying to mean across
   each timestep. This preserves the nonlinear nature of the RMSE metric.
 
@@ -43,8 +46,11 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-    # The preserved coordinates specifies whether or not the
+    # The preserved coordinates specify whether or not the
     # RMSE is to be computed over the entire case study.
+
+  - operator: misc.extract_common_time_points
+
   - operator: scoreswrappers.scores_rmse
     preserved_coordinates: $PRESERVED_COORDS
 
@@ -52,7 +58,7 @@ steps:
     # computed across the entire case study.
   - operator: collapse.collapse
     coordinate: ["time"]
-    method: $METHOD
+    method: $COLLAPSE_METHOD
 
   - operator: plot.spatial_pcolormesh_plot
 

@@ -1,11 +1,10 @@
-category: Surface Model verus Observation Time Series
-title: "$VARNAME scores pearson correlation time series for model vs observation points $SUBAREA_NAME"
+category: Scores Model vs Observation Time Series Aggregation
+title: "$VARNAME\nscores Pearson's Correlation time series for model vs observation points aggregated by $AGGREGATION_MODE $SUBAREA_NAME"
 description: |
-
-  Extracts and plots the Pearson's Correlation coefficient in $VARNAME
+  Extracts and plots the Pearson's Correlation (PC) coefficient in $VARNAME
   computed over the domain for each timestep. The PC is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.correlation.pearsonr).
-  This recipe allows the preservation of the time coordinate to produce a timeseries. Therefore, the PC is
+  This recipe allows the preservation of the time coordinate to produce a time series. Therefore, the PC is
   collapsed over all other coordinates in the cube and calculated for every timestep.
 
   The PC coefficient provides information on the linear relationship between two fields.
@@ -27,34 +26,39 @@ steps:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
 
-  - operator: misc.extract_common_points
-    coordinate: time
+  - operator: misc.extract_common_time_points
 
   - operator: misc.combine_cubes_into_cubelist
     first:
-        operator: filters.filter_cubes
+      operator: aggregate.combine_obs_across_forecasts
+      cubes:
+        operator: filters.filter_multiple_cubes
         constraint:
+          operator: constraints.generate_var_constraint
+          varname: observed_$VARNAME
+    second:
+      operator: regrid.interpolate_to_point_cube
+      fld:
+        operator: aggregate.ensure_aggregatable_across_cases
+        cubes:
+          operator: filters.filter_multiple_cubes
+          constraint:
+            operator: constraints.generate_var_constraint
+            varname: $VARNAME
+
+      point_cube:
+        operator: aggregate.combine_obs_across_forecasts
+        cubes:
+          operator: filters.filter_multiple_cubes
+          constraint:
             operator: constraints.generate_var_constraint
             varname: observed_$VARNAME
-    second:
-       operator: regrid.interpolate_to_point_cube
-       fld:
-           operator: filters.filter_multiple_cubes
-           constraint:
-               operator: constraints.combine_constraints
-               var_constraint:
-                   operator: constraints.generate_var_constraint
-                   varname: $VARNAME
-       point_cube:
-           operator: filters.filter_cubes
-           constraint:
-               operator: constraints.generate_var_constraint
-               varname: observed_$VARNAME
 
   - operator: scoreswrappers.scores_correlation_pearsonr
-    preserved_coordinates: "time"
+    preserved_coordinates: $PRESERVED_COORD
 
   - operator: plot.plot_line_series
+    series_coordinate: $PRESERVED_COORD
 
   - operator: write.write_cube_to_nc
     overwrite: True

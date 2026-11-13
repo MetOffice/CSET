@@ -55,6 +55,7 @@ from CSET.operators._utils import (
     check_sequence_coordinate,
     check_single_cube,
     check_stamp_coordinate,
+    ensure_common_time_points,
     fully_equalise_attributes,
     get_cube_yxcoordname,
     get_num_models,
@@ -64,7 +65,6 @@ from CSET.operators._utils import (
     validate_cubes_coords,
 )
 from CSET.operators.collapse import collapse
-from CSET.operators.misc import _extract_common_time_points
 from CSET.operators.regrid import regrid_onto_cube
 
 logger = logging.getLogger(__name__)
@@ -409,8 +409,14 @@ def _set_title_and_filename(
             plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
 
     if model_name:
-        plot_filename = f"{model_name}_{plot_filename}"
-        plot_title = f"{model_name}_{plot_title}"
+        if "the comparison model" in plot_title:
+            plot_title = plot_title.replace("the comparison model", model_name)
+            plot_filename = slugify(
+                plot_filename.replace("the comparison model", model_name)
+            )
+        else:
+            plot_title = f"{model_name}_{plot_title}"
+            plot_filename = slugify(f"{model_name}_{plot_filename}")
 
     return plot_title, plot_filename
 
@@ -752,7 +758,7 @@ def _plot_and_save_spatial_plot(
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     cube_min, cube_max, cube_mean = calc_array_stats(cube.data)
     axes.annotate(
-        f"Min: {cube_min:.3g} Max: {cube_max:.3g} Mean: {cube_mean:.3g}",
+        f"Min: {np.nanmin(cube.data):.3g} Max: {np.nanmax(cube.data):.3g} Mean: {np.nanmean(cube.data):.3g}",
         xy=(0.025, yinfopad),
         xycoords="axes fraction",
         xytext=(-5, 5),
@@ -881,7 +887,7 @@ def _plot_and_save_postage_stamp_spatial_plot(
                 vmin = min(levels)
                 vmax = max(levels)
             else:
-                raise TypeError("Unknown vmin and vmax range.")
+                logger.info("Unknown vmin and vmax range.")
                 vmin, vmax = None, None
             # pcolormesh plot of the field and ensure to use norm and not vmin/vmax
             # if levels are defined.
@@ -1871,6 +1877,7 @@ def _spatial_plot(
     filename: str | None,
     sequence_coordinate: str,
     stamp_coordinate: str,
+    strict_title: bool = False,
     overlay_cube: iris.cube.Cube | None = None,
     contour_cube: iris.cube.Cube | None = None,
     point_cube: iris.cube.Cube | None = None,
@@ -1904,6 +1911,9 @@ def _spatial_plot(
     stamp_coordinate: str
         Coordinate about which to plot postage stamp plots. Defaults to
         ``"realization"``.
+    strict_title: bool, optional
+        Logical switch that if set to True will ensure that the MODEL_NAME
+        string is not prepended to the plot title. The default is False.
     overlay_cube: Cube | None, optional
         Optional 2 dimensional (lat and lon) Cube of data to overplot on top of base cube
     contour_cube: Cube | None, optional
@@ -1965,6 +1975,8 @@ def _spatial_plot(
         if "model_name" in cube.attributes:
             model_name = cube.attributes["model_name"]
         else:
+            model_name = None
+        if strict_title:
             model_name = None
 
         plot_title, plot_filename = _set_title_and_filename(
@@ -2054,6 +2066,7 @@ def spatial_pcolormesh_plot(
     filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
+    strict_title: bool = False,
     **kwargs,
 ) -> iris.cube.Cube:
     """Plot a spatial variable onto a map from a 2D, 3D, or 4D cube.
@@ -2081,6 +2094,9 @@ def spatial_pcolormesh_plot(
     stamp_coordinate: str, optional
         Coordinate about which to plot postage stamp plots. Defaults to
         ``"realization"``.
+    strict_title: bool, optional
+        Logical switch that if set to True will ensure that the MODEL_NAME
+        string is not prepended to the plot title. The default is False.
 
     Returns
     -------
@@ -2100,6 +2116,7 @@ def spatial_pcolormesh_plot(
                 filename,
                 sequence_coordinate,
                 stamp_coordinate,
+                strict_title,
                 **kwargs,
             )
     elif isinstance(cubes, iris.cube.Cube):
@@ -2109,6 +2126,7 @@ def spatial_pcolormesh_plot(
             filename,
             sequence_coordinate,
             stamp_coordinate,
+            strict_title,
             **kwargs,
         )
     return cubes
@@ -2726,7 +2744,8 @@ def qq_plot(
         base = regrid_onto_cube(base, other, method="Linear")
 
     # Extract just common time points.
-    base, other = _extract_common_time_points(base, other)
+    # raise value error if no shared time
+    ensure_common_time_points(base, other)
 
     # Equalise attributes so we can merge.
     fully_equalise_attributes([base, other])

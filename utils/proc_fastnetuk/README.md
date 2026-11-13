@@ -39,7 +39,7 @@ The script requires:
 Run with:
 
 ```bash
-python fix_fastnetuk_ugrid.py \
+python proc_fastnetuk.py \
     --inputpath "<input_files>" \
     --outputpath "<output_directory>"
 ```
