@@ -174,3 +174,23 @@ def load(conf: Config):
                 model_ids=[model["id"] for model in models],
                 aggregation=False,
             )
+
+    # Ancillary fields.
+    if conf.SPECTRUM_ANCILLARY_FIELD:
+        for field in conf.ANCILLARY_FIELDS:
+            yield RawRecipe(
+                recipe="generic_surface_power_spectrum_series.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": [model["name"] for model in models],
+                    "SEQUENCE": "realization",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                    "SPECTRUM_SURFACE_FIELD_SEQUENCE": True,
+                },
+                model_ids=[model["id"] for model in models],
+                aggregation=False,
+            )

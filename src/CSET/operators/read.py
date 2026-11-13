@@ -20,6 +20,7 @@ import functools
 import glob
 import itertools
 import logging
+import re
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Literal
@@ -315,10 +316,132 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
                 else:
                     files.append(input_path)
 
+        # If files not found, test if aiming to read ancillary directory path
+        if len(files) == 0 or any(str(f).endswith(".nl") for f in files):
+            files = _check_ancillary_path(raw_filename)
+
     files.sort()
     logger.info("Loading files:\n%s", "\n".join(str(path) for path in files))
+
     if len(files) == 0:
         raise FileNotFoundError(f"No files found for {input_paths}")
+    return files
+
+
+def _check_ancillary_path(raw_filename: str) -> list[Path]:
+    """Test if reading ancillary directory path, and get an iterable of files to load. Checks potential filename against list of expected ancillary file types.
+
+    Arguments
+    ---------
+    raw_filename: str
+        Path to input files or directory of files. The path may itself contain
+        glob patterns, but unlike in shells it will match directly first.
+
+    Returns
+    -------
+    list[Path]
+        A list of files to load.
+    """
+    files = []
+    for input_path in glob.glob(raw_filename):
+        # Convert string paths into Path objects.
+        input_path = Path(input_path)
+        # Get the list of files in the directory, or use it directly.
+        if input_path.is_dir():
+            ancil_list = {
+                "qrparm.mask",
+                "qrparm.landfrac",
+                "qrparm.orog",
+                "qrparm.orog_radiation_parameters",
+                "qrparm.orog_wavedrag",
+                "qrparm.hydtop",
+                "qrparm.ash",
+                "qrparm.soil.dust",
+                "qrparm.soil",
+                "qrparm.soil_roughness",
+                "qrparm.urb.morph",
+                "qrparm.MORUSES.morph",
+                "qrparm.veg.frac",
+                "qrparm.veg.frac.urb2t",
+                "qrparm.veg.func",
+                "qrclim.land",
+                "qrclim.sea",
+            }
+            logger.debug("Checking directory '%s' for files", input_path)
+            files.extend(
+                str(fname)
+                for fname in input_path.rglob("*", recurse_symlinks=True)
+                if fname.name in ancil_list
+            )
+
+    # Some ancillary paths contain multiple versions of same filename.
+    # Determine latest version for each path excluding vN.
+    latest_version = {}
+
+    for fname in map(Path, files):
+        version = None
+        parent_parts = []
+
+        for part in fname.parts:
+            match = re.fullmatch(r"v([1-9])", part)
+            if match:
+                version = int(match.group(1))
+            else:
+                parent_parts.append(part)
+
+        if version is not None:
+            key = tuple(parent_parts[:-1])  # exclude filename
+
+            latest_version[key] = max(
+                version,
+                latest_version.get(key, 0),
+            )
+
+    # Keep only files from latest version in each path
+    filtered_files = []
+
+    for fname in map(Path, files):
+        version = None
+        parent_parts = []
+
+        for part in fname.parts:
+            match = re.fullmatch(r"v([1-9])", part)
+            if match:
+                version = int(match.group(1))
+            else:
+                parent_parts.append(part)
+
+        if version is None:
+            filtered_files.append(fname)
+            continue
+
+        key = tuple(parent_parts[:-1])
+
+        if version == latest_version[key]:
+            filtered_files.append(fname)
+
+    files = filtered_files
+
+    # Only keep latest created file where duplicated files in path
+    latest_files = {}
+    for file in files:
+        fname = Path(file)
+        if (
+            fname.name not in latest_files
+            or fname.stat().st_mtime > latest_files[fname.name].stat().st_mtime
+        ):
+            latest_files[fname.name] = fname
+
+    # Set rule for which veg.frac file to preserve if 2 versions exist
+    if "qrparm.veg.frac" in latest_files and "qrparm.veg.frac.urb2t" in latest_files:
+        logger.debug(
+            "Found both qrparm.veg.frac and qrparm.veg.frac.urb2t; "
+            "using qrparm.veg.frac.urb2t"
+        )
+        del latest_files["qrparm.veg.frac"]
+
+    files = [str(fname) for fname in latest_files.values()]
+
     return files
 
 
