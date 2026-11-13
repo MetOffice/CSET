@@ -28,7 +28,7 @@ Example to generate full-domain spatial maps of ``surface_altitude``::
                  --VARNAME="surface_altitude" \\
                  --MODEL_NAME="my_model_label" \\
                  --METHOD="" \\
-                 --SUBAREA_TYPE='None' --SUBAREA_EXTENT='None' --SUBAREA_NAME='None'
+                 --SUBAREA_TYPE='None' --SUBAREA_EXTENT='None' --SUBAREA_NAME=''
 
 Configuring the *cset_workflow*
 -------------------------------
