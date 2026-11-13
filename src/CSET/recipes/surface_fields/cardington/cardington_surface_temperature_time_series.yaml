@@ -12,20 +12,6 @@ steps:
       - $OBS_VARNAME
       - $STASH
 
-  - operator: misc.remove_attribute
-    attribute:
-      - time_coverage_end
-      - time_coverage_start
-      - valid_min
-      - valid_max
-      - date
-      - date_created
-
-  - operator: misc.remove_scalar_coords
-    coords:
-      - forecast_reference_time
-      - realization
-
   - operator: filters.apply_mask
     mask:
       operator: filters.generate_mask
@@ -33,7 +19,7 @@ steps:
       value: 1.0e+10
 
   - operator: filters.filter_multiple_cubes
-    Cardington:
+    $OBS_NAME:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
@@ -43,7 +29,7 @@ steps:
         cell_methods: [ ]
         varname: $OBS_VARNAME
 
-    UM:
+    $MODEL_NAME:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint

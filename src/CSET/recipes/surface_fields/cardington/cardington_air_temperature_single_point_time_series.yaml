@@ -1,37 +1,52 @@
 category: Time series of air temperature at Cardington single point
-title: Time series of 'air_temperature' at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint.
-description: Plots a time series of the air temperature at a selected Cardington gridpoint.
-
+title: "Time series of $OBS_HEIGHT m air temperature at Cardington [52.10438N, -0.42286E]"
+description: "Plots a time series of air temperature at the gridpoint nearest to Cardington."
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: ['Cardington','$MODEL_NAME']
+    model_names:
+      - $OBS_NAME
+      - $MODEL_NAME
     constraint:
+      - $OBS_VARNAME
+      - $STASH
+
+
+  - operator: filters.apply_mask
+    mask:
+      operator: filters.generate_mask
+      condition: 'lt'
+      value: 1.0e+10
+
+  - operator: filters.filter_multiple_cubes
+    $OBS_NAME:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: 'air_temperature'
+        varname: $OBS_VARNAME
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-        varname: 'air_temperature'
+        varname: $OBS_VARNAME
+
+
+    $MODEL_NAME:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         levels: []
         coordinate: "pressure"
-
-  - operator: misc.remove_attribute
-    attribute: ['time_coverage_end', 'time_coverage_start', 'valid_min', 'valid_max', 'date', 'date_created']
-
-  - operator: filters.filter_multiple_cubes
-    cardington:
+      stash_constraint:
         operator: constraints.generate_attribute_constraint
-        attribute: 'height'
-        value: 2.0
-    model:
-        operator: constraints.generate_attribute_constraint
-        # This currently only works for UM. Maybe we need another operator to make this nicer?
         attribute: STASH
+        value: $STASH
 
   - operator: misc.convert_units
     units: 'Celsius'
@@ -43,9 +58,7 @@ steps:
     method: "Nearest"
     boundary_margin: 0
 
-  # Make a single NetCDF with all the data inside it.
   - operator: write.write_cube_to_nc
     overwrite: True
 
-  # Plot the data.
   - operator: plot.plot_line_series

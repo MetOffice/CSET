@@ -48,9 +48,6 @@ steps:
         attribute: STASH
         value: $STASH
 
-  - operator: misc.remove_attribute
-    attribute: ['time_coverage_end', 'time_coverage_start', 'valid_min', 'valid_max', 'date', 'date_created']
-
   - operator: regrid.regrid_to_single_point
     lat_pt: 52.10438
     lon_pt: -0.42286

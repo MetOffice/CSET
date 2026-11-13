@@ -27,7 +27,6 @@ steps:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
 
-
     $MODEL_NAME:
       operator: constraints.combine_constraints
       varname_constraint:
@@ -45,15 +44,6 @@ steps:
         operator: constraints.generate_attribute_constraint
         attribute: STASH
         value: $STASH
-
-  - operator: misc.remove_attribute
-    attribute:
-      - time_coverage_end
-      - time_coverage_start
-      - valid_min
-      - valid_max
-      - date
-      - date_created
 
   - operator: misc.convert_units
     units: K

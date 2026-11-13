@@ -1,6 +1,6 @@
-category: Time series of visibility at Cardington single point
-title: "Time series of visible range at Cardington [52.10438N, -0.42286E]."
-description: "Plots a time series of visible range at gridpoint nearest to Cardington."
+category: Time series of $PLOT_VARNAME at single point
+title: "Time series of $PLOT_VARNAME at Cardington [52.10438N, -0.42286E]."
+description: "Plots a time series of $PLOT_VARNAME at gridpoint nearest to Cardington."
 
 steps:
   - operator: read.read_cubes
@@ -26,15 +26,6 @@ steps:
       stash_constraint:
         operator: constraints.generate_attribute_constraint
         attribute: STASH
-
-  - operator: misc.remove_attribute
-    attribute:
-      - time_coverage_end
-      - time_coverage_start
-      - valid_min
-      - valid_max
-      - date
-      - date_created
 
   - operator: misc.convert_units
     units: km
