@@ -224,21 +224,45 @@ def test_difference_different_model_types(cube):
     assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
 
 
-def test_difference_flip_pressure_order(transect_source_cube_readonly):
+def test_difference_flip_pressure_order(transect_source_cube):
     """Test that pressure coord is flipped if decreasing."""
-    flipped = transect_source_cube_readonly.copy()
+    cb = transect_source_cube.copy()
+    flipped = transect_source_cube.copy()
     reverse(flipped, "pressure")
     del flipped.attributes["cset_comparison_base"]
     flipped.attributes["model_name"] = "model1"
-    transect_source_cube_readonly.attributes["model_name"] = "model2"
-    cubes = CubeList([transect_source_cube_readonly, flipped])
-
+    cb.attributes["model_name"] = "model2"
+    cubes = CubeList([cb, flipped])
     # Take rmse.
     rmse_cube = scoreswrappers.scores_rmse(cubes)
-
     assert isinstance(rmse_cube, Cube)
     # As both cubes use the same data, check the difference is zero.
     assert np.allclose(rmse_cube.data, np.zeros_like(rmse_cube.data), atol=1e-9)
+
+
+def test_process_cubes_for_verification_equalise_pressure(
+    transect_source_cube,
+):
+    """Test that pressure is equalised for two cubes."""
+    cube1 = transect_source_cube.copy()
+    cube2 = transect_source_cube.copy()
+    cube1.attributes["model_name"] = "model1"
+    cube2.attributes["model_name"] = "model2"
+    out = scoreswrappers._process_cubes_for_verification(cube1, cube2)
+
+    assert np.allclose(
+        out[0].coord("pressure").points, out[1].coord("pressure").points, atol=1e-9
+    )
+
+    # Remove a pressure level
+    cube1 = cube1[:, 1:, :, :]
+
+    # Check that final result means that pressure level removed in both
+    out = scoreswrappers._process_cubes_for_verification(cube1, cube2)
+
+    assert np.allclose(
+        out[0].coord("pressure").points, out[1].coord("pressure").points, atol=1e-9
+    )
 
 
 def test_crps(feature_cube):
@@ -975,3 +999,300 @@ def test_pfd_gt_complete_miss(make_cube_categorical_testing):
 
     assert len(result) == 1
     assert np.allclose(result[0].data, 1.0, atol=1e-2, rtol=1e-6)
+
+
+def test_rmse_multiple_forecasts_preserve_forecast_reference_time(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Testing RMSE preserving frt."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_rmse = []
+    for i in range(obs.coord("forecast_reference_time").shape[0]):
+        calculate_rmse.append(
+            np.sqrt(np.mean((data_obs[i, :, :] - data_model[i, :, :]) ** 2))
+        )
+
+    rmse_scores = scoreswrappers.scores_rmse(input_cubelist, "forecast_reference_time")
+    assert np.allclose(rmse_scores.data, calculate_rmse, atol=1e-2, rtol=1e-6)
+
+
+def test_rmse_multiple_forecasts_preserve_forecast_period(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test RMSE preserving forecast period."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_rmse = []
+    for i in range(obs.coord("forecast_period").shape[0]):
+        calculate_rmse.append(
+            np.sqrt(np.mean((data_obs[:, i, :] - data_model[:, i, :]) ** 2))
+        )
+
+    rmse_scores = scoreswrappers.scores_rmse(input_cubelist, "forecast_period")
+    assert np.allclose(rmse_scores.data, calculate_rmse, atol=1e-2, rtol=1e-6)
+
+
+def test_rmse_multiple_forecasts_preserve_none(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test RMSE preserving no coordinates."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_rmse = np.sqrt(np.mean((data_obs[:, :, :] - data_model[:, :, :]) ** 2))
+
+    rmse_scores = scoreswrappers.scores_rmse(input_cubelist)
+    assert np.allclose(rmse_scores.data, calculate_rmse, atol=1e-2, rtol=1e-6)
+
+
+def test_rmse_multiple_forecasts_preserve_lat_lon(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test RMSE preserving lat/lon coordinates."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_rmse = []
+    for i in range(obs.coord("station").shape[0]):
+        calculate_rmse.append(
+            np.sqrt(np.mean((data_obs[:, :, i] - data_model[:, :, i]) ** 2))
+        )
+
+    rmse_scores = scoreswrappers.scores_rmse(
+        input_cubelist, preserved_coordinates=["latitude", "longitude"]
+    )
+
+    assert np.allclose(rmse_scores.data, calculate_rmse, atol=1e-2, rtol=1e-6)
+
+
+def test_mae_multiple_forecasts_preserve_forecast_reference_time(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Testing MAE preserving frt."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_mae = []
+    for i in range(obs.coord("forecast_reference_time").shape[0]):
+        calculate_mae.append(np.mean(np.abs(data_obs[i, :, :] - data_model[i, :, :])))
+
+    mae_scores = scoreswrappers.scores_mae(input_cubelist, "forecast_reference_time")
+    assert np.allclose(mae_scores.data, calculate_mae, atol=1e-2, rtol=1e-6)
+
+
+def test_mae_multiple_forecasts_preserve_forecast_period(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test MAE preserving forecast period."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_mae = []
+    for i in range(obs.coord("forecast_period").shape[0]):
+        calculate_mae.append(np.mean(np.abs(data_obs[:, i, :] - data_model[:, i, :])))
+
+    mae_scores = scoreswrappers.scores_mae(input_cubelist, "forecast_period")
+    assert np.allclose(mae_scores.data, calculate_mae, atol=1e-2, rtol=1e-6)
+
+
+def test_mae_multiple_forecasts_preserve_none(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test MAE preserving no coordinates."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_mae = np.mean(np.abs(data_obs[:, :, :] - data_model[:, :, :]))
+
+    mae_scores = scoreswrappers.scores_mae(input_cubelist)
+    assert np.allclose(mae_scores.data, calculate_mae, atol=1e-2, rtol=1e-6)
+
+
+def test_mae_multiple_forecasts_preserve_lat_lon(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test mae preserving lat/lon coordinates."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_mae = []
+    for i in range(obs.coord("station").shape[0]):
+        calculate_mae.append(np.mean(np.abs(data_obs[:, :, i] - data_model[:, :, i])))
+
+    mae_scores = scoreswrappers.scores_mae(
+        input_cubelist, preserved_coordinates=["latitude", "longitude"]
+    )
+    assert np.allclose(mae_scores.data, calculate_mae, atol=1e-2, rtol=1e-6)
+
+
+def test_additive_bias_multiple_forecasts_preserve_forecast_reference_time(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Testing additive bias preserving frt."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_bias = []
+    for i in range(obs.coord("forecast_reference_time").shape[0]):
+        calculate_bias.append(np.mean(data_model[i, :, :] - data_obs[i, :, :]))
+
+    bias_scores = scoreswrappers.scores_additive_bias(
+        input_cubelist, "forecast_reference_time"
+    )
+    assert np.allclose(bias_scores.data, calculate_bias, atol=1e-2, rtol=1e-6)
+
+
+def test_additive_bias_multiple_forecasts_preserve_forecast_period(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test additive bias preserving forecast period."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_bias = []
+    for i in range(obs.coord("forecast_period").shape[0]):
+        calculate_bias.append(np.mean(data_model[:, i, :] - data_obs[:, i, :]))
+
+    bias_scores = scoreswrappers.scores_additive_bias(input_cubelist, "forecast_period")
+    assert np.allclose(bias_scores.data, calculate_bias, atol=1e-2, rtol=1e-6)
+
+
+def test_additive_bias_multiple_forecasts_preserve_none(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test additive bias preserving no coordinates."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_bias = np.mean(data_model[:, :, :] - data_obs[:, :, :])
+
+    bias_scores = scoreswrappers.scores_additive_bias(input_cubelist)
+    assert np.allclose(bias_scores.data, calculate_bias, atol=1e-2, rtol=1e-6)
+
+
+def test_additive_bias_multiple_forecasts_preserve_lat_lon(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test additive bias preserving lat/lon coordinates."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_bias = []
+    for i in range(obs.coord("station").shape[0]):
+        calculate_bias.append(np.mean(data_model[:, :, i] - data_obs[:, :, i]))
+
+    bias_scores = scoreswrappers.scores_additive_bias(
+        input_cubelist, preserved_coordinates=["latitude", "longitude"]
+    )
+    assert np.allclose(bias_scores.data, calculate_bias, atol=1e-2, rtol=1e-6)
+
+
+def test_correlation_pearsonr_multiple_forecasts_preserve_forecast_reference_time(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Testing Pearson correlation preserving frt."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_corr = []
+    for i in range(obs.coord("forecast_reference_time").shape[0]):
+        calculate_corr.append(
+            np.corrcoef(data_obs[i, :, :].flatten(), data_model[i, :, :].flatten())[
+                0, 1
+            ]
+        )
+
+    corr_scores = scoreswrappers.scores_correlation_pearsonr(
+        input_cubelist, "forecast_reference_time"
+    )
+    assert np.allclose(corr_scores.data, calculate_corr, atol=1e-2, rtol=1e-6)
+
+
+def test_correlation_pearsonr_multiple_forecasts_preserve_forecast_period(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test Pearson correlation preserving forecast period."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_corr = []
+    for i in range(obs.coord("forecast_period").shape[0]):
+        calculate_corr.append(
+            np.corrcoef(data_obs[:, i, :].flatten(), data_model[:, i, :].flatten())[
+                0, 1
+            ]
+        )
+
+    corr_scores = scoreswrappers.scores_correlation_pearsonr(
+        input_cubelist, "forecast_period"
+    )
+    assert np.allclose(corr_scores.data, calculate_corr, atol=1e-2, rtol=1e-6)
+
+
+def test_correlation_pearsonr_multiple_forecasts_preserve_none(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test Pearson correlation preserving no coordinates."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_corr = np.corrcoef(data_obs.flatten(), data_model.flatten())[0, 1]
+
+    corr_scores = scoreswrappers.scores_correlation_pearsonr(input_cubelist)
+    assert np.allclose(corr_scores.data, calculate_corr, atol=1e-2, rtol=1e-6)
+
+
+def test_correlation_pearsonr_multiple_forecasts_preserve_lat_lon(
+    dummy_cubelist_model_obs_multiple_forecasts,
+):
+    """Test Pearson correlation preserving lat/lon coordinates."""
+    input_cubelist = dummy_cubelist_model_obs_multiple_forecasts
+    obs, model = input_cubelist
+    data_obs = obs.data
+    data_model = model.data
+
+    calculate_corr = []
+    for i in range(obs.coord("station").shape[0]):
+        calculate_corr.append(
+            np.corrcoef(data_obs[:, :, i].flatten(), data_model[:, :, i].flatten())[
+                0, 1
+            ]
+        )
+
+    corr_scores = scoreswrappers.scores_correlation_pearsonr(
+        input_cubelist, preserved_coordinates=["latitude", "longitude"]
+    )
+    assert np.allclose(corr_scores.data, calculate_corr, atol=1e-2, rtol=1e-6)

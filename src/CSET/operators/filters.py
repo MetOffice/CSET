@@ -193,7 +193,7 @@ def generate_mask(
     -----
     The mask is created in the opposite sense to numpy.ma.masked_arrays. This
     method was chosen to allow easy combination of masks together outside of
-    this function using misc.addition or misc.multiplication depending on
+    this function using maths.addition or maths.multiplication depending on
     applicability. The combinations can be of any fields such as orography >
     500 m, and humidity == 100 %.
 

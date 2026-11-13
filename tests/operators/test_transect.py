@@ -22,26 +22,26 @@ import iris.cube
 import numpy as np
 import pytest
 
-from CSET.operators import plot, read, transect
+from CSET.operators import plot, transect
 
 
 # Session scope fixtures, so the test data only has to be loaded once.
 @pytest.fixture(scope="session")
 def transect_source_cube_out() -> iris.cube.Cube:
     """Load cube containing UM pressure level data transect."""
-    return read.read_cube("tests/test_data/transect_out_umpl.nc")
+    return iris.load_cube("tests/test_data/transect_out_umpl.nc")
 
 
 @pytest.fixture(scope="session")
 def load_cube_ml() -> iris.cube.Cube:
     """Load cube containing UM model level data."""
-    return read.read_cube("tests/test_data/transect_test_umml.nc")
+    return iris.load_cube("tests/test_data/transect_test_umml.nc")
 
 
 @pytest.fixture(scope="session")
 def load_cube_ml_out() -> iris.cube.Cube:
     """Load cube containing UM model level data transect."""
-    return read.read_cube("tests/test_data/transect_out_umml.nc")
+    return iris.load_cube("tests/test_data/transect_out_umml.nc")
 
 
 @pytest.fixture(scope="session")

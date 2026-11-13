@@ -240,6 +240,8 @@ def test_clone_ref_no_such_ref(tmp_path: Path, restricted_git_repo: str):
 
 def test_install_restricted_files(tmp_path: Path, restricted_git_repo: str):
     """Install restricted files from a Git repository."""
+    # Give some extra permissions to ensure they are not stripped.
+    tmp_path.chmod(0o755)
     # Make into cylc workflow.
     (tmp_path / "flow.cylc").touch()
 
@@ -254,6 +256,8 @@ def test_install_restricted_files(tmp_path: Path, restricted_git_repo: str):
     assert (tmp_path / "restricted_file.txt").exists()
     # Existing files are untouched.
     assert (tmp_path / "flow.cylc").exists()
+    # Existing directory permissions are unchanged.
+    assert stat.filemode(tmp_path.stat().st_mode) == "drwxr-xr-x"
 
 
 def test_install_restricted_files_version_tag(

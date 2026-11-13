@@ -38,6 +38,7 @@ Configuring the *cset_workflow*
 * Set required configuration options on ``Diagnostics / Surface (2D) fields`` panel.
 * Set ``HISTOGRAM_SURFACE_FIELD_SEQUENCE=False`` to generate one histogram for all times.
 * Set ``HISTOGRAM_SURFACE_FIELD_SEQUENCE=True`` to generate a separate histogram for each output time.
+
 ::
 
     HISTOGRAM_SURFACE_FIELD = True
