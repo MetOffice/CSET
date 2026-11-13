@@ -317,7 +317,7 @@ def _check_input_files(input_paths: str | list[str]) -> list[Path]:
                     files.append(input_path)
 
         # If files not found, test if aiming to read ancillary directory path
-        if len(files) == 0:
+        if len(files) == 0 or not any(f.endswith((".pp", ".nc")) for f in str(files)):
             files = _check_ancillary_path(raw_filename)
 
     files.sort()
@@ -413,6 +413,7 @@ def _check_ancillary_path(raw_filename: str) -> list[Path]:
 
         if version is None:
             filtered_files.append(fname)
+            continue
 
         key = tuple(parent_parts[:-1])
 
