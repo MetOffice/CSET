@@ -942,6 +942,7 @@
     "cmap": "bwr",
     "max": 0.1,
     "min": -0.1
+  },
   "surface_direct_shortwave_flux_radiative_timestep": {
     "cmap": "Greys",
     "max": 1400,
