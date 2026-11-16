@@ -434,8 +434,9 @@ def _cutout_cubes(
     return cutout_cubes
 
 
-def _extract_projected_latlon(cube: iris.cube.Cube, lats, lons):
-
+def _extract_projected_latlon(
+    cube: iris.cube.Cube, lats: tuple[float, float], lons: tuple[float, float]
+) -> iris.cube.Cube:
     cs_x = cube.coord("projection_x_coordinate").coord_system
     cs_y = cube.coord("projection_y_coordinate").coord_system
 
