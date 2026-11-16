@@ -434,7 +434,7 @@ def _cutout_cubes(
     return cutout_cubes
 
 
-def _extract_projected_latlon(cube: Cube, lats, lons):
+def _extract_projected_latlon(cube: iris.cube.Cube, lats, lons):
 
     cs_x = cube.coord("projection_x_coordinate").coord_system
     cs_y = cube.coord("projection_y_coordinate").coord_system
@@ -470,7 +470,6 @@ def _extract_projected_latlon(cube: Cube, lats, lons):
         & (lons[0] <= grid_lon)
         & (grid_lon <= lons[1])
     )
-    breakpoint()
 
     # if no values are true
     if not inside_subarea.any():
@@ -489,7 +488,6 @@ def _extract_projected_latlon(cube: Cube, lats, lons):
     index[cube.coord_dims(x)[0]] = slice(cols[0], cols[-1] + 1)
 
     return cube[tuple(index)]
-
 
 
 def _clean_unwanted_cube_attributes(
