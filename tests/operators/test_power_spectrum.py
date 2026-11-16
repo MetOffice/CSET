@@ -500,12 +500,7 @@ def test_calculate_power_spectrum_raises_for_different_multi_point_times():
 
     with pytest.raises(
         ValueError,
-        match=(
-            "Cannot combine power spectra: "
-            "multiple forecast reference times "
-            "have different multi-point time "
-            "coordinates."
-        ),
+        match=("No common time points found!"),
     ):
         power_spectrum.calculate_power_spectrum(cube)
 
@@ -523,7 +518,7 @@ def test_multiple_frts_matching_forecast_period():
     fp_coord = iris.coords.AuxCoord(
         [0, 1, 2, 0, 1, 2],
         standard_name="forecast_period",
-        units="hours",
+        units="hours since 1970-01-01 00:00:00",
     )
 
     frt_coord = iris.coords.AuxCoord(

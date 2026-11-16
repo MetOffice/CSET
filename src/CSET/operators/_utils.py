@@ -613,7 +613,7 @@ def calc_array_stats(
 def get_time_coord(cube: Cube | CubeList) -> str | None:
     """Return the time coordinate name or None if no time coordinate is found."""
     cube = cube[0] if isinstance(cube, CubeList) else cube
-    for name in ("time", "hour"):
+    for name in ("time", "hour", "forecast_period"):
         coords = cube.coords(name)
         if coords and len(coords[0].points) > 1:
             return name
@@ -629,7 +629,9 @@ def ensure_common_time_points(base: Cube, other: Cube):
     if not time_coord:
         return
 
-    if base.coords("forecast_reference_time"):
+    #    if base.coords("forecast_reference_time"):
+    frt_coords = base.coords("forecast_reference_time")
+    if frt_coords and frt_coords[0].shape[0] > 1:
         pairs = []
         for base_slice in base.slices_over("forecast_reference_time"):
             frt = base_slice.coord("forecast_reference_time").cell(0).point
@@ -656,7 +658,8 @@ def get_shared_times(base: Cube, other: Cube, time_coord: str) -> set[int | date
     base_time_coord = base.coord(time_coord)
     other_time_coord = other.coord(time_coord)
     logger.debug("Base: %s\nOther: %s", base_time_coord, other_time_coord)
-    if time_coord == "hour":
+    #    if time_coord == "hour":
+    if time_coord in ("hour", "forecast_period"):
         # We directly compare points when comparing coordinates with
         # non-absolute units, such as hour. We can't just check the units are
         # equal as iris automatically converts to datetime objects in the

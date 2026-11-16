@@ -24,6 +24,7 @@ import numpy as np
 from scipy import fft
 
 from CSET._common import iter_maybe
+from CSET.operators._utils import ensure_common_time_points
 
 logger = logging.getLogger(__name__)
 
@@ -259,20 +260,9 @@ def calculate_power_spectrum(
                         # (i.e. forecast_period)
                         # only FRT varies and normal concatenation should
                         # work.
-                        first_time = frt_power_spectra[0].coord("forecast_period")
 
-                        matching_times = all(
-                            frt_cube.coord("forecast_period") == first_time
-                            for frt_cube in frt_power_spectra[1:]
-                        )
-
-                        if not matching_times:
-                            raise ValueError(
-                                "Cannot combine power spectra: "
-                                "multiple forecast reference times "
-                                "have different multi-point time "
-                                "coordinates."
-                            )
+                        for frt_cube in frt_power_spectra[1:]:
+                            ensure_common_time_points(frt_power_spectra[0], frt_cube)
 
                         # Combine individual cubes into single cube.
 
