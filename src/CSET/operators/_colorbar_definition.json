@@ -20,6 +20,11 @@
     "ymax": 1.0,
     "ymin": 0.0
   },
+  "air_density": {
+    "cmap": "RdYlBu_r",
+    "max": 1.5,
+    "min": 0.0
+  },
   "air_potential_temperature": {
     "cmap": "RdYlBu_r",
     "max": 350,
@@ -125,6 +130,11 @@
     "max": 1,
     "min": -1
   },
+  "charnock_coefficient_for_surface_roughness_length_for_momentum_in_air": {
+    "cmap": "RdYlBu_r",
+    "max": 0.03,
+    "min": 0.001
+  },
   "clapp_hornberger_b_coefficient": {
     "cmap": "managua_r",
     "max": 12.0,
@@ -175,6 +185,11 @@
     "max": 1,
     "min": -1
   },
+  "depth": {
+    "cmap": "ocean_r",
+    "max": 1500.0,
+    "min": 0.0
+  },
   "dew_point_temperature_at_screen_level": {
     "cmap": "RdYlBu_r",
     "max": 315,
@@ -186,6 +201,36 @@
     "cmap": "bwr",
     "max": 10,
     "min": -10
+  },
+  "eastward current_northward current_magnitude": {
+    "cmap": "GnBu_r",
+    "max": 0.5,
+    "min": 0.0
+  },
+  "eastward friction velocity": {
+    "cmap": "RdYlBu_r",
+    "max": 0.5,
+    "min": -0.5
+  },
+  "eastward wave supported wind stress": {
+    "cmap": "RdBu_r",
+    "max": 0.0005,
+    "min": -0.0005
+  },
+  "eastward wave to ocean stress": {
+    "cmap": "RdBu_r",
+    "max": 0.0005,
+    "min": -0.0005
+  },
+  "eastward_sea_water_velocity": {
+    "cmap": "RdBu_r",
+    "max": 1.1,
+    "min": -1.1
+  },
+  "eastward_wind": {
+    "cmap": "RdBu_r",
+    "max": 20.0,
+    "min": -20.0
   },
   "eastward_wind_at_10m": {
     "cmap": "RdBu_r",
@@ -208,6 +253,11 @@
     "cmap": "coolwarm",
     "max": 1.1,
     "min": 0.5
+  },
+  "expected maximum wave height (linear, 1st order)": {
+    "cmap": "RdYlBu_r",
+    "max": 10.0,
+    "min": 0.0
   },
   "fog_fraction_at_screen_level": {
     "cmap": "viridis",
@@ -508,6 +558,31 @@
     "max": 20,
     "min": -20
   },
+  "northward friction velocity": {
+    "cmap": "RdYlBu_r",
+    "max": 0.5,
+    "min": -0.5
+  },
+  "northward wave supported wind stress": {
+    "cmap": "RdBu_r",
+    "max": 0.0005,
+    "min": -0.0005
+  },
+  "northward wave to ocean stress": {
+    "cmap": "RdBu_r",
+    "max": 0.0005,
+    "min": -0.0005
+  },
+  "northward_sea_water_velocity": {
+    "cmap": "RdBu_r",
+    "max": 1.1,
+    "min": -1.1
+  },
+  "northward_wind": {
+    "cmap": "RdBu_r",
+    "max": 20.0,
+    "min": -20.0
+  },
   "northward_wind_at_10m": {
     "cmap": "RdBu_r",
     "max": 25.0,
@@ -644,6 +719,41 @@
     "max": 50,
     "min": -50
   },
+  "sea_surface_height_above_mean_sea_level": {
+    "cmap": "RdBu_r",
+    "max": 1.6,
+    "min": -1.6
+  },
+  "sea_surface_wave_from_direction": {
+    "cmap": "rainbow",
+    "max": 360.0,
+    "min": 0.0
+  },
+  "sea_surface_wave_significant_height": {
+    "cmap": "CMRmap_r",
+    "max": 7.5,
+    "min": 0
+  },
+  "sea_surface_wave_stokes_drift_eastward_velocity": {
+    "cmap": "RdBu_r",
+    "max": 0.25,
+    "min": -0.25
+  },
+  "sea_surface_wave_stokes_drift_northward_velocity": {
+    "cmap": "RdBu_r",
+    "max": 0.25,
+    "min": -0.25
+  },
+  "sea_surface_wind_wave_mean_period_from_variance_spectral_density_first_frequency_moment": {
+    "cmap": "RdYlBu_r",
+    "max": 15.0,
+    "min": 0.0
+  },
+  "sea_surface_wind_wave_mean_period_from_variance_spectral_density_second_frequency_moment": {
+    "cmap": "RdYlBu_r",
+    "max": 15.0,
+    "min": 0.0
+  },
   "silhouette_orographic_roughness": {
     "cmap": "hot_r",
     "max": 0.05,
@@ -770,6 +880,11 @@
     "max": 500,
     "min": -500
   },
+  "surface_downward_eastward_stress": {
+    "cmap": "RdBu_r",
+    "max": 1.5,
+    "min": -1.5
+  },
   "surface_downward_longwave_flux": {
     "cmap": "Greys_r",
     "max": 500,
@@ -779,6 +894,11 @@
     "cmap": "PuOr",
     "max": 500,
     "min": -500
+  },
+  "surface_downward_northward_stress": {
+    "cmap": "RdBu_r",
+    "max": 3.0,
+    "min": -3.0
   },
   "surface_downward_shortwave_flux": {
     "cmap": "Greys",
@@ -1185,6 +1305,21 @@
   "volume_fraction_of_silt_in_soil": {
     "cmap": "managua_r",
     "max": 1.0,
+    "min": 0.0
+  },
+  "wave peak frequency": {
+    "cmap": "RdYlBu_r",
+    "max": 1.0,
+    "min": 0.0
+  },
+  "wave peak period": {
+    "cmap": "RdYlBu_r",
+    "max": 20.0,
+    "min": 0.0
+  },
+  "wave to ocean energy flux": {
+    "cmap": "YlOrRd",
+    "max": 5.0,
     "min": 0.0
   },
   "wet_bulb_potential_temperature_at_pressure_levels": {
