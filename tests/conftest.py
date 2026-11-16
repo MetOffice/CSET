@@ -1702,3 +1702,27 @@ def make_multi_frt_cube():
         return cube
 
     return _make
+
+
+@pytest.fixture
+def mercator_cube():
+    """10 km Mercator cube covering roughly 6W-2E, 49N-56N (the UK)."""
+    mercator = iris.coord_systems.Mercator()
+    x = iris.coords.DimCoord(
+        np.arange(-700_000.0, 250_001.0, 10_000.0),
+        standard_name="projection_x_coordinate",
+        units="m",
+        coord_system=mercator,
+    )
+    y = iris.coords.DimCoord(
+        np.arange(6_250_000.0, 7_600_001.0, 10_000.0),
+        standard_name="projection_y_coordinate",
+        units="m",
+        coord_system=mercator,
+    )
+    return iris.cube.Cube(
+        np.zeros((y.shape[0], x.shape[0])),
+        standard_name="air_temperature",
+        units="K",
+        dim_coords_and_dims=[(y, 0), (x, 1)],
+    )
