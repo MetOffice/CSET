@@ -466,6 +466,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _realization_callback(cube)
     _um_normalise_callback(cube)
     _lfric_stash_source_callback(cube)
+    _nimrod_normalise_callback(cube)
     cube = _lfric_time_coord_fix_callback(cube)
     _normalise_var0_varname(cube)
     cube = _fix_no_spatial_coords_callback(cube)
@@ -482,6 +483,15 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     cube = _fix_no_time_coords_callback(cube)
     _normalise_longname(cube)
     return cube
+
+
+def _nimrod_normalise_callback(cube: iris.cube.Cube):
+    """Normalise attributes that prevents NIMROD radar cubes from merging."""
+    # Remove unwanted attributes.
+    cube.attributes.pop("radar_sites", None)
+    cube.attributes.pop("additional_radar_sites", None)
+    cube.attributes.pop("recursive_filter_iterations", None)
+    cube.attributes.pop("Probability methods", None)
 
 
 def _remove_cset_comparison_base_attribute_callback(cube):
