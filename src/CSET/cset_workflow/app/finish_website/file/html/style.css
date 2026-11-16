@@ -310,3 +310,6 @@ body.sidebar-collapsed #plot-selector {
 }
 
 /* End loading throbber. */
+
+#preset-form label { display: block; margin: 0.25rem 0; }
+#preset-form fieldset { margin-bottom: 1rem; }

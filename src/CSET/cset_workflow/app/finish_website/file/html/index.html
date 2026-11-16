@@ -12,19 +12,52 @@
 
   <a href="viewer.html">Full list of diagnostics →</a>
 
-<button type="button" class="preset" data-query='VARNAME:temperature'>Temperature</button>
-<button type="button" class="preset" data-query='case_date="20250815T0000Z"'>20250815T0000Z</button>
-<button type="button" class="preset"
-        data-query='case_date="20250815T0000Z" OTHER_MODEL="cci"'
-        data-title="15 Aug 2025 case: CCI vs control">20250815T0000Z + cci</button>
+<form id="preset-form">
+  <fieldset>
+    <legend>Surface fields</legend>
+    <label><input type="checkbox" value='CATEGORY:surface' data-title="Surface"> All surface fields</label>
+    <label><input type="checkbox" value='CATEGORY:surface AND aggregated' data-title="Surface: aggregated"> Aggregated</label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Pressure fields</legend>
+    <label><input type="checkbox" value='CATEGORY:pressure' data-title="Pressure"> All pressure fields</label>
+    <label><input type="checkbox" value='CATEGORY:pressure AND aggregated' data-title="Pressure: aggregated"> Aggregated</label>
+  </fieldset>
+
+    <fieldset>
+    <legend>Model Level fields</legend>
+    <label><input type="checkbox" value='CATEGORY:pressure' data-title="Pressure"> All pressure fields</label>
+    <label><input type="checkbox" value='CATEGORY:pressure AND aggregated' data-title="Pressure: aggregated"> Aggregated</label>
+  </fieldset>
+
+
+  <button type="submit">Go</button>
+</form>
 
 <script>
-  document.querySelectorAll(".preset").forEach(btn =>
-    btn.addEventListener("click", () => {
-      window.location.href = "viewer.html?base=" + encodeURIComponent(btn.dataset.query)
-        + "&title=" + encodeURIComponent(btn.dataset.title || btn.textContent);
-    })
-  );
+  const form = document.getElementById("preset-form");
+  form.addEventListener("submit", (event) => {
+    // Stop the form doing its default "reload the page" behaviour.
+    event.preventDefault();
+
+    const ticked = form.querySelectorAll('input[type="checkbox"]:checked');
+
+    // Nothing ticked: just open the viewer with everything.
+    if (ticked.length === 0) {
+      window.location.href = "viewer.html";
+      return;
+    }
+
+    // Combine ticked boxes: show diagnostics matching ANY of them.
+    let query = "";
+    const titles = [];
+    for (const box of ticked) {
+      query = query ? `(${query}) OR (${box.value})` : box.value;
+      titles.push(box.dataset.title);
+    }
+
+    window.location.href = "viewer.html?base=" + encodeURIComponent(query)
+      + "&title=" + encodeURIComponent(titles.join(", "));
+  });
 </script>
-</body>
-</html>
