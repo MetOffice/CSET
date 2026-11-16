@@ -44,6 +44,7 @@ from CSET.operators import (
     power_spectrum,
     precipitation,
     pressure,
+    radar_filter,
     read,
     regrid,
     scoreswrappers,
@@ -75,6 +76,7 @@ __all__ = [
     "power_spectrum",
     "precipitation",
     "pressure",
+    "radar_filter",
     "read",
     "regrid",
     "scoreswrappers",
@@ -141,6 +143,17 @@ def _write_metadata(recipe: dict):
         metadata["title"] = metadata["title"].replace("_for_climate_averaging", "")
         metadata["title"] = metadata["title"].replace("_radiative_timestep", "")
         metadata["title"] = metadata["title"].replace("_maximum_random_overlap", "")
+        metadata["title"] = metadata["title"].replace(
+            "_for_surface_roughness_length_for_momentum_in_air", ""
+        )
+        metadata["title"] = metadata["title"].replace(
+            "sea_surface_wind_wave_mean_period_from_variance_spectral_density_first_frequency_moment",
+            "wave_mean_period_first_moment",
+        )
+        metadata["title"] = metadata["title"].replace(
+            "sea_surface_wind_wave_mean_period_from_variance_spectral_density_second_frequency_moment",
+            "wave_mean_period_second_moment",
+        )
     with open("meta.json", "wt", encoding="UTF-8") as fp:
         json.dump(metadata, fp, indent=2)
 
