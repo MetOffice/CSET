@@ -1,4 +1,6 @@
-category: Surface Vector Plot
+category: Diagnostics
+subcategory: Vector Plot
+level: Surface
 title: "$MODEL_NAME Surface Vector Plot of $VARNAME_U and $VARNAME_V $SUBAREA_NAME"
 description: Extracts and plots the surface vector plot of $VARNAME_U and $VARNAME_V for all times in $MODEL_NAME.
 
