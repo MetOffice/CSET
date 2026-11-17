@@ -1,6 +1,6 @@
 category: Diagnostics
 subcategory: Time Series
-level: $LEVELTYPE
+level_type: $LEVELTYPE
 title: "$VARNAME $LEVEL domain mean time series\n Aggregation by validity time $SUBAREA_NAME"
 description: |
   Plots a time series of the domain mean $VARNAME at $LEVELTYPE $LEVEL by averaging
