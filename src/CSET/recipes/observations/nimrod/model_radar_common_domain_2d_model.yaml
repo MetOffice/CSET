@@ -1,13 +1,12 @@
-category: Surface Spatial Plot
-title: "Histogram $MODEL_VARNAME\n $TITLE_STRING common domain model and Nimrod radar"
+category: Nimrod Observations
+subcategory: Spatial
+level_type: Surface
+title: "$MODEL_NAME $MODEL_VARNAME.\n Common domain $MODEL_NAME and $RADAR_LABEL"
 description: |
-  Creates histograms of the model rainfall rate and
-  the observed radar rainfall accumulation.
-  The model field is regridded onto the radar grid. Both regridded model
-  and radar grids are then masked so that only data within a domain common
-  to both are used.
-  If $SEQUENCE is set to "time" then time sequence plots are produced.
-  If $SEQUENCE is set to "realization" then a single case-study mean plot is produced.
+  Creates a 2-d surface plot of the model rainfall field over the
+  domain common to both the model and the radar observation network.
+  To achieve this, the model field is regridded onto the radar grid,
+  before being masked by the common domain.
   ATTENTION: the radar data are 1 hour accumulations. Because showers
   typically advect, on a 2D plot of accumulated rainfall, showers show
   as streaks i.e. lower intensity rainfall over a greater area than a
@@ -18,12 +17,12 @@ description: |
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: $ALL_LABEL
+    model_names: [$MODEL_NAME, $RADAR_NAME, $MASK_NAME]
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
-    constraint: [$MODEL_VARNAME, $RADAR_VARNAME, $RADAR_WTS_VARNAME]
+    constraint: [$MODEL_VARNAME, "Hourly rain accumulation", "Hourly wts accumulation"]
 
-  - operator: radar_filter.radar_mask_loop
+  - operator: radar_filter.radar_mask
     model_field:
       operator: filters.filter_multiple_cubes
       constraint:
@@ -44,7 +43,7 @@ steps:
       operator: filters.filter_multiple_cubes
       constraint:
         operator: constraints.generate_var_constraint
-        varname: $RADAR_VARNAME
+        varname: "Hourly rain accumulation"
 
     nimrod_mask:
       operator: filters.generate_mask
@@ -52,17 +51,20 @@ steps:
         operator: filters.filter_multiple_cubes
         constraint:
           operator: constraints.generate_var_constraint
-          varname: $RADAR_WTS_VARNAME
+          varname: "Hourly wts accumulation"
       condition: 'ge'
       value: 11
 
     boundary_margin: $BOUNDARY_MARGIN
-    required_outputs: $OUTPUTS
+    required_outputs: "model"
 
-  - operator: radar_filter.match_varname_and_units
+  - operator: collapse.collapse
+    coordinate: [time]
+    method: $METHOD
 
   - operator: write.write_cube_to_nc
     overwrite: True
 
-  - operator: plot.plot_histogram_series
-    sequence_coordinate: $SEQUENCE
+  - operator: plot.spatial_pcolormesh_plot
+    strict_title: True
+    sequence_coordinate: time

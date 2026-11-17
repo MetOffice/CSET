@@ -1,4 +1,6 @@
-category: Surface Spatial Observation Plot
+category: Point Observations
+subcategory: Spatial
+level_type: Surface
 title: $VARNAME $METHOD $SUBAREA_NAME
 description: |
     Plots the $METHOD of $VARNAME as points at observation locations.

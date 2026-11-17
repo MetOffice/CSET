@@ -1,4 +1,6 @@
-category: Surface Spatial Plot
+category: Nimrod Observations
+subcategory: Spatial
+level_type: Surface
 title: "$RADAR_NAME $VARNAME $SUBAREA_NAME"
 description: |
   Extracts and plots radar rainfall data.
