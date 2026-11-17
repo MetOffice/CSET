@@ -1,4 +1,6 @@
-category: $LEVELTYPE Level Spatial
+category: Diagnostics
+subcategory: Spatial
+level: $LEVELTYPE
 title: "$MODEL_NAME $VARNAME $LEVELTYPE$LEVEL\n Aggregation over all cases $SUBAREA_NAME"
 description: |
   Extracts ands plots the $VARNAME from $MODEL_NAME at $LEVELTYPE level $LEVEL.
