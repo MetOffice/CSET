@@ -62,10 +62,6 @@ steps:
   - operator: scoreswrappers.scores_additive_bias
     preserved_coordinates: $PRESERVED_COORDS
 
-  - operator: collapse.collapse
-    coordinate: ["time"]
-    method: $METHOD
-
   - operator: plot.spatial_pcolormesh_plot
 
   - operator: write.write_cube_to_nc
