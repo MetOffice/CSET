@@ -1,6 +1,8 @@
-category: Point observation histogram
-title: "Histogram $VARNAME $SUBAREA_NAME"
-description: Extracts and plot the probability density of $VARNAME.
+category: Point Observations
+subcategory: Time Series
+level_type: Surface
+title: "$VARNAME time series $SUBAREA_NAME"
+description: Extracts and plot a time series of $VARNAME for all times at specific observation points.
 
 steps:
   - operator: read.read_cubes
@@ -41,9 +43,7 @@ steps:
                operator: constraints.generate_var_constraint
                varname: observed_$VARNAME
 
-  - operator: plot.plot_histogram_series
-    # Set SEQUENCE to "station" for separate plot for each station, else "realization" for combined plot.
-    sequence_coordinate: $SEQUENCE
+  - operator: plot.plot_line_series
 
   - operator: write.write_cube_to_nc
     overwrite: True

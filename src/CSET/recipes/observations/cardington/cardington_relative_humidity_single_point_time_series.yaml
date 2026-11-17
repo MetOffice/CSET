@@ -1,6 +1,7 @@
-category: Time series of air temperature at Cardington single point
-title: Time series of 'air_temperature' at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint.
-description: Plots a time series of the air temperature at a selected Cardington gridpoint.
+category: Cardington Observations
+subcategory: Time Series
+title: Time series of 'relative humidity' at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint.
+description: Plots a time series of the relative humidity at a selected Cardington gridpoint.
 
 steps:
   - operator: read.read_cubes
@@ -10,11 +11,11 @@ steps:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: 'air_temperature'
+        varname: 'relative_humidity'
       cell_methods_constraint:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
-        varname: 'air_temperature'
+        varname: 'relative_humidity'
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         levels: []
@@ -27,14 +28,11 @@ steps:
     cardington:
         operator: constraints.generate_attribute_constraint
         attribute: 'height'
-        value: 2.0
+        value: 1.2
     model:
         operator: constraints.generate_attribute_constraint
         # This currently only works for UM. Maybe we need another operator to make this nicer?
         attribute: STASH
-
-  - operator: misc.convert_units
-    units: 'Celsius'
 
   - operator: regrid.regrid_to_single_point
     lat_pt: 52.10438
