@@ -259,6 +259,7 @@ def load(conf: Config):
         conf.SURFACE_FIELDS,
         scores_spatial_methods_aggregated,
     ):
+        _, preserved_coords = _collapse_settings("")
         yield RawRecipe(
             recipe=f"surface_scores_{scores_method}_aggregated.yaml",
             variables={
@@ -266,11 +267,7 @@ def load(conf: Config):
                 "BASE_MODEL": base_model["name"],
                 "OTHER_MODELS": model["name"],
                 "AGGREGATION_MODE": "Case Date",
-                "PRESERVED_COORDS": [
-                    "forecast_period",
-                    "grid_latitude",
-                    "grid_longitude",
-                ],
+                "PRESERVED_COORDS": preserved_coords,
                 **subarea_vars,
             },
             model_ids=[base_model["id"], model["id"]],
@@ -282,13 +279,15 @@ def load(conf: Config):
         models,
         scores_spatial_methods_model_vs_obs_aggregated,
     ):
+        _, preserved_coords = _collapse_settings("", obs=True)
+
         yield RawRecipe(
             recipe=f"surface_scores_model_vs_obs_{scores_method}_aggregated.yaml",
             variables={
                 "VARNAME": field,
                 "MODEL_NAME": ["OBS"] + [model["name"]],
                 "AGGREGATION_MODE": "Case Date",
-                "PRESERVED_COORDS": ["forecast_period", "latitude", "longitude"],
+                "PRESERVED_COORDS": preserved_coords,
                 **subarea_vars,
             },
             model_ids=["OBS"] + [model["id"]],
