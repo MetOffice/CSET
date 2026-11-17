@@ -138,7 +138,9 @@ def _get_scores_timeseries_categorical(conf):
     return scores_timeseries_categorical
 
 
-def _collapse_settings(method_from_recipe: str, obs=False) -> tuple[str, list[str]]:
+def _collapse_settings(
+    method_from_recipe: str = "", obs: bool = False
+) -> tuple[str, list[str]]:
     """Get the collapse method and preserved coordinates for spatial scores metrics."""
     if obs:
         preserved_coords = ["time", "latitude", "longitude"]
@@ -259,7 +261,7 @@ def load(conf: Config):
         conf.SURFACE_FIELDS,
         scores_spatial_methods_aggregated,
     ):
-        _, preserved_coords = _collapse_settings("")
+        _, preserved_coords = _collapse_settings()
         yield RawRecipe(
             recipe=f"surface_scores_{scores_method}_aggregated.yaml",
             variables={
@@ -279,7 +281,7 @@ def load(conf: Config):
         models,
         scores_spatial_methods_model_vs_obs_aggregated,
     ):
-        _, preserved_coords = _collapse_settings("", obs=True)
+        _, preserved_coords = _collapse_settings(obs=True)
 
         yield RawRecipe(
             recipe=f"surface_scores_model_vs_obs_{scores_method}_aggregated.yaml",
