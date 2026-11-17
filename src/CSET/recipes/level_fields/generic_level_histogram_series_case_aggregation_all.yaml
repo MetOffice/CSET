@@ -1,6 +1,6 @@
 category: Diagnostics
 subcategory: Histogram
-level: $LEVELTYPE
+level_type: $LEVELTYPE
 title: "Histogram $VARNAME $LEVELTYPE $LEVEL\n Aggregation over all cases $SUBAREA_NAME"
 description: |
   Extracts and plots the probability density of $LEVEL level $VARNAME from a

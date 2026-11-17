@@ -1,6 +1,6 @@
 category: Diagnostics
 subcategory: Profiles
-level: $LEVELTYPE
+level_type: $LEVELTYPE
 title: "Domain mean $VARNAME vertical profile\n Aggregation by lead time $SUBAREA_NAME"
 description: |
   Plots a time series of vertical profiles for the domain horizontal mean $VARNAME using a
