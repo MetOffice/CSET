@@ -15,7 +15,7 @@ description: |
   MAE of zero indicates the two fields most likely match. The MAE is calculated
   on the grid point and thus a spatial view of the MAE provides useful
   information about where the differences are, or if placement errors
-  are domininating the score (usually indicated by dipoles). MAE is a fair
+  are dominating the score (usually indicated by dipoles). MAE is a fair
   measure of error when forecasting the median and is not sensitive to outliers.
 
   For MAE values computed across an entire case study, the computation
@@ -68,6 +68,7 @@ steps:
     preserved_coordinates: $PRESERVED_COORDS
 
   - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: "forecast_period"
 
   - operator: write.write_cube_to_nc
     overwrite: True
