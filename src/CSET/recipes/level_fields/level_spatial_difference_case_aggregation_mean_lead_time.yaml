@@ -1,6 +1,6 @@
 category: Diagnostics
 subcategory: Spatial Difference
-level: $LEVELTYPE
+level_type: $LEVELTYPE
 title: "$VARNAME $LEVELTYPE$LEVEL\n Difference ($OTHER_MODEL - $BASE_MODEL)\n Aggregation by lead time $SUBAREA_NAME"
 description: |
   Extracts and plot the difference in $VARNAME on $LEVELTYPE level $LEVEL for all times. The cases

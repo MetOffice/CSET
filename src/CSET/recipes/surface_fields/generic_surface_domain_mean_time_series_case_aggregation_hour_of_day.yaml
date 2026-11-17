@@ -1,6 +1,6 @@
 category: Diagnostics
 subcategory: Time Series
-level: Surface
+level_type: Surface
 title: "Domain mean $VARNAME time series\n Aggregation by hour of day $SUBAREA_NAME"
 description: |
   Plots a time series of the domain horizontal mean $VARNAME by averaging over

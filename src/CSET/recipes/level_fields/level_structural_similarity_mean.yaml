@@ -1,6 +1,6 @@
 category: Diagnostics
 subcategory: Structural Similarity
-level: $LEVELTYPE
+level_type: $LEVELTYPE
 title: "$VARNAME $LEVEL $SUBAREA_NAME\nMean Structural Similarity between $OTHER_MODEL and $BASE_MODEL"
 description: |
   Extracts $VARNAME at $LEVELTYPE $LEVEL for $OTHER_MODEL and $BASE_MODEL.
