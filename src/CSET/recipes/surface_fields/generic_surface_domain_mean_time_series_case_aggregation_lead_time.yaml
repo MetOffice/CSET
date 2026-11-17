@@ -1,4 +1,6 @@
-category: Surface Time Series
+category: Diagnostics
+subcategory: Time Series
+level: Surface
 title: "Domain mean $VARNAME time series\n Aggregation by lead time $SUBAREA_NAME"
 description: |
   Plots a time series of the domain horizontal mean $VARNAME by averaging over

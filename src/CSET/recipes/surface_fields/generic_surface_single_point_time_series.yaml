@@ -1,4 +1,6 @@
-category: Time Series
+category: Diagnostics
+subcategory: Time Series
+level: Surface
 title: Time series of $VARNAME at $LATITUDE_POINT N, $LONGITUDE_POINT E ($LATLON_IN_TYPE)
 description: Plots a time series of the $VARNAME at a selected gridpoint.
 

@@ -1,4 +1,6 @@
-category: Surface Time Series
+category: Diagnostics
+subcategory: Time Series
+level: Surface
 title: "Domain mean $VARNAME time series\n Aggregation over all cases $SUBAREA_NAME"
 description: |
   Plots a time series of the domain horizontal mean surface $VARNAME by averaging over

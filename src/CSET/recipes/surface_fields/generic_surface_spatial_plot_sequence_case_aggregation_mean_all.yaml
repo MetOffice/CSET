@@ -1,4 +1,6 @@
-category: Surface Spatial Plot
+category: Diagnostics
+subcategory: Spatial
+level: Surface
 title: "$MODEL_NAME $VARNAME\n Aggregation over all cases $SUBAREA_NAME"
 description: |
   Extracts and plots the mean $VARNAME for all times in $MODEL_NAME. Case

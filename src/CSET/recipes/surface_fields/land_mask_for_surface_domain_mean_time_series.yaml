@@ -1,4 +1,6 @@
-category: Surface Time Series
+category: Diagnostics
+subcategory: Time Series
+level: Surface
 title: "Land mask domain mean $VARNAME time series $SUBAREA_NAME"
 description: |
   Creates a land mask and applies it to $VARNAME. It then creates and plots
