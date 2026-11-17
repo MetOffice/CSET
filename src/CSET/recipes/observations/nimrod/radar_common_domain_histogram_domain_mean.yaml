@@ -1,7 +1,9 @@
-category: Surface Spatial Plot
-title: "bmc8b Histogram $VARNAME\n common domain model and radar $NIMROD_LABEL"
+category: Nimrod Observations
+subcategory: Spatial
+level_type: Surface
+title: "bmc9 Domain mean histogram $VARNAME\n common domain model and radar $NIMROD_LABEL"
 description: |
-  Creates time sequence histograms of the model rainfall rate and
+  Creates domain mean histogram of the model rainfall rate and
   the observed radar rainfall rate. The model field is regridded onto
   the radar grid. Both regridded model and radar grids are then masked
   so that only data within a domain common to both are used.
@@ -52,8 +54,14 @@ steps:
 
   - operator: radar_filter.match_varname_and_units
 
+  #- operator: collapse.collapse
+  #  #coordinate: [projection_y_coordinate, projection_x_coordinate]
+  #  coordinate: [time]
+  #  method: MEAN
+
   - operator: write.write_cube_to_nc
     overwrite: True
 
   - operator: plot.plot_histogram_series
-    sequence_coordinate: $SEQUENCE
+    sequence_coordinate: "realization"
+    #sequence_coordinate: $SEQUENCE
