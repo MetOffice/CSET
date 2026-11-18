@@ -567,6 +567,11 @@ def _nimrod_normalise_callback(cube: iris.cube.Cube):
     cube.attributes.pop("Probability methods", None)
 
 
+def _gpm_normalise_callback(cube: iris.cube.Cube):
+    """Normalise attributes that prevents GPM rainfall cubes from merging."""
+    # Remove unwanted attributes.
+
+
 def _remove_cset_comparison_base_attribute_callback(cube):
     """Remove ``cset_comparison_base`` attribute if present.
 
