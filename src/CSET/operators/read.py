@@ -18,6 +18,7 @@ import ast
 import datetime
 import functools
 import glob
+import inspect
 import itertools
 import logging
 import re
@@ -46,6 +47,8 @@ from CSET.operators._utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+_HAS_RECURSE_SYMLINKS = "recurse_symlinks" in inspect.signature(Path.rglob).parameters
 
 
 class NoDataError(FileNotFoundError):
@@ -371,7 +374,9 @@ def _check_ancillary_path(raw_filename: str) -> list[Path]:
             logger.debug("Checking directory '%s' for files", input_path)
             files.extend(
                 str(fname)
-                for fname in input_path.rglob("*", recurse_symlinks=True)
+                for fname in input_path.rglob(
+                    "*", recurse_symlinks=_HAS_RECURSE_SYMLINKS
+                )
                 if fname.name in ancil_list
             )
 
