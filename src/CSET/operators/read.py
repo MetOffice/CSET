@@ -372,13 +372,18 @@ def _check_ancillary_path(raw_filename: str) -> list[Path]:
                 "qrclim.sea",
             }
             logger.debug("Checking directory '%s' for files", input_path)
-            files.extend(
-                str(fname)
-                for fname in input_path.rglob(
-                    "*", recurse_symlinks=_HAS_RECURSE_SYMLINKS
+            if _HAS_RECURSE_SYMLINKS:
+                files.extend(
+                    str(fname)
+                    for fname in input_path.rglob("qr*.*", recurse_symlinks=True)
+                    if fname.name in ancil_list
                 )
-                if fname.name in ancil_list
-            )
+            else:
+                files.extend(
+                    str(fname)
+                    for fname in input_path.rglob("qr*.*")
+                    if fname.name in ancil_list
+                )
 
     # Some ancillary paths contain multiple versions of same filename.
     # Determine latest version for each path excluding vN.
