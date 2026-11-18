@@ -333,7 +333,6 @@ def extract_common_time_points(cubes: CubeList | Cube) -> CubeList | Cube:
                     "All cubes must have a forecast_reference_time coordinate."
                 )
         cubes_common = extract_common_points(cubes, "forecast_period")
-
         return cubes_common
     else:
         return _extract_common_time_points_one_frt(cubes)
