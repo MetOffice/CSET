@@ -218,7 +218,7 @@ def load(conf: Config):
         collapse_method, preserved_coords = _collapse_settings(method_from_recipe)
 
         yield RawRecipe(
-            recipe=f"surface_difference_scores_{scores_method}.yaml",
+            recipe=f"surface_scores_{scores_method}.yaml",
             variables={
                 "VARNAME": field,
                 "BASE_MODEL": base_model["name"],
@@ -260,7 +260,7 @@ def load(conf: Config):
         scores_spatial_methods_aggregated,
     ):
         yield RawRecipe(
-            recipe=f"surface_difference_scores_{scores_method}_aggregated.yaml",
+            recipe=f"surface_scores_{scores_method}_aggregated.yaml",
             variables={
                 "VARNAME": field,
                 "BASE_MODEL": base_model["name"],
@@ -299,7 +299,7 @@ def load(conf: Config):
         conf.SURFACE_FIELDS, scores_timeseries_methods
     ):
         yield RawRecipe(
-            recipe=f"timeseries_surface_difference_scores_{scores_method}.yaml",
+            recipe=f"timeseries_scores_{scores_method}.yaml",
             variables={
                 "VARNAME": field,
                 "BASE_MODEL": base_model["name"],
@@ -330,7 +330,7 @@ def load(conf: Config):
             conf.SURFACE_FIELDS, scores_timeseries_methods_aggregated
         ):
             yield RawRecipe(
-                recipe=f"timeseries_difference_scores_{scores_method}_aggregated.yaml",
+                recipe=f"timeseries_scores_{scores_method}_aggregated.yaml",
                 variables={
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
