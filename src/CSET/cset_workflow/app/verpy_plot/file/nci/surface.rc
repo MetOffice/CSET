@@ -1,0 +1,91 @@
+[VerPyPlot_surface_fs]
+comment = surface_fs
+jobid = surface_fs
+system = MET
+type = cnt
+truth = Surface Obs
+stats = ["ME (FcVsObs)", "MSE (FcVsObs)"]
+param = ["TMP", "RH"]
+interp = NEAREST
+output = fcrseries
+
+[VerPyPlot_surface_ts]
+comment = surface_ts
+jobid = surface_ts
+system = MET
+type = cnt
+truth = Surface Obs
+stats = ["ME (FcVsObs)", "MSE (FcVsObs)"]
+param = ["TMP", "RH"]
+interp = NEAREST
+output = timeseries
+aggopts = fcrs
+
+[VerPyPlot_surface_di]
+comment = surface_di
+jobid = surface_di
+system = MET
+type = cnt
+truth = Surface Obs
+stats = ["ME (FcVsObs)", "MSE (FcVsObs)"]
+param = ["TMP", "RH"]
+interp = NEAREST
+output = diurnal
+aggopts = fcrs
+
+[VerPyPlot_surface_em]
+comment = surface_em
+jobid = surface_em
+system = MET
+type = mpr
+truth = Surface Obs
+param = ["TMP", "RH"]
+stats = ["ME (FcVsObs)"]
+interp = NEAREST
+output = errormap
+aggopts = ["dateranges", "fcrs"]
+plottheme = "diffmap"
+verbosity = 30
+
+[VerPyPlot_surface_taylor]
+comment = surface_taylor
+jobid = surface_taylor
+system = MET
+type = sl1l2
+stats = [7758, 1756, 3756]
+truth = Surface Obs
+param = ["TMP", "RH"]
+interp = NEAREST
+output = taylor
+compare_on_plot = fcrs
+fcrs = [600, 1200, 1800, 2400]
+plottheme = split
+tayloropts = ['crmse_contour', 'normalized']
+
+[VerPyPlot_surface_roebber_tmp]
+comment = surface_roebber
+jobid = surface_roebber_tmp
+system = MET
+type = ctc
+stats = [7921, 7922, 7923]
+truth = Surface Obs
+param = ["TMP"]
+interp = NEAREST
+output = roebber
+compare_on_plot = fcrs
+fcrs = [600, 1200, 1800, 2400]
+plottheme = split
+
+[VerPyPlot_surface_roebber_rh]
+comment = surface_roebber
+jobid = surface_roebber_rh
+system = MET
+type = ctc
+stats = [7921, 7922, 7923]
+truth = Surface Obs
+param = ["RH"]
+interp = NEAREST
+output = roebber
+compare_on_plot = fcrs
+fcrs = [600, 1200, 1800, 2400]
+plottheme = split

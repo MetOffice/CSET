@@ -60,7 +60,7 @@
             -l storage  = scratch/{{PROJECT}}+gdata/{{PROJECT}}+gdata/access+gdata/dp9+gdata/hr22+gdata/ig2+scratch/dx2
             -W umask    = 0022
         [[[ environment ]]]
-            OMP_NUM_THREADS = $PBS_NCPUS
+            OMP_NUM_THREADS = ${PBS_NCPUS:-1}
             ANALYSIS_LENGTH = {{ANALYSIS_LENGTH}}
             # Shift valid times in METplus by this many seconds
             METPLUS_FCST_SHIFT  = {{METPLUS_FCST_SHIFT | default(0)}}
