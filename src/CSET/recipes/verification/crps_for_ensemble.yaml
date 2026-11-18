@@ -1,4 +1,5 @@
-category: Scores
+category: Verification
+subcategory: Ensembles
 title: "$VARNAME\nCRPS time series between ensemble members and control"
 description: |
   Extracts and plots the  Continuous Ranked Probability Score (CRPS) for Ensembles in $VARNAME
