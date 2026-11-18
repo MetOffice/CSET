@@ -1,8 +1,8 @@
 category: Scores Categorical
-title: Timeseries of PFD for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
+title: Time Series of PFD for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
 description: |
 
-  Extracts and plots the Probability of False Detection (POFD) for $VARNAME for each model against observations as a timeseries.
+  Extracts and plots the Probability of False Detection (POFD) for $VARNAME for each model against observations as a time series.
 
   The Probability of False Detection (POFD) in [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.categorical.BasicContingencyManager.probability_of_false_detection)
   measures the proportion of observed non-events that were incorrectly forecast as events.
