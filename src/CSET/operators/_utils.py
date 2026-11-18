@@ -685,7 +685,6 @@ def get_shared_times(base: Cube, other: Cube, time_coord: str) -> set[int | date
         shared_times = set.intersection(set(base_times), set(other_times))
 
     logger.debug("Shared times: %s", shared_times)
-
     if not shared_times:
         raise ValueError("No common time points found!")
     return shared_times
