@@ -61,18 +61,9 @@ steps:
 
   - operator: write.write_cube_to_nc
     overwrite: True
-
-#  - operator: plot.plot_histogram_series
-#    sequence_coordinate: $SEQUENCE
-
-##  - operator: plot.plot_histogram_series
-##    sequence_coordinate: $SEQUENCE
 #
   - operator: power_spectrum.calculate_power_spectrum
 #
   - operator: plot.plot_line_series
     series_coordinate: "physical_wavenumber"
     sequence_coordianate: $SEQUENCE
-    #stamp_coordinate: "realization"
-    #ingle_plot: True
-    sequence_coordinate: $SEQUENCE
