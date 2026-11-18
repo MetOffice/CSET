@@ -40,9 +40,9 @@ steps:
     # The preserved coordinates specify whether or not the
     # RMSE is to be computed over the entire case study.
 
-  - operator: misc.extract_common_time_points
-
   - operator: aggregate.ensure_aggregatable_across_cases
+
+  - operator: misc.extract_common_time_points
 
   - operator: scoreswrappers.scores_rmse
     preserved_coordinates: $PRESERVED_COORDS
