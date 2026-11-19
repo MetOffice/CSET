@@ -1,5 +1,5 @@
 category: Verification
-subcategory: Time Series
+plot_type: time series
 title: "$VARNAME scores pearson correlation time series for model vs observation points $SUBAREA_NAME"
 description: |
 

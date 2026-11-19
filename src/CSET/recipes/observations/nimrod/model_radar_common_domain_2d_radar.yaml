@@ -1,5 +1,5 @@
 category: Nimrod Observations
-subcategory: Spatial
+plot_type: spatial
 level_type: Surface
 title: "$RADAR_LABEL $RADAR_VARNAME.\n Common domain $MODEL_NAME and $RADAR_LABEL"
 description: |

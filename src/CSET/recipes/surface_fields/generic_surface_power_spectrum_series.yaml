@@ -1,5 +1,5 @@
 category: Diagnostics
-subcategory: Power Spectrum
+plot_type: power spectrum
 level_type: Surface
 title: "Power Spectrum $VARNAME $SUBAREA_NAME"
 description: |

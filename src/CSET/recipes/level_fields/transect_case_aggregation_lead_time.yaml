@@ -1,5 +1,5 @@
 category: Diagnostics
-subcategory: Transect
+plot_type: transect
 title: "$MODEL_NAME Transect of $VARNAME\n Aggregation by lead time $SUBAREA_NAME"
 description: |
   Aggregates over lead time, and then extracts a $VERTICAL_COORDINATE
