@@ -191,7 +191,7 @@ def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
     return (y_coords[0], x_coords[0])
 
 
-def get_xy_coords(cube):
+def get_xy_coords(cube: iris.cube.Cube) -> tuple[iris.coords.Coord, iris.coords.Coord]:
     """Return (x, y) coords, preferring dim coords and falling back to aux coords."""
     try:
         x = cube.coord(axis="X", dim_coords=True)
