@@ -400,7 +400,7 @@ def test_extract_common_points_nocoord(vertical_profile_cube):
         )
 
 
-def test_extract_common_points_ensureworking(vertical_profile_cube):
+def test_extract_common_points_ensure_working(vertical_profile_cube):
     """Test that correct common points returned."""
     cube1 = vertical_profile_cube.copy()
     cube2 = vertical_profile_cube.copy()
@@ -563,3 +563,54 @@ def test_extract_common_time_points_single_cube(cube):
 
     assert cb == misc.extract_common_time_points(cb)
     assert cb_list == misc.extract_common_time_points(cb_list)
+
+
+def test_ensure_same_frt(make_frt_cube):
+    """Test _ensure_same_frt working."""
+    cube1 = make_frt_cube([0, 24], [0, 6, 12])
+    cube2 = make_frt_cube([0, 24], [0, 6, 12])
+    cube3 = make_frt_cube([0, 24], [0, 6, 12])
+
+    cube_list = CubeList([cube1, cube2, cube3])
+    assert misc._ensure_same_frt(cube_list) is None
+
+
+def test_ensure_same_frt_wrong_number_frt(make_frt_cube):
+    """Test _ensure_same_frt with wrong number of frts in one cube."""
+    cube1 = make_frt_cube([0, 24], [0, 6, 12])
+    cube2 = make_frt_cube([0, 24], [0, 6, 12])
+    cube3 = make_frt_cube([0, 24, 48], [0, 6, 12])
+
+    cube_list = CubeList([cube1, cube2, cube3])
+    with pytest.raises(
+        ValueError, match="Cubes do not have same number of forecast_reference_times"
+    ):
+        misc._ensure_same_frt(cube_list)
+
+
+def test_ensure_same_frt_wrong_frt(make_frt_cube):
+    """Test _ensure_same_frt with wrong frt in one cube."""
+    cube1 = make_frt_cube([0, 24], [0, 6, 12])
+    cube2 = make_frt_cube([0, 24], [0, 6, 12])
+    cube3 = make_frt_cube([0, 48], [0, 6, 12])
+
+    cube_list = CubeList([cube1, cube2, cube3])
+    with pytest.raises(
+        ValueError, match="Cubes do not share the same forecast_reference_time values."
+    ):
+        misc._ensure_same_frt(cube_list)
+
+
+def test_ensure_same_frt_one_cube_no_frt(make_frt_cube, make_simple_1d_time_cube):
+    """Test _ensure_same_frt where one cube has no frt."""
+    cube1 = make_frt_cube([0, 24], [0, 6, 12])
+    cube2 = make_frt_cube([0, 24], [0, 6, 12])
+    cube3 = make_simple_1d_time_cube(
+        [0, 6, 12], "time", "hours since 2026-01-01 00:00:00"
+    )
+
+    cube_list = CubeList([cube1, cube2, cube3])
+    with pytest.raises(
+        ValueError, match="Cube does not contain any forecast_reference_times."
+    ):
+        misc._ensure_same_frt(cube_list)
