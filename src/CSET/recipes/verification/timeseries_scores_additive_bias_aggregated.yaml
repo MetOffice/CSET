@@ -37,10 +37,10 @@ steps:
   - operator: aggregate.ensure_aggregatable_across_cases
 
   - operator: scoreswrappers.scores_additive_bias
-    preserved_coordinates: $PRESERVED_COORD
+    preserved_coordinates: "forecast_period"
 
   - operator: plot.plot_line_series
-    series_coordinate: $PRESERVED_COORD
+    series_coordinate: "forecast_period"
 
   - operator: write.write_cube_to_nc
     overwrite: True
