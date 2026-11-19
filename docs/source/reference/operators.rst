@@ -38,6 +38,12 @@ CSET.operators.filters
 .. automodule:: CSET.operators.filters
    :members:
 
+CSET.operators.maths
+--------------------
+
+.. automodule:: CSET.operators.maths
+   :members:
+
 CSET.operators.misc
 -------------------
 
