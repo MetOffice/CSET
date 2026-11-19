@@ -300,24 +300,22 @@ def load(conf: Config):
                 aggregation=False,
             )
 
-            # Mean spectrum over 1 case.
-            yield RawRecipe(
-                recipe="radar_common_domain_power_spectrum_mean_over_time.yaml",
-                variables={
-                    "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
-                    "RADAR_VARNAME": "Hourly rain accumulation",
-                    "RADAR_WTS_VARNAME": "Hourly wts accumulation",
-                    "ALL_LABEL": names_ids["combined_names"],
-                    "SEQUENCE": sequence,
-                    "OUTPUTS": "all",
-                    "BOUNDARY_MARGIN": boundary_margin,
-                    "TITLE_STRING": title,
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                },
-                model_ids=names_ids["combined_ids"],
-                aggregation=False,
-            )
+        # Mean spectrum over 1 case.
+        yield RawRecipe(
+            recipe="radar_common_domain_power_spectrum_mean_over_time.yaml",
+            variables={
+                "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
+                "RADAR_VARNAME": "Hourly rain accumulation",
+                "RADAR_WTS_VARNAME": "Hourly wts accumulation",
+                "ALL_LABEL": names_ids["combined_names"],
+                "SEQUENCE": "time",
+                "OUTPUTS": "all",
+                "BOUNDARY_MARGIN": boundary_margin,
+                "TITLE_STRING": "case study",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+            },
+            model_ids=names_ids["combined_ids"],
+            aggregation=False,
+        )
