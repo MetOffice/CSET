@@ -268,3 +268,54 @@ def load(conf: Config):
                 model_ids=names_ids["combined_ids"],
                 aggregation=False,
             )
+
+    # Power spectrum sequence rainfall using common domain between
+    # model and Nimrod radar observations.
+    if (
+        conf.NIMROD_RADAR_OBS
+        and conf.PROCESS_RADAR_SPECTRUM
+        and (len(accum_radars) > 0)
+    ):
+        names_ids = _model_and_radar_names_ids(models, accum_radars)
+        for sequence, title in (("time", "sequence plots"),):
+            # Time sequence plots
+            yield RawRecipe(
+                recipe="radar_common_domain_power_spectrum.yaml",
+                variables={
+                    "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
+                    "RADAR_VARNAME": "Hourly rain accumulation",
+                    "RADAR_WTS_VARNAME": "Hourly wts accumulation",
+                    "ALL_LABEL": names_ids["combined_names"],
+                    "SEQUENCE": sequence,
+                    "OUTPUTS": "all",
+                    "BOUNDARY_MARGIN": boundary_margin,
+                    "TITLE_STRING": title,
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                },
+                model_ids=names_ids["combined_ids"],
+                aggregation=False,
+            )
+
+        # Mean spectrum over 1 case.
+        yield RawRecipe(
+            recipe="radar_common_domain_power_spectrum_mean_over_time.yaml",
+            variables={
+                "MODEL_VARNAME": "surface_microphysical_rainfall_rate",
+                "RADAR_VARNAME": "Hourly rain accumulation",
+                "RADAR_WTS_VARNAME": "Hourly wts accumulation",
+                "ALL_LABEL": names_ids["combined_names"],
+                "SEQUENCE": "time",
+                "OUTPUTS": "all",
+                "BOUNDARY_MARGIN": boundary_margin,
+                "TITLE_STRING": "case study",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+            },
+            model_ids=names_ids["combined_ids"],
+            aggregation=False,
+        )
