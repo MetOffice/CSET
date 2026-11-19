@@ -49,7 +49,7 @@ def vertical_relative_vorticity(
 .. math::
     \boldsymbol{\zeta} = \nabla \times \mathbf{u}
     It's interpretation depends on the hemisphere you are in. Southern
-    hemispheric convections are opposite to Northern hemispheric convections.
+    hemispheric conventions are opposite to Northern hemispheric conventions.
     In the Northern hemisphere negative vorticity implies cyclonic circulation
     whereas, positive vorticity implies anticyclonic circulation (e.g. [Holton13]_).
 
@@ -59,6 +59,7 @@ def vertical_relative_vorticity(
     """
     new_cubelist = CubeList([])
     for u, v in zip(iter_maybe(u_cube), iter_maybe(v_cube), strict=True):
+        # if 2d field supplied as here, returns [None, None, k_cube].
         _, _, zeta = iris.analysis.calculus.curl(u, v, None)
         zeta.rename("vertical_component_of_relative_vorticity")
         new_cubelist.append(zeta)

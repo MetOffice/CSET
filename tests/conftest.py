@@ -1754,7 +1754,7 @@ def ywind(ywind_read_only) -> iris.cube.Cube:
 
 @pytest.fixture()
 def wwind_read_only() -> iris.cube.Cube:
-    """Get regridded wwind to run tests on. It is NOT sfae to modify."""
+    """Get regridded wwind to run tests on. It is NOT safe to modify."""
     return read.read_cube(
         "tests/test_data/ageofair/aoa_in_rgd.nc", "upward_air_velocity"
     )
