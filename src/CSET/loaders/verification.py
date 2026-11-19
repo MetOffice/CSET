@@ -138,9 +138,7 @@ def _get_scores_timeseries_categorical(conf):
     return scores_timeseries_categorical
 
 
-def _collapse_settings(
-    method_from_recipe: str = "", obs: bool = False
-) -> tuple[str, list[str]]:
+def _collapse_settings(method_from_recipe, obs: bool = False) -> tuple[str, list[str]]:
     """Get the collapse method and preserved coordinates for spatial scores metrics."""
     if obs:
         preserved_coords = ["time", "latitude", "longitude"]
