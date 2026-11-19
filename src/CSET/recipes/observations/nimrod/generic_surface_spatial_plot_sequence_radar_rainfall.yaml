@@ -1,5 +1,5 @@
 category: Nimrod Observations
-subcategory: Spatial
+plot_type: spatial
 level_type: Surface
 title: "$RADAR_NAME $VARNAME $SUBAREA_NAME"
 description: |

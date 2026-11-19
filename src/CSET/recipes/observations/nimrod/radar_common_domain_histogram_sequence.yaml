@@ -1,5 +1,5 @@
 category: Nimrod Observations
-subcategory: Spatial
+plot_type: spatial
 level_type: Surface
 title: "bmc8b Histogram $VARNAME\n common domain model and radar $NIMROD_LABEL"
 description: |

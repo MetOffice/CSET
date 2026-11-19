@@ -1,5 +1,5 @@
 category: Nimrod Observations
-subcategory: Spatial
+plot_type: spatial
 level_type: Surface
 title: "Histogram $MODEL_VARNAME\n $TITLE_STRING common domain model and Nimrod radar"
 description: |

@@ -1,5 +1,5 @@
 category: Diagnostics
-subcategory: Time Series
+plot_type: time series
 level_type: $LEVELTYPE
 title: "$VARNAME $LEVEL domain mean time series\n Aggregation over all cases $SUBAREA_NAME"
 description: Plots a time series of the domain mean $VARNAME at $LEVELTYPE $LEVEL by using all available times.

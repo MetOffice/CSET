@@ -1,5 +1,5 @@
 category: Point Observations
-subcategory: Spatial
+plot_type: spatial
 level_type: Surface
 title: $VARNAME $METHOD $SUBAREA_NAME
 description: |

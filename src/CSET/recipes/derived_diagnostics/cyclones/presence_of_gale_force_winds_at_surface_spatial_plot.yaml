@@ -1,5 +1,5 @@
 category: Diagnostics
-subcategory: Derived Diagnostics
+Derived: true
 title: $MODEL_NAME presence of gale force winds at the surface spatial plot
 description: |
   Generates a plot of the surface wind speed converted onto the Beaufort Scale

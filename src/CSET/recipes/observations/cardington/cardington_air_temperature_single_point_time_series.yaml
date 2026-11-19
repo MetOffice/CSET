@@ -1,5 +1,5 @@
 category: Cardington Observations
-subcategory: Time Series
+plot_type: time series
 title: Time series of 'air_temperature' at lat_pt:52.10438, lon_pt:-0.42286 specific to Cardington gridpoint.
 description: Plots a time series of the air temperature at a selected Cardington gridpoint.
 

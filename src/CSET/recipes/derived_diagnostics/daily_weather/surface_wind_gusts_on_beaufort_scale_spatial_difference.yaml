@@ -1,5 +1,5 @@
 category: Diagnostics
-subcategory: Derived Diagnostics
+Derived: true
 title: "Surface wind gusts on Beaufort Scale\nDifference ($OTHER_MODEL - $BASE_MODEL)"
 description: |
   Generates the surface wind gusts converted onto the Beaufort Scale and takes the
