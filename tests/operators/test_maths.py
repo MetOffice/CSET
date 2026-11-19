@@ -157,3 +157,49 @@ def test_differentitate_cubelist(long_forecast):
     new_cubelist = maths.differentiate(input_cubes, "time")
     for actual, expected in zip(new_cubelist, expected_cubelist, strict=True):
         assert np.allclose(actual.data, expected.data, rtol=1e-6, atol=1e-2)
+
+
+def test_round_data_rounds_values_1_dec_place():
+    """Data is rounded to the requested number of decimals."""
+    data = np.array([[1.234, 5.678], [-2.345, 9.999]])
+    cb = iris.cube.Cube(data, var_name="test_field")
+    result = maths.round_data(cb, decimals=1)
+    expected = np.array([[1.2, 5.7], [-2.3, 10.0]])
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_round_data_rounds_values_2_dec_place():
+    """Data is rounded to the requested number of decimals."""
+    data = np.array([[1.234, 5.678], [-2.345, 9.999]])
+    cb = iris.cube.Cube(data, var_name="test_field")
+    result = maths.round_data(cb, decimals=2)
+    expected = np.array([[1.23, 5.68], [-2.35, 10.0]])
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_round_data_rounds_values_fail_bad_decimal():
+    """Data is rounded to the requested number of decimals."""
+    data = np.array([[1.234, 5.678], [-2.345, 9.999]])
+    cb = iris.cube.Cube(data, var_name="test_field")
+    with pytest.raises(TypeError, match="decimals must be an integer, got float: 1.1"):
+        maths.round_data(cb, decimals=1.1)
+
+
+def test_round_data_preserves_nans():
+    """NaNs are left as NaN."""
+    data = np.array([[1.234, np.nan], [-2.345, 9.999]])
+    cb = iris.cube.Cube(data, var_name="test_field")
+    result = maths.round_data(cb, decimals=1)
+    assert np.isnan(result.data[0, 1])
+    np.testing.assert_allclose(result.data[0, 0], 1.2)
+
+
+def test_round_data_preserves_mask():
+    """Masked points stay masked."""
+    data = np.array([[1.234, np.nan], [-2.345, 9.999]])
+    cb = iris.cube.Cube(data, var_name="test_field")
+    mask = np.array([[False, True], [False, False]])
+    cb.data = np.ma.masked_array(cb.data, mask=mask)
+    result = maths.round_data(cb, decimals=1)
+    assert np.ma.isMaskedArray(result.data)
+    np.testing.assert_array_equal(result.data.mask, mask)

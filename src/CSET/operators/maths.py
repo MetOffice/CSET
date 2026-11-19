@@ -18,6 +18,7 @@ import logging
 
 import iris
 import iris.analysis.calculus
+import numpy as np
 from iris.cube import Cube, CubeList
 
 from CSET._common import iter_maybe
@@ -251,3 +252,33 @@ def differentiate(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def round_data(cubes: Cube | CubeList, decimals: int) -> Cube | CubeList:
+    """Round data in a cube or cubelist to a specified number of decimal places.
+
+    Parameters
+    ----------
+    cubes : Cube | CubeList
+        A Cube or CubeList of fields to be rounded.
+    decimals : int
+        The number of decimal places to round to.
+
+    Returns
+    -------
+    Cube | CubeList
+        The rounded cube, or a CubeList of rounded cubes if more than one
+        cube was given.
+    """
+    if not isinstance(decimals, int):
+        raise TypeError(
+            f"decimals must be an integer, got {type(decimals).__name__}: {decimals!r}"
+        )
+
+    rounded_cubes = CubeList()
+    for cube in iter_maybe(cubes):
+        rounded_cube = cube.copy()
+        rounded_cube.data = np.round(rounded_cube.core_data(), decimals)
+        rounded_cubes.append(rounded_cube)
+
+    return rounded_cubes[0] if len(rounded_cubes) == 1 else rounded_cubes
