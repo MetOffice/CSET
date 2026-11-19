@@ -278,6 +278,7 @@ def load(conf: Config):
     ):
         names_ids = _model_and_radar_names_ids(models, accum_radars)
         for sequence, title in (("time", "sequence plots"),):
+            # Time sequence plots
             yield RawRecipe(
                 recipe="radar_common_domain_power_spectrum.yaml",
                 variables={
@@ -299,6 +300,7 @@ def load(conf: Config):
                 aggregation=False,
             )
 
+            # Mean spectrum over 1 case.
             yield RawRecipe(
                 recipe="radar_common_domain_power_spectrum_mean_over_time.yaml",
                 variables={

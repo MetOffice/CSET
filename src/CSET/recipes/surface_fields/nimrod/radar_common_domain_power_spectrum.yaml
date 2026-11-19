@@ -3,6 +3,7 @@ title: "Power Spectrum $MODEL_VARNAME\n $TITLE_STRING common domain model and Ni
 description: |
   Creates power spectra of the model rainfall rate and
   the observed radar rainfall accumulation.
+  Time sequence plots are produced.
   The model field is regridded onto the radar grid. Both regridded model
   and radar grids are then masked so that only data within a domain common
   to both are used.
