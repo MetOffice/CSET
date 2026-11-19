@@ -1,5 +1,5 @@
 category: Point Observations
-subcategory: Scatter plot
+plot_type: scatter plot
 title: "$MODEL_NAME scatter $VARNAME $SUBAREA_NAME"
 description: Extracts and plot scatter plot of $VARNAME.
              Scatter plots generated either showing all points, or as matplotlib hexbin 2D hexagonal binning plot of points.

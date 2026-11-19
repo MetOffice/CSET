@@ -1,5 +1,5 @@
 category: Verification
-subcategory: Time Series
+plot_type: time series
 title: "$VARNAME\nscores MAE time series for model vs observation points aggregated by lead time $SUBAREA_NAME"
 description: |
   The mean absolute error (MAE) is calculated based on that used in the

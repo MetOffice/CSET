@@ -1,5 +1,5 @@
 category: Diagnostics
-subcategory: Spatial Difference
+plot_type: spatial difference
 level_type: $LEVELTYPE
 title: "$VARNAME $LEVELTYPE$LEVEL\n Difference ($OTHER_MODEL - $BASE_MODEL)\n Aggregation by hour of day $SUBAREA_NAME"
 description: |

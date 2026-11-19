@@ -1,5 +1,5 @@
 category: Verification
-subcategory: Profile
+plot_type: vertical profile
 title: "$VARNAME\nRMSE vertical profile between $OTHER_MODELS and $BASE_MODEL ($AGGREGATION_MODE)"
 description: |
   Extracts and plots the Root Mean Square Error (RMSE) of $VARNAME

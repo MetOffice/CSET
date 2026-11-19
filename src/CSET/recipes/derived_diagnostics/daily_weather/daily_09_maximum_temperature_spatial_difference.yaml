@@ -1,5 +1,5 @@
 category: Diagnostics
-subcategory: Derived Diagnostics
+Derived: true
 title: "Daily maximum temperature at 0900 UTC\nDifference ($OTHER_MODEL - $BASE_MODEL)"
 description: |
   Extracts and plots the daily maximum temperature between 0900 UTC and 0900 UTC

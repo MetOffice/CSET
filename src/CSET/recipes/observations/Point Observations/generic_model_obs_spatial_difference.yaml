@@ -1,5 +1,5 @@
 category: Point Observations
-subcategory: Spatial Difference
+plot_type: spatial difference
 title: "$METHOD $VARNAME $SUBAREA_NAME\nDifference ($MODEL_NAME - OBS)"
 description: Extracts and plot the difference in $METHOD of $VARNAME between model value and observed value for all times.
 
