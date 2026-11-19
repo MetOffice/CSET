@@ -41,6 +41,7 @@ from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
 from CSET.operators._utils import (
     get_cube_coordindex,
     get_cube_yxcoordname,
+    get_xy_coords,
     is_spatialdim,
 )
 
@@ -410,8 +411,7 @@ def _cutout_cubes(
         else:
             raise ValueError("Unknown subarea_type:", subarea_type)
 
-        x = cube.coord(axis="X", dim_coords=True)
-        y = cube.coord(axis="Y", dim_coords=True)
+        x, y = get_xy_coords(cube)
 
         if (
             x.name() == "projection_x_coordinate"

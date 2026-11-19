@@ -1,7 +1,7 @@
 category: Scores Spatial Aggregated
 title: "Scores Mean Absolute Error between the comparison model and $BASE_MODEL aggregated by $AGGREGATION_MODE $SUBAREA_NAME"
 description: |
-  Extracts and plots the Mean Absolute Error (MAE) in $METHOD of $VARNAME.
+  Extracts and plots the Mean Absolute Error (MAE) of $VARNAME.
   The MAE is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.mae).
   This recipe preserves the time, latitude and longitude coordinates.
@@ -48,6 +48,7 @@ steps:
     preserved_coordinates: $PRESERVED_COORDS
 
   - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: "forecast_period"
 
   - operator: write.write_cube_to_nc
     overwrite: True
