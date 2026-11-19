@@ -25,7 +25,7 @@ def vertical_relative_vorticity(
     u_cube: Cube | CubeList,
     v_cube: Cube | CubeList,
 ) -> Cube | CubeList:
-    """Calculate the vertical relative vorticity of a cube from wind components.
+    r"""Calculate the vertical relative vorticity of a cube from wind components.
 
     Arguments
     ---------
@@ -45,9 +45,12 @@ def vertical_relative_vorticity(
     The relative vorticity is calculated as the curl of the wind. It automatically
     determines if the spherical curl or cartesian curl is calculated based
     on the cubes coordinate system. In essence this operator is a CSET wrapper around
-    `iris.analysis.calculus.curl <https://scitools-iris.readthedocs.io/en/stable/generated/api/iris.analysis.calculus.html#iris.analysis.calculus.curl>`_ adapted for wind.
-.. math::
-    \boldsymbol{\zeta} = \nabla \times \mathbf{u}
+    `iris.analysis.calculus.curl <https://scitools-iris.readthedocs.io/en/stable/generated/api/iris.analysis.calculus.html#iris.analysis.calculus.curl>`_ adapted for wind and the vertical component of vorticity only, and is calculated as
+
+    .. math:: \\zeta = \\frac{\\partial \\nu}{\\partial x} - \\frac{\\partial u}{\\partial y}
+
+    for :math:`\\zeta` the relative vorticity, :math:`\\nu` the meridional component of the wind,
+    :math:`u` the zonal component of the wind in directions :math:`x` and :math:`y`.
     It's interpretation depends on the hemisphere you are in. Southern
     hemispheric conventions are opposite to Northern hemispheric conventions.
     In the Northern hemisphere negative vorticity implies cyclonic circulation
