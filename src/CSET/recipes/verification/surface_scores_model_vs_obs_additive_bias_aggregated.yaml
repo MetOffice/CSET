@@ -36,24 +36,29 @@ steps:
 
   - operator: misc.combine_cubes_into_cubelist
     first:
-        operator: filters.filter_cubes
+      operator: aggregate.combine_obs_across_forecasts
+      cubes:
+        operator: filters.filter_multiple_cubes
         constraint:
+          operator: constraints.generate_var_constraint
+          varname: observed_$VARNAME
+    second:
+      operator: regrid.interpolate_to_point_cube
+      fld:
+        operator: aggregate.ensure_aggregatable_across_cases
+        cubes:
+          operator: filters.filter_multiple_cubes
+          constraint:
+            operator: constraints.generate_var_constraint
+            varname: $VARNAME
+
+      point_cube:
+        operator: aggregate.combine_obs_across_forecasts
+        cubes:
+          operator: filters.filter_multiple_cubes
+          constraint:
             operator: constraints.generate_var_constraint
             varname: observed_$VARNAME
-    second:
-       operator: regrid.interpolate_to_point_cube
-       fld:
-           operator: filters.filter_multiple_cubes
-           constraint:
-               operator: constraints.combine_constraints
-               var_constraint:
-                   operator: constraints.generate_var_constraint
-                   varname: $VARNAME
-       point_cube:
-           operator: filters.filter_cubes
-           constraint:
-               operator: constraints.generate_var_constraint
-               varname: observed_$VARNAME
 
   - operator: misc.extract_common_time_points
 
