@@ -32,6 +32,7 @@ import iris.exceptions
 import iris.util
 import numpy as np
 from iris.cube import Cube, CubeList
+from iris.exceptions import CoordinateNotFoundError
 from iris.time import PartialDateTime
 
 from CSET._common import iter_maybe
@@ -188,6 +189,17 @@ def get_cube_yxcoordname(cube: iris.cube.Cube) -> tuple[str, str]:
             raise ValueError("Could not identify a unique y-coordinate in cube")
 
     return (y_coords[0], x_coords[0])
+
+
+def get_xy_coords(cube):
+    """Return (x, y) coords, preferring dim coords and falling back to aux coords."""
+    try:
+        x = cube.coord(axis="X", dim_coords=True)
+        y = cube.coord(axis="Y", dim_coords=True)
+    except CoordinateNotFoundError:
+        x = cube.coord(axis="X", dim_coords=False)
+        y = cube.coord(axis="Y", dim_coords=False)
+    return x, y
 
 
 def get_cube_coordindex(cube: iris.cube.Cube, coord_name) -> int:

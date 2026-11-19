@@ -35,13 +35,13 @@ import iris.util
 import numpy as np
 from iris._constraints import ConstraintCombination
 from iris.analysis.cartography import rotate_pole, rotate_winds
-from iris.exceptions import CoordinateNotFoundError
 
 from CSET._common import iter_maybe
 from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
 from CSET.operators._utils import (
     get_cube_coordindex,
     get_cube_yxcoordname,
+    get_xy_coords,
     is_spatialdim,
 )
 
@@ -432,17 +432,6 @@ def _cutout_cubes(
                 ) from err
 
     return cutout_cubes
-
-
-def get_xy_coords(cube):
-    """Return (x, y) coords, preferring dim coords and falling back to aux coords."""
-    try:
-        x = cube.coord(axis="X", dim_coords=True)
-        y = cube.coord(axis="Y", dim_coords=True)
-    except CoordinateNotFoundError:
-        x = cube.coord(axis="X", dim_coords=False)
-        y = cube.coord(axis="Y", dim_coords=False)
-    return x, y
 
 
 def _extract_projected_latlon(
