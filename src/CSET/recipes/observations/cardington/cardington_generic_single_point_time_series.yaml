@@ -1,6 +1,8 @@
-category: Time series of air temperature at Cardington single point
-title: "Time series of $OBS_HEIGHT m air temperature at Cardington [52.10438N, -0.42286E]"
-description: "Plots a time series of air temperature at the gridpoint nearest to Cardington."
+category: Time series at single point
+title: "Time series of $PLOT_VARNAME at Cardington [52.10438N, -0.42286E]"
+description: |
+      Plots a time series of $PLOT_VARNAME at the gridpoint nearest to Cardington.
+
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
@@ -9,8 +11,11 @@ steps:
       - $MODEL_NAME
     constraint:
       - $OBS_VARNAME
-      - $STASH
+      - $VARNAME
+    preserve_attributes: [height]
 
+  - operator: write.write_cube_to_nc
+    overwrite: True
 
   - operator: filters.apply_mask
     mask:
@@ -28,7 +33,10 @@ steps:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
         varname: $OBS_VARNAME
-
+      height_constraint:
+        operator: constraints.generate_attribute_constraint
+        attribute: height
+        value: $OBS_HEIGHT
 
     $MODEL_NAME:
       operator: constraints.combine_constraints
@@ -42,23 +50,19 @@ steps:
       pressure_level_constraint:
         operator: constraints.generate_level_constraint
         levels: []
-        coordinate: "pressure"
-      stash_constraint:
-        operator: constraints.generate_attribute_constraint
-        attribute: STASH
-        value: $STASH
+        coordinate: pressure
 
   - operator: misc.convert_units
-    units: 'Celsius'
+    units: $UNITS
 
   - operator: regrid.regrid_to_single_point
     lat_pt: 52.10438
     lon_pt: -0.42286
-    latlon_in_type: "realworld"
-    method: "Nearest"
+    latlon_in_type: realworld
+    method: Nearest
     boundary_margin: 0
 
-  - operator: write.write_cube_to_nc
-    overwrite: True
+
 
   - operator: plot.plot_line_series
+    ymin: $PLOT_YMIN
