@@ -46,7 +46,8 @@ def vertical_relative_vorticity(
     determines if the spherical curl or cartesian curl is calculated based
     on the cubes coordinate system. In essence this operator is a CSET wrapper around
     `iris.analysis.calculus.curl <https://scitools-iris.readthedocs.io/en/stable/generated/api/iris.analysis.calculus.html#iris.analysis.calculus.curl>`_ adapted for wind.
-
+.. math::
+    \boldsymbol{\zeta} = \nabla \times \mathbf{u}
     It's interpretation depends on the hemisphere you are in. Southern
     hemispheric convections are opposite to Northern hemispheric convections.
     In the Northern hemisphere negative vorticity implies cyclonic circulation
