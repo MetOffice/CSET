@@ -178,3 +178,146 @@ def test_latent_heat_units_unknown_units_passthrough():
     cube = _make_scalar_latent_cube(1.0, "unknown", units=None)
     out = fluxes.latent_heat_units(cube)
     assert out is cube
+
+
+def test_net_radiative_flux_shortwave():
+    """Calculate net downward shortwave flux from components."""
+    sw_down = _make_scalar_cube(
+        1000.0,
+        "downwelling_sw",
+        units=Unit("W m-2"),
+        standard_name="downwelling_shortwave_flux_in_air",
+    )
+    sw_up = _make_scalar_cube(
+        300.0,
+        "upwelling_sw",
+        units=Unit("W m-2"),
+        standard_name="upwelling_shortwave_flux_in_air",
+    )
+    out = fluxes.net_radiative_flux(
+        downwelling_flux=sw_down,
+        upwelling_flux=sw_up,
+    )
+    arr = out.data
+    if hasattr(arr, "compute"):
+        arr = arr.compute()
+
+    assert np.isclose(arr[0, 0], 700.0)
+    assert out.name() == "net_downward_shortwave_flux"
+    assert out.units == Unit("W m-2")
+
+
+def test_net_radiative_flux_longwave():
+    """Calculate net downward longwave flux from components."""
+    lw_down = _make_scalar_cube(
+        400.0,
+        "downwelling_lw",
+        units=Unit("W m-2"),
+        standard_name="downwelling_longwave_flux_in_air",
+    )
+    lw_up = _make_scalar_cube(
+        500.0,
+        "upwelling_lw",
+        units=Unit("W m-2"),
+        standard_name="upwelling_longwave_flux_in_air",
+    )
+    out = fluxes.net_radiative_flux(
+        downwelling_flux=lw_down,
+        upwelling_flux=lw_up,
+    )
+    arr = out.data
+    if hasattr(arr, "compute"):
+        arr = arr.compute()
+
+    assert np.isclose(arr[0, 0], -100.0)
+    assert out.name() == "net_downward_longwave_flux"
+
+
+def test_net_radiative_flux_mixed_raises():
+    """Cannot mix shortwave and longwave in net_radiative_flux."""
+    sw_down = _make_scalar_cube(
+        1000.0,
+        "downwelling_sw",
+        units=Unit("W m-2"),
+        standard_name="downwelling_shortwave_flux_in_air",
+    )
+    lw_up = _make_scalar_cube(
+        500.0,
+        "upwelling_lw",
+        units=Unit("W m-2"),
+        standard_name="upwelling_longwave_flux_in_air",
+    )
+    try:
+        fluxes.net_radiative_flux(
+            downwelling_flux=sw_down,
+            upwelling_flux=lw_up,
+        )
+        raise AssertionError("Should have raised ValueError")
+    except ValueError as e:
+        assert "Cannot combine shortwave and longwave" in str(e)
+
+
+def test_add_fluxes_shortwave_longwave():
+    """Add shortwave and longwave net fluxes to get total net radiation."""
+    sw_net = _make_scalar_cube(
+        700.0,
+        "sw_net",
+        units=Unit("W m-2"),
+        long_name="net_downward_shortwave_flux",
+    )
+    lw_net = _make_scalar_cube(
+        -100.0,
+        "lw_net",
+        units=Unit("W m-2"),
+        long_name="net_downward_longwave_flux",
+    )
+    out = fluxes.add_fluxes(flux_a=sw_net, flux_b=lw_net)
+    arr = out.data
+    if hasattr(arr, "compute"):
+        arr = arr.compute()
+
+    assert np.isclose(arr[0, 0], 600.0)
+    assert out.name() == "net_downward_radiative_flux"
+    assert out.units == Unit("W m-2")
+
+
+def test_add_fluxes_cubelist():
+    """Add fluxes with CubeList input (multiple cubes)."""
+    sw_net_1 = _make_scalar_cube(
+        700.0,
+        "sw_net",
+        units=Unit("W m-2"),
+        long_name="net_downward_shortwave_flux",
+    )
+    lw_net_1 = _make_scalar_cube(
+        -100.0,
+        "lw_net",
+        units=Unit("W m-2"),
+        long_name="net_downward_longwave_flux",
+    )
+    sw_net_2 = _make_scalar_cube(
+        750.0,
+        "sw_net",
+        units=Unit("W m-2"),
+        long_name="net_downward_shortwave_flux",
+    )
+    lw_net_2 = _make_scalar_cube(
+        -50.0,
+        "lw_net",
+        units=Unit("W m-2"),
+        long_name="net_downward_longwave_flux",
+    )
+    out = fluxes.add_fluxes(flux_a=[sw_net_1, sw_net_2], flux_b=[lw_net_1, lw_net_2])
+
+    assert isinstance(out, iris.cube.CubeList)
+    assert len(out) == 2
+
+    arr_1 = out[0].data
+    if hasattr(arr_1, "compute"):
+        arr_1 = arr_1.compute()
+    assert np.isclose(arr_1[0, 0], 600.0)
+
+    arr_2 = out[1].data
+    if hasattr(arr_2, "compute"):
+        arr_2 = arr_2.compute()
+    assert np.isclose(arr_2[0, 0], 700.0)
