@@ -61,5 +61,5 @@ steps:
     method: "Nearest"
     boundary_margin: 0
 
-  - operator: plot.plot_distribution_comparison
+  - operator: plot.plot_histogram_series
     bins: 25

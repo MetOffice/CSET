@@ -118,4 +118,4 @@ steps:
     method: "Nearest"
     boundary_margin: 0
 
-  - operator: plot.plot_scatter_comparison
+  - operator: plot.plot_scatter_series
