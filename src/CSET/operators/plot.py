@@ -3203,6 +3203,81 @@ def plot_scatter_comparison(
     return iris.cube.CubeList([cube_x, cube_y])
 
 
+def plot_distribution_comparison(
+    cubes: iris.cube.CubeList,
+    filename: str | None = None,
+    bins: int = 20,
+    **kwargs,
+) -> iris.cube.CubeList:
+    """Plot overlaid histograms of the full data distributions from two sources.
+
+    Flattens both cubes (across all dimensions including time) and plots their
+    distributions as overlaid histograms, useful for comparing the range and
+    frequency of values across the entire dataset.
+
+    Parameters
+    ----------
+    cubes: CubeList
+        Two cubes with any shape. Both are flattened to 1D for histogram.
+    filename: str, optional
+        Name of the plot to write. Defaults to the recipe title.
+    bins: int, optional
+        Number of histogram bins. Default is 20.
+
+    Returns
+    -------
+    CubeList
+        The two cubes as provided.
+
+    Raises
+    ------
+    ValueError
+        If not exactly two cubes are given.
+    """
+    cubes = iris.cube.CubeList(iter_maybe(cubes))
+    if len(cubes) != 2:
+        raise ValueError("plot_distribution_comparison requires exactly two cubes.")
+
+    obs, model = cubes
+    model_name = model.attributes.get("model_name", model.name())
+
+    recipe_title = get_recipe_metadata().get("title", "Distribution_comparison")
+    if filename is None:
+        filename = slugify(recipe_title)
+    plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    fig = plt.figure(figsize=(12, 6), facecolor="w", edgecolor="k")
+    ax = fig.add_subplot(111)
+
+    obs_data = obs.data.flatten()
+    model_data = model.data.flatten()
+
+    obs_data = obs_data[~np.isnan(obs_data)]
+    model_data = model_data[~np.isnan(model_data)]
+
+    ax.hist(obs_data, bins=bins, alpha=0.6, label=obs.name(), color="blue")
+    ax.hist(
+        model_data,
+        bins=bins,
+        alpha=0.6,
+        label=f"{model_name}_{model.name()}",
+        color="red",
+    )
+
+    ax.set_xlabel(f"{obs.name()} / {obs.units}", fontsize=12)
+    ax.set_ylabel("Frequency", fontsize=12)
+    ax.set_title(recipe_title, fontsize=14)
+    ax.legend(fontsize=11)
+    ax.tick_params(axis="both", labelsize=10)
+
+    _save_close_figure(fig, "histogram", plot_filename)
+
+    plot_index = _append_to_plot_index([plot_filename])
+    _make_plot_html_page(plot_index)
+
+    return cubes
+
+
 def vector_plot(
     cube_u: iris.cube.Cube,
     cube_v: iris.cube.Cube,

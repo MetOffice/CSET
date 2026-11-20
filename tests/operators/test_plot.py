@@ -1630,3 +1630,21 @@ def test_plot_scatter_comparison_wrong_number_of_cubes(tmp_working_dir):
     """Error raised unless exactly two cubes are given."""
     with pytest.raises(ValueError, match="exactly two"):
         plot.plot_scatter_comparison(iris.cube.CubeList([]))
+
+
+def test_plot_distribution_comparison(tmp_working_dir):
+    """Save a distribution comparison plot."""
+    obs_data = np.random.normal(5, 2, 100)
+    model_data = np.random.normal(6, 2.5, 100)
+    obs = iris.cube.Cube(obs_data, long_name="temperature", units="K")
+    model = iris.cube.Cube(model_data, long_name="temperature", units="K")
+    plot.plot_distribution_comparison(
+        iris.cube.CubeList([obs, model]), filename="dist.png"
+    )
+    assert Path("dist.png").is_file()
+
+
+def test_plot_distribution_comparison_wrong_number_of_cubes(tmp_working_dir):
+    """Error raised unless exactly two cubes are given."""
+    with pytest.raises(ValueError, match="exactly two"):
+        plot.plot_distribution_comparison(iris.cube.CubeList([]))
