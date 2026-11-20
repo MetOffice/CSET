@@ -25,6 +25,10 @@ steps:
       varname_constraint:
         operator: constraints.generate_var_constraint
         varname: $OBS_VARNAME
+      height_constraint:
+        operator: constraints.generate_attribute_constraint
+        attribute: height
+        value: $OBS_HEIGHT
 
     $MODEL_NAME:
       operator: constraints.combine_constraints

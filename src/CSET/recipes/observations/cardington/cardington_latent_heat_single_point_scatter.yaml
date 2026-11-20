@@ -29,6 +29,10 @@ steps:
         operator: constraints.generate_cell_methods_constraint
         cell_methods: []
         varname: $OBS_VARNAME
+      height_constraint:
+        operator: constraints.generate_attribute_constraint
+        attribute: height
+        value: $OBS_HEIGHT
 
     $MODEL_NAME:
       operator: constraints.combine_constraints
