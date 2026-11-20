@@ -14,6 +14,8 @@
 
 """Operators to calculate kinematic heat fluxes from covariances."""
 
+import logging
+
 import iris
 import iris.cube
 from cf_units import Unit
@@ -21,6 +23,8 @@ from iris.cube import Cube, CubeList
 
 from CSET._common import iter_maybe
 from CSET.operators._atmospheric_constants import CPD, LV, RD
+
+logger = logging.getLogger(__name__)
 
 
 def sensible_heat_flux_from_covariance(
@@ -248,12 +252,17 @@ def add_fluxes(
     out = iris.cube.CubeList()
 
     for cube_a, cube_b in zip(iter_maybe(flux_a), iter_maybe(flux_b), strict=True):
+        logger.debug(f"Adding fluxes: {cube_a.name()} + {cube_b.name()}")
         times_a = cube_a.coord("time")
         times_b = cube_b.coord("time")
         if (
             times_a.shape != times_b.shape
             or not (times_a.points == times_b.points).all()
         ):
+            logger.debug(
+                f"Interpolating {cube_b.name()} to match {cube_a.name()} time points; "
+                f"original {len(times_b.points)} points, target {len(times_a.points)} points"
+            )
             cube_b = cube_b.interpolate(
                 [("time", times_a.points)],
                 iris.analysis.Linear(extrapolation_mode="nan"),
