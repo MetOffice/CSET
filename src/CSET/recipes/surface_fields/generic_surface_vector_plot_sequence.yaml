@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: vector plot
 level_type: Surface
 title: "$MODEL_NAME Surface Vector Plot of $VARNAME_U and $VARNAME_V $SUBAREA_NAME"

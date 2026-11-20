@@ -1,4 +1,4 @@
-category: Verification
+category: verification
 plot_type: time series
 title: "$VARNAME\nscores Pearson's Correlation time series for model vs observation points aggregated by $AGGREGATION_MODE $SUBAREA_NAME"
 description: |

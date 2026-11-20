@@ -1,4 +1,4 @@
-category: Verification
+category: verification
 plot_type: vertical profile
 title: "$VARNAME\nRMSE vertical profile between $OTHER_MODELS and $BASE_MODEL ($AGGREGATION_MODE)"
 description: |

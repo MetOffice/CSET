@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: multivariable spatial
 level_type: Surface
 title: "$MODEL_NAME $VARNAME_BASE $METHOD $SUBAREA_NAME\n(contour: $VARNAME_CONTOUR)"

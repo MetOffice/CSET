@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 Derived: true
 title: "Surface wind speed on Beaufort Scale\nDifference ($OTHER_MODEL - $BASE_MODEL)"
 description: |

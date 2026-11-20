@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 Derived: true
 title: "Daily minimum temperature at 0900 UTC\nDifference ($OTHER_MODEL - $BASE_MODEL)"
 description: |

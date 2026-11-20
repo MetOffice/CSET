@@ -1,4 +1,4 @@
-category: Verification
+category: verification
 ensemble: true
 title: "$VARNAME\nCRPS time series between ensemble members and control"
 description: |
