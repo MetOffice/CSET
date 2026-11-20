@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: histogram
 level_type: $LEVELTYPE
 title: Histogram $VARNAME $LEVELTYPE $LEVEL $SUBAREA_NAME

@@ -659,6 +659,10 @@ def _make_scores_cube(
 
 
     """
+    # in case mask is lost..
+    base.data = np.ma.masked_greater(base.data, 1e30)
+    other.data = np.ma.masked_greater(other.data, 1e30)
+
     if not base.long_name or not "observed" in base.long_name:
         base, other = _process_cubes_for_verification(base, other)
 
@@ -668,7 +672,6 @@ def _make_scores_cube(
 
     # Scores operates on xarray data arrays, so we transform the iris cube into an array,
     # apply scores, and then transform it back.
-
     if metric == "rmse":
         scores_cube = xr.DataArray.to_iris(
             scores.continuous.rmse(other_xr, base_xr, preserve_dims=preserve_dims)
@@ -701,6 +704,7 @@ def _make_scores_cube(
     _attach_scaler_time_coord_maybe(scores_cube, base)
     model_name = other.attributes["model_name"]
     scores_cube.attributes["model_name"] = model_name
+
     return scores_cube
 
 

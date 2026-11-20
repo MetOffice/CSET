@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: time series
 level_type: Surface
 title: Time series of $VARNAME at $LATITUDE_POINT N, $LONGITUDE_POINT E ($LATLON_IN_TYPE)

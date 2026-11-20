@@ -1,4 +1,4 @@
-category: Verification
+category: verification
 plot_type: spatial
 title: "$COLLAPSE_METHOD $VARNAME\nScores Mean Absolute Error between the comparison model and $BASE_MODEL $SUBAREA_NAME"
 description: |

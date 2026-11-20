@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 Derived: true
 title: "Aviation Fog presence\nDifference ($OTHER_MODEL - $BASE_MODEL)"
 description: |

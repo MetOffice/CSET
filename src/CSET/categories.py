@@ -14,21 +14,5 @@
 
 """Define categories and sub categories for CSET recipes."""
 
-from enum import StrEnum
-
-
-class Category(StrEnum):
-    """Valid Categories for CSET recipes."""
-
-    DIAGNOSTICS = "Diagnostics"
-    VERIFICATION = "Verification"
-
-
-class Subcategory(StrEnum):
-    """Valid Subcategories for CSET recipes."""
-
-    SURFACE = "Surface"
-    UPPER_AIR = "Pressure Level"
-    DETERMINISTIC = "Model Level"
-    ENSEMBLE = "Ensembles"
-    DERIVED_DIAGNOSTICS = "Derived Diagnostics"
+categories = ["diagnostics", "observations", "verification"]
+sub_categories = {}

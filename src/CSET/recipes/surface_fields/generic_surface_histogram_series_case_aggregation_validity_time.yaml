@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: histogram
 level_type: Surface
 title: "Histogram $VARNAME\n Aggregation by validity time $SUBAREA_NAME"

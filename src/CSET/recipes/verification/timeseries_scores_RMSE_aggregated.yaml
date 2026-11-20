@@ -1,4 +1,4 @@
-category: Verification
+category: verification
 plot_type: time series
 title: "$VARNAME\nScores RMSE time series between models and $BASE_MODEL aggregated by $AGGREGATION_MODE $SUBAREA_NAME"
 description: |

@@ -1,4 +1,4 @@
-category: Verification
+category: verification
 plot_type: spatial
 title: "$VARNAME scores additive bias spatial plot for model vs observation points $SUBAREA_NAME"
 description: |

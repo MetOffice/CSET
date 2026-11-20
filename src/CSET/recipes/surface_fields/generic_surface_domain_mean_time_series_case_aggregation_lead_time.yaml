@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: time series
 level_type: Surface
 title: "Domain mean $VARNAME time series\n Aggregation by lead time $SUBAREA_NAME"

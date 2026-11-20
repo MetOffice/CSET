@@ -1,4 +1,4 @@
-category: Verification
+category: verification
 plot_type: time series
 title: "$VARNAME scores mae time series for model vs observation points $SUBAREA_NAME"
 description: Extracts and plot a time series of $VARNAME for all times based on RMSE between given models and observation points.

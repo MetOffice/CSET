@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: structural similarity
 level_type: $LEVELTYPE
 title: "$METHOD $VARNAME $LEVEL $SUBAREA_NAME\nStructural Similarity between $OTHER_MODEL and $BASE_MODEL"

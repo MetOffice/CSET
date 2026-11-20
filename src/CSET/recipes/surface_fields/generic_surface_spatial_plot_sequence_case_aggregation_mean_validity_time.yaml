@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: spatial
 level_type: Surface
 title: "$MODEL_NAME $VARNAME\n Aggregation by validity time $SUBAREA_NAME"

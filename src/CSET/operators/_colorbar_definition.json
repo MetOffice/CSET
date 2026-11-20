@@ -13,6 +13,11 @@
     "ymax": 1.0,
     "ymin": 0.0
   },
+  "RMSE_of_observed_temperature_at_screen_level_difference": {
+    "cmap": "bwr",
+    "max": 3.5,
+    "min": 0
+  },
   "Rainfall rate Composite": {
     "cmap": "cividis",
     "max": 256,
