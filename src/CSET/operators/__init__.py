@@ -38,6 +38,7 @@ from CSET.operators import (
     fluxes,
     humidity,
     imageprocessing,
+    maths,
     mesoscale,
     misc,
     plot,
