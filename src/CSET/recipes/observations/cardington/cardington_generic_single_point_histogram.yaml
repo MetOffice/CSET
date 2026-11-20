@@ -64,3 +64,4 @@ steps:
     boundary_margin: 0
 
   - operator: plot.plot_histogram_series
+    sequence_coordinate: realization
