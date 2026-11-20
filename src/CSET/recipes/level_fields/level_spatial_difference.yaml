@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: spatial difference
 level_type: $LEVELTYPE
 title: "$METHOD $VARNAME $LEVELTYPE$LEVEL\n Difference ($OTHER_MODEL - $BASE_MODEL) $SUBAREA_NAME"

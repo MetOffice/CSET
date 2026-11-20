@@ -1,4 +1,4 @@
-category: Verification
+category: verification
 plot_type: time series
 title: Time Series of PFD for "$VARNAME over $SUBAREA_NAME, using threshold $OPERATOR $THRESHOLD"
 description: |

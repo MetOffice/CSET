@@ -1,4 +1,4 @@
-category: Verification
+category: verification
 plot_type: spatial
 title: "$VARNAME\nScores RMSE between the comparison model and $BASE_MODEL aggregated by lead time $SUBAREA_NAME"
 description: |

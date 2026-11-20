@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: structural similarity
 level_type: Surface
 title: "$VARNAME\nMean Structural Similarity between $OTHER_MODEL and $BASE_MODEL $SUBAREA_NAME"

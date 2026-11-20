@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: transect
 title: $MODEL_NAME Transect of $VARNAME $SUBAREA_NAME
 description: |

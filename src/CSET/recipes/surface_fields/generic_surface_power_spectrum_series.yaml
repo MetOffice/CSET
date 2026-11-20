@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: power spectrum
 level_type: Surface
 title: "Power Spectrum $VARNAME $SUBAREA_NAME"

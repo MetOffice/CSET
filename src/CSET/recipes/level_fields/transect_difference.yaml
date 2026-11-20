@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: transect difference
 title: "$VARNAME Transect\nDifference ($BASE_MODEL - $OTHER_MODEL) $SUBAREA_NAME"
 description: |

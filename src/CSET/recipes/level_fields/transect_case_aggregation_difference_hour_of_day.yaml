@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: transect difference
 title: "$VARNAME Transect Difference ($BASE_MODEL - $OTHER_MODEL)\n Aggregation over hour of day $SUBAREA_NAME"
 description: |

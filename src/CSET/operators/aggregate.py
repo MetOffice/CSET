@@ -491,7 +491,6 @@ def _make_aggregated_obs_cube(
         # only coords attached solely to station axis
         if dims != (1,):
             continue
-
         values = coord.points[common_idx]
 
         # verify same in every cube
@@ -504,11 +503,16 @@ def _make_aggregated_obs_cube(
 
             other_values = cube.coord(coord.name()).points[idx]
 
-            if not np.array_equal(
-                values,
-                other_values,
-            ):
-                raise ValueError(f"Station metadata differs for coord '{coord.name()}'")
+            if not np.array_equal(values, other_values):
+                is_latlon = coord.name() in ("latitude", "longitude")
+                within_tol = np.max(np.abs(values - other_values)) < 0.01
+
+                if is_latlon and within_tol:
+                    continue
+                else:
+                    raise ValueError(
+                        f"Station metadata differs for coord '{coord.name()}'"
+                    )
 
         aux = AuxCoord(
             values,

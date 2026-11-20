@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 ensemble: true
 title: $MODEL_NAME probability of temperature at screen level $CONDITION $THRESHOLD
 description: |

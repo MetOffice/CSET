@@ -1,4 +1,4 @@
-category: Verification
+category: verification
 plot_type: spatial
 title: "$VARNAME\nScores Mean Error between the comparison model and $BASE_MODEL $SUBAREA_NAME aggregated by lead time $SUBAREA_NAME"
 description: |

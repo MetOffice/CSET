@@ -1,8 +1,10 @@
-category: Point Observations
-plot_type: time series
-level_type: Surface
-title: "$VARNAME time series $SUBAREA_NAME"
-description: Extracts and plot a time series of $VARNAME for all times at specific observation points.
+category: observations
+observation_type: point
+plot_type: scatter plot
+title: "$MODEL_NAME scatter $VARNAME $SUBAREA_NAME"
+description: Extracts and plot scatter plot of $VARNAME.
+             Scatter plots generated either showing all points, or as matplotlib hexbin 2D hexagonal binning plot of points.
+             Quantile-Quantile distribution of included scatter points are shown as filled circles, with points every 5% along with 1% and 99%.
 
 steps:
   - operator: read.read_cubes
@@ -43,7 +45,10 @@ steps:
                operator: constraints.generate_var_constraint
                varname: observed_$VARNAME
 
-  - operator: plot.plot_line_series
+  - operator: plot.plot_scatter_series
+    # Set SEQUENCE to "station" for separate output for each station, else "realization" for combined plot
+    sequence_coordinate: $SEQUENCE
+    hexbin: $HEXBIN
 
   - operator: write.write_cube_to_nc
     overwrite: True

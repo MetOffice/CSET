@@ -1,4 +1,4 @@
-category: Verification
+category: verification
 plot_type: time series
 title: "$VARNAME\nScores Mean Error time series between models and $BASE_MODEL aggregated by lead time $SUBAREA_NAME"
 description: |

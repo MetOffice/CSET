@@ -1,4 +1,4 @@
-category: Diagnostics
+category: diagnostics
 plot_type: transect
 title: "$MODEL_NAME Transect of $VARNAME\n Aggregation by hour of day $SUBAREA_NAME"
 description: |
