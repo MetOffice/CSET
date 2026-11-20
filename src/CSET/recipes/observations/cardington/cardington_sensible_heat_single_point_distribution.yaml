@@ -25,26 +25,16 @@ steps:
       varname_constraint:
         operator: constraints.generate_var_constraint
         varname: $OBS_VARNAME
-      cell_methods_constraint:
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: []
-        varname: $OBS_VARNAME
 
     $MODEL_NAME:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
-      cell_methods_constraint:
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: []
-        varname: $VARNAME
       pressure_level_constraint:
             operator: constraints.generate_level_constraint
             levels: [ ]
             coordinate: "pressure"
-
-  - operator: fluxes.sensible_heat_units
 
   - operator: regrid.regrid_to_single_point
     lat_pt: 52.10438
