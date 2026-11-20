@@ -57,6 +57,42 @@ def test_aggregate_multi_frt(long_forecast_multi_day):
     assert len(aggregated_cube.coords()) + 1 == len(long_forecast_multi_day.coords())
 
 
+def test_aggregate_cubelist(cube):
+    """Aggregate each cube in a CubeList and return a CubeList."""
+    interval = "PT2H"
+    cubes = CubeList([cube.copy(), cube.copy()])
+
+    aggregated_cubes = aggregate.time_aggregate(
+        cubes, method="SUM", interval_iso=interval
+    )
+    expected_cube = aggregate.time_aggregate(
+        cube.copy(), method="SUM", interval_iso=interval
+    )
+
+    assert isinstance(aggregated_cubes, CubeList)
+    assert len(aggregated_cubes) == 2
+    for aggregated_cube in aggregated_cubes:
+        assert np.allclose(aggregated_cube.data, expected_cube.data, equal_nan=True)
+
+
+def test_aggregate_cubelist_mixed_frt(cube, long_forecast_multi_day):
+    """Aggregate a CubeList holding single and multiple forecast reference times."""
+    interval = "PT1H"
+    originals = [cube, long_forecast_multi_day]
+
+    aggregated_cubes = aggregate.time_aggregate(
+        CubeList([c.copy() for c in originals]), method="SUM", interval_iso=interval
+    )
+
+    assert isinstance(aggregated_cubes, CubeList)
+    assert len(aggregated_cubes) == 2
+    for original, aggregated_cube in zip(originals, aggregated_cubes, strict=True):
+        expected_cube = aggregate.time_aggregate(
+            original.copy(), method="SUM", interval_iso=interval
+        )
+        assert np.allclose(aggregated_cube.data, expected_cube.data, equal_nan=True)
+
+
 def test_aggregate_in_time_single_frt(cube):
     """Aggregate time to 2 hour intervals."""
     # Set test interval to 2 hours.
