@@ -6,7 +6,6 @@ steps:
 
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: ['OBS', '$MODEL_NAME']
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
     constraint:

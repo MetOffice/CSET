@@ -27,11 +27,11 @@ steps:
 
   - operator: precipitation.MAUL_properties
     cubes:
-        operator: misc.multiplication
+        operator: maths.multiplication
         multiplicand:
             operator: filters.generate_mask
             mask_field:
-                operator: misc.differentiate
+                operator: maths.differentiate
                 cubes:
                     operator: temperature.equivalent_potential_temperature
                     temperature:
@@ -117,7 +117,7 @@ steps:
                                 level: 0
                 coordinate: "model_level_number"
                 target:
-                    operator: misc.differentiate
+                    operator: maths.differentiate
                     cubes:
                         operator: filters.filter_multiple_cubes
                         constraint:

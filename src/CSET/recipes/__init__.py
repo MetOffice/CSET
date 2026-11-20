@@ -138,14 +138,14 @@ class RawRecipe:
     """
 
     recipe: str
-    model_ids: list[int]
+    model_ids: list[int | str]
     variables: dict[str, Any]
     aggregation: bool
 
     def __init__(
         self,
         recipe: str,
-        model_ids: int | list[int],
+        model_ids: int | str | list[int | str],
         variables: dict[str, Any],
         aggregation: bool,
     ) -> None:

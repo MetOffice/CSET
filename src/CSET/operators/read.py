@@ -24,6 +24,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Literal
 
+import cartopy.crs as ccrs
 import dask
 import iris
 import iris.coord_systems
@@ -40,6 +41,7 @@ from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
 from CSET.operators._utils import (
     get_cube_coordindex,
     get_cube_yxcoordname,
+    get_xy_coords,
     is_spatialdim,
 )
 
@@ -48,6 +50,24 @@ logger = logging.getLogger(__name__)
 
 class NoDataError(FileNotFoundError):
     """Error that no data has been loaded."""
+
+
+def _probe_variables(file_paths: list[str] | str):
+    """Return variables in input data using CSET-normalised long names.
+
+    Files are loaded using the standard CSET loading callbacks, so UM STASH
+    codes are mapped to their corresponding LFRic names where possible.
+    """
+    # Use _load_model to make use of normalisation callbacks.
+    cubes = _load_model(file_paths, model_name=None, constraint=None)
+
+    variables = {cube.long_name for cube in cubes if cube.long_name is not None}
+
+    # Add 10m wind, if eastward and northward wind exist.
+    if "eastward_wind_at_10m" in variables and "northward_wind_at_10m" in variables:
+        variables.add("wind_speed_at_10m")
+
+    return sorted(variables)
 
 
 def read_cube(
@@ -208,6 +228,9 @@ def read_cubes(
 
     # Select sub region.
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
+
+    # Clean unwanted cube attributes
+    cubes = _clean_unwanted_cube_attributes(cubes)
 
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = _merge_cubes_check_ensemble(cubes)
@@ -388,19 +411,119 @@ def _cutout_cubes(
         else:
             raise ValueError("Unknown subarea_type:", subarea_type)
 
-        # Do cutout and add to cutout_cubes.
-        intersection_args = {lat_name: lats, lon_name: lons}
-        logger.debug("Cutting out coords: %s", intersection_args)
-        try:
-            cutout_cubes.append(cube.intersection(**intersection_args))
-        except IndexError as err:
-            raise ValueError(
-                "Region cutout error. Check and update SUBAREA_EXTENT."
-                "Cutout region requested should be contained within data area. "
-                "Also check if cutout region requested is smaller than input grid spacing."
-            ) from err
+        x, y = get_xy_coords(cube)
+
+        if (
+            x.name() == "projection_x_coordinate"
+            and y.name() == "projection_y_coordinate"
+        ):
+            cutout_cubes.append(_extract_projected_latlon(cube, lats, lons))
+        else:
+            # Do cutout and add to cutout_cubes.
+            intersection_args = {lat_name: lats, lon_name: lons}
+            logger.debug("Cutting out coords: %s", intersection_args)
+            try:
+                cutout_cubes.append(cube.intersection(**intersection_args))
+            except IndexError as err:
+                raise ValueError(
+                    "Region cutout error. Check and update SUBAREA_EXTENT."
+                    "Cutout region requested should be contained within data area. "
+                    "Also check if cutout region requested is smaller than input grid spacing."
+                ) from err
 
     return cutout_cubes
+
+
+def _extract_projected_latlon(
+    cube: iris.cube.Cube, lats: tuple[float, float], lons: tuple[float, float]
+) -> iris.cube.Cube:
+    cs_x = cube.coord("projection_x_coordinate").coord_system
+    cs_y = cube.coord("projection_y_coordinate").coord_system
+
+    if cs_x is None or cs_y is None:
+        raise ValueError(
+            f"{cube.name()!r} has no coordinate system on its projection coordinates."
+        )
+    if cs_x != cs_y:
+        raise ValueError(
+            f"{cube.name()!r} has mismatched coordinate systems: x={cs_x}, y={cs_y}."
+        )
+
+    crs = cs_x.as_cartopy_crs()
+
+    x = cube.coord(axis="X", dim_coords=True)
+    y = cube.coord(axis="Y", dim_coords=True)
+
+    # make a meshgrid of the projected x and y points
+    xx, yy = np.meshgrid(x.points, y.points)
+
+    # convert to lat/lon
+    lonlat = ccrs.PlateCarree().transform_points(crs, xx, yy)
+
+    # grab the x and y dim, without the z dim ..
+    grid_lon, grid_lat = lonlat[:, :, 0], lonlat[:, :, 1]
+
+    # make a boolean area where if true then point is inside the
+    # subarea cutout
+    inside_subarea: np.array(bool) = (
+        (lats[0] <= grid_lat)
+        & (grid_lat <= lats[1])
+        & (lons[0] <= grid_lon)
+        & (grid_lon <= lons[1])
+    )
+
+    # if no values are true
+    if not inside_subarea.any():
+        raise ValueError(
+            "Region cutout error. Check and update SUBAREA_EXTENT."
+            "Cutout region requested should be contained within data area. "
+            "Also check if cutout region requested is smaller than input grid spacing."
+        )
+
+    # Smallest block of rows/columns containing every point inside the box.
+    rows = np.flatnonzero(inside_subarea.any(axis=1))
+    cols = np.flatnonzero(inside_subarea.any(axis=0))
+
+    index = [slice(None)] * cube.ndim
+    index[cube.coord_dims(y)[0]] = slice(rows[0], rows[-1] + 1)
+    index[cube.coord_dims(x)[0]] = slice(cols[0], cols[-1] + 1)
+
+    return cube[tuple(index)]
+
+
+def _clean_unwanted_cube_attributes(
+    cubes: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Remove unwanted cube attributes, apart from those in an exception list.
+
+    This is run as a final step in read, so cube metadata fixing has already been done.
+    """
+
+    def _strip_attributes(
+        obj: iris.cube.Cube | iris.coords.Coord, keep: list[str]
+    ) -> None:
+        """Remove all attributes not in keep, in place."""
+        for attr in list(obj.attributes):
+            if attr not in keep:
+                obj.attributes.pop(attr, None)
+
+    # List of cube attributes to preserve
+    attrs_to_preserve = [
+        "model_name",
+        "cset_comparison_base",
+        "STASH",
+        "um_stash_source",
+    ]
+
+    # Iterate through each cube and check each attribute.
+    for cube in iter_maybe(cubes):
+        # remove unwanted cube attributes
+        _strip_attributes(cube, attrs_to_preserve)
+        for coord in cube.dim_coords + cube.aux_coords:
+            # remove unwanted coord attributes
+            _strip_attributes(coord, attrs_to_preserve)
+
+    return cubes
 
 
 def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.Cube:
@@ -409,7 +532,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _remove_cset_comparison_base_attribute_callback(cube)
     _realization_callback(cube)
     _um_normalise_callback(cube)
-    _lfric_normalise_callback(cube)
+    _lfric_stash_source_callback(cube)
     _nimrod_normalise_callback(cube)
     cube = _lfric_time_coord_fix_callback(cube)
     _normalise_var0_varname(cube)
@@ -427,6 +550,15 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     cube = _fix_no_time_coords_callback(cube)
     _normalise_longname(cube)
     return cube
+
+
+def _nimrod_normalise_callback(cube: iris.cube.Cube):
+    """Normalise attributes that prevents NIMROD radar cubes from merging."""
+    # Remove unwanted attributes.
+    cube.attributes.pop("radar_sites", None)
+    cube.attributes.pop("additional_radar_sites", None)
+    cube.attributes.pop("recursive_filter_iterations", None)
+    cube.attributes.pop("Probability methods", None)
 
 
 def _remove_cset_comparison_base_attribute_callback(cube):
@@ -476,39 +608,19 @@ def _um_normalise_callback(cube: iris.cube.Cube):
             )
 
 
-def _lfric_normalise_callback(cube: iris.cube.Cube):
-    """Normalise attributes that prevents LFRic cube from merging.
-
-    The uuid and timeStamp relate to the output file, as saved by XIOS, and has
-    no relation to the data contained. These attributes are removed.
+def _lfric_stash_source_callback(cube: iris.cube.Cube):
+    """Add um stash source to LFRic data.
 
     The um_stash_source is a list of STASH codes for when an LFRic field maps to
     multiple UM fields, however it can be encoded in any order. This attribute
     is sorted to prevent this. This attribute is only present in LFRic data that
     has been converted to look like UM data.
     """
-    # Remove unwanted attributes.
-    cube.attributes.pop("timeStamp", None)
-    cube.attributes.pop("uuid", None)
-    cube.attributes.pop("name", None)
-    cube.attributes.pop("source", None)
-    cube.attributes.pop("analysis_source", None)
-    cube.attributes.pop("history", None)
-
     # Sort STASH code list.
     stash_list = cube.attributes.get("um_stash_source")
     if stash_list:
         # Parse the string as a list, sort, then re-encode as a string.
         cube.attributes["um_stash_source"] = str(sorted(ast.literal_eval(stash_list)))
-
-
-def _nimrod_normalise_callback(cube: iris.cube.Cube):
-    """Normalise attributes that prevents NIMROD radar cubes from merging."""
-    # Remove unwanted attributes.
-    cube.attributes.pop("radar_sites", None)
-    cube.attributes.pop("additional_radar_sites", None)
-    cube.attributes.pop("recursive_filter_iterations", None)
-    cube.attributes.pop("Probability methods", None)
 
 
 def _lfric_time_coord_fix_callback(cube: iris.cube.Cube) -> iris.cube.Cube:
@@ -674,7 +786,6 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                     var_name="latitude",
                     units="degrees",
                     coord_system=iris.coord_systems.GeogCS(6371229.0),
-                    circular=True,
                 ),
                 ny,
             )
@@ -687,7 +798,6 @@ def _fix_spatial_coords_callback(cube: iris.cube.Cube):
                     var_name="longitude",
                     units="degrees",
                     coord_system=iris.coord_systems.GeogCS(6371229.0),
-                    circular=True,
                 ),
                 nx,
             )
@@ -1081,9 +1191,6 @@ def _lfric_time_callback(cube: iris.cube.Cube):
                 logger.warning(
                     "Cannot find forecast_reference_time, but no `time_origin` attribute to construct it from."
                 )
-
-        # Remove time_origin to allow multiple case studies to merge.
-        tcoord.attributes.pop("time_origin", None)
 
         # Construct forecast_period axis (forecast lead time) if it doesn't exist.
         if not cube.coords("forecast_period"):

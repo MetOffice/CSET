@@ -49,5 +49,22 @@ You now have CSET installed. Go to :doc:`the next tutorial to run it
     the commands for :doc:`setting up the workflow <run_full_cylc_workflow>`.
     You can copy your ``rose-suite.conf`` file across to the latest CSET version.
 
+.. note::
+
+    On Apple Silicon Macs, the normal conda command may install an old CSET
+    version because ``mo_pack`` is unavailable for native Apple Silicon. The
+    tested workaround is an Intel environment running through Rosetta:
+
+    .. code-block:: bash
+
+        conda create -n cset-intel --platform osx-64 \
+          --override-channels -c conda-forge \
+          "python=3.12" "cset=26.9.0"
+
+        conda activate cset-intel
+
+    Activate ``cset-intel`` instead of ``cset``, then continue with the
+    tutorial.
+
 .. _conda: https://docs.conda.io/en/latest/
 .. _conda-forge: https://anaconda.org/conda-forge/cset

@@ -6,7 +6,6 @@ description: Extracts and plot the difference in $METHOD of $VARNAME between mod
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
-    model_names: ['OBS', '$MODEL_NAME']
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
     constraint:
@@ -25,7 +24,7 @@ steps:
     coordinate: [time]
     method: $METHOD
 
-  - operator: misc.subtraction
+  - operator: maths.subtraction
     minuend:
         operator: regrid.interpolate_to_point_cube
         fld:
