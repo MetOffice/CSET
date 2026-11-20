@@ -116,6 +116,32 @@ def test_cape_ratio_non_masked_arrays(SBCAPE, MUCAPE, MUCIN, cape_ratio_kgo):
     assert np.allclose(cape_75.data, cape_ratio_kgo.data, atol=1e-5, equal_nan=True)
 
 
+def test_cape_ratio_cubelist(SBCAPE, MUCAPE, MUCIN, cape_ratio_kgo):
+    """CubeLists are processed pairwise and return a CubeList."""
+    sbcapes = iris.cube.CubeList([SBCAPE, SBCAPE.copy()])
+    mucapes = iris.cube.CubeList([MUCAPE, MUCAPE.copy()])
+    mucins = iris.cube.CubeList([MUCIN, MUCIN.copy()])
+
+    cape_ratios = convection.cape_ratio(sbcapes, mucapes, mucins)
+
+    assert isinstance(cape_ratios, iris.cube.CubeList)
+    assert len(cape_ratios) == 2
+    for cape_ratio in cape_ratios:
+        assert np.allclose(
+            cape_ratio.data, cape_ratio_kgo.data, atol=1e-5, equal_nan=True
+        )
+
+
+def test_cape_ratio_cubelist_length_mismatch(SBCAPE, MUCAPE, MUCIN):
+    """CubeLists of different lengths raise an error."""
+    sbcapes = iris.cube.CubeList([SBCAPE, SBCAPE.copy()])
+    mucapes = iris.cube.CubeList([MUCAPE])
+    mucins = iris.cube.CubeList([MUCIN, MUCIN.copy()])
+
+    with pytest.raises(ValueError):
+        convection.cape_ratio(sbcapes, mucapes, mucins)
+
+
 def test_inflow_layer_properties(EIB, BLheight, orography_2D, inflow_kgo):
     """Compare with precalculated properties."""
     inflow_layer_properties = convection.inflow_layer_properties(
