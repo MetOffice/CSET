@@ -1,17 +1,18 @@
-category: Scatter plot of $PLOT_VARNAME at single point
-title: "Scatter of $OBS_HEIGHT m $PLOT_VARNAME at Cardington [52.10438N, -0.42286E]"
-description: "Scatter plot of model against observed $PLOT_VARNAME at gridpoint nearest to Cardington."
+category: Scatter plot of total net radiation at single point
+title: "Scatter of total net radiation at Cardington [52.10438N, -0.42286E]"
+description: "Scatter plot of model total net radiation (SW + LW) against observed net radiation at gridpoint nearest to Cardington."
 
 steps:
   - operator: read.read_cubes
     preserve_attributes: [height]
     file_paths: $INPUT_PATHS
     model_names:
-      - $OBS_NAME
-      - $MODEL_NAME
+      - Cardington_obs
+      - RAL3LFRic_model
     constraint:
-      - $OBS_VARNAME
-      - $VARNAME
+      - net_radiation_down
+      - surface_net_shortwave_flux
+      - surface_net_longwave_flux
 
   - operator: filters.apply_mask
     mask:
@@ -20,21 +21,46 @@ steps:
        value: 1.0e+10
 
   - operator: filters.filter_multiple_cubes
-    $OBS_NAME:
+    Cardington_obs:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: $OBS_VARNAME
+        varname: net_radiation_down
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: net_radiation_down
 
-    $MODEL_NAME:
+    RAL3LFRic_model:
       operator: constraints.combine_constraints
       varname_constraint:
         operator: constraints.generate_var_constraint
-        varname: $VARNAME
+        varname: surface_net_shortwave_flux
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: surface_net_shortwave_flux
       pressure_level_constraint:
             operator: constraints.generate_level_constraint
             levels: [ ]
             coordinate: "pressure"
+
+  - operator: filters.filter_multiple_cubes
+    RAL3LFRic_model:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: surface_net_longwave_flux
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: surface_net_longwave_flux
+      pressure_level_constraint:
+            operator: constraints.generate_level_constraint
+            levels: [ ]
+            coordinate: "pressure"
+
+  - operator: fluxes.add_fluxes
 
   - operator: regrid.regrid_to_single_point
     lat_pt: 52.10438
