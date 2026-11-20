@@ -1274,13 +1274,13 @@
   },
   "visibility_in_air": {
     "cmap": "viridis",
-    "max": 30000.0,
+    "max": 30.0,
     "min": 0.0
   },
   "visibility_in_air_difference": {
     "cmap": "PRGn",
-    "max": 5000.0,
-    "min": -5000.0
+    "max": 5.0,
+    "min": -5.0
   },
   "volume_fraction_of_clay_in_soil": {
     "cmap": "managua_r",
