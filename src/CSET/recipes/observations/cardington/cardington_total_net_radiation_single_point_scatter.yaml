@@ -84,6 +84,10 @@ steps:
         operator: filters.filter_multiple_cubes
         constraint:
           operator: constraints.combine_constraints
+          model_name_constraint:
+            operator: constraints.generate_attribute_constraint
+            attribute: model_name
+            value: $MODEL_NAME
           varname_constraint:
             operator: constraints.generate_var_constraint
             varname: $MODEL_SW
@@ -95,6 +99,10 @@ steps:
         operator: filters.filter_multiple_cubes
         constraint:
           operator: constraints.combine_constraints
+          model_name_constraint:
+            operator: constraints.generate_attribute_constraint
+            attribute: model_name
+            value: $MODEL_NAME
           varname_constraint:
             operator: constraints.generate_var_constraint
             varname: $MODEL_LW

@@ -36,6 +36,10 @@ steps:
 
     $MODEL_NAME:
       operator: constraints.combine_constraints
+      model_name_constraint:
+        operator: constraints.generate_attribute_constraint
+        attribute: model_name
+        value: $MODEL_NAME
       varname_constraint:
         operator: constraints.generate_var_constraint
         varname: $VARNAME
