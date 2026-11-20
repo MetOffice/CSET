@@ -71,6 +71,7 @@ __all__ = [
     "get_operator",
     "humidity",
     "imageprocessing",
+    "maths",
     "mesoscale",
     "misc",
     "plot",
