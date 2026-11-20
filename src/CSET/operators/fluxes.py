@@ -157,3 +157,121 @@ def latent_heat_units(
         out.append(cube_a)
 
     return out[0] if len(out) == 1 else out
+
+
+def net_radiative_flux(
+    downwelling_flux: iris.cube.Cube | iris.cube.CubeList,
+    upwelling_flux: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """
+    Calculate net downward radiative flux.
+
+    Computes:
+
+        F_net = F_down - F_up
+
+    where positive values indicate a net downward flux.
+    Will work for a pair of downwelling and upwelling fluxes at any atmospheric level.
+
+    Parameters
+    ----------
+    downwelling_flux : iris.cube.Cube or iris.cube.CubeList
+        Downwelling radiative flux.
+
+    upwelling_flux : iris.cube.Cube or iris.cube.CubeList
+        Upwelling radiative flux.
+
+    Returns
+    -------
+    iris.cube.Cube or iris.cube.CubeList
+        Net downward radiative flux cube(s).
+        Returned cube name is set to either shortwave or longwave
+        (or neither) depending on input names (if specified).
+    """
+    out = iris.cube.CubeList()
+
+    for down_cube, up_cube in zip(
+        iter_maybe(downwelling_flux),
+        iter_maybe(upwelling_flux),
+        strict=True,
+    ):
+        down_name = down_cube.name().lower()
+        up_name = up_cube.name().lower()
+        if ("shortwave" in down_name and "longwave" in up_name) or (
+            "longwave" in down_name and "shortwave" in up_name
+        ):
+            raise ValueError("Cannot combine shortwave and longwave fluxes")
+
+        net_flux = down_cube - up_cube
+        name = down_cube.name().lower()
+        if "shortwave" in name:
+            output_name = "net_downward_shortwave_flux"
+        elif "longwave" in name:
+            output_name = "net_downward_longwave_flux"
+        else:
+            output_name = "net_downward_radiative_flux"
+
+        net_flux.rename(output_name)
+        net_flux.units = down_cube.units
+        net_flux.var_name = output_name
+
+        out.append(net_flux)
+
+    return out[0] if len(out) == 1 else out
+
+
+def add_fluxes(
+    flux_a: iris.cube.Cube | iris.cube.CubeList,
+    flux_b: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """
+    Add two flux cubes together.
+
+    Combines two radiative flux components (e.g., shortwave and longwave)
+    into a single total flux by arithmetic addition.
+
+    Parameters
+    ----------
+    flux_a : iris.cube.Cube or iris.cube.CubeList
+        First flux component.
+
+    flux_b : iris.cube.Cube or iris.cube.CubeList
+        Second flux component to add to flux_a.
+
+    Returns
+    -------
+    iris.cube.Cube or iris.cube.CubeList
+        Sum of the two flux cubes.
+        Returned cube name is set to "net_downward_radiative_flux" if neither
+        input is specifically shortwave or longwave, or compound name if mixing types.
+    """
+    out = iris.cube.CubeList()
+
+    for flux_a_cube, flux_b_cube in zip(
+        iter_maybe(flux_a),
+        iter_maybe(flux_b),
+        strict=True,
+    ):
+        total_flux = flux_a_cube + flux_b_cube
+
+        name_a = flux_a_cube.name().lower()
+        name_b = flux_b_cube.name().lower()
+
+        # Determine output name based on input components
+        if ("shortwave" in name_a and "longwave" in name_b) or (
+            "longwave" in name_a and "shortwave" in name_b
+        ):
+            output_name = "net_downward_radiative_flux"
+        elif "shortwave" in name_a or "shortwave" in name_b:
+            output_name = "net_downward_shortwave_flux"
+        elif "longwave" in name_a or "longwave" in name_b:
+            output_name = "net_downward_longwave_flux"
+        else:
+            output_name = "net_downward_radiative_flux"
+
+        total_flux.rename(output_name)
+        total_flux.var_name = output_name
+
+        out.append(total_flux)
+
+    return out[0] if len(out) == 1 else out

@@ -1,0 +1,67 @@
+category: Histogram at single point
+title: "Histogram of $OBS_HEIGHT m $PLOT_VARNAME at Cardington [52.10438N, -0.42286E]"
+description: |
+      Histogram of observed and modelled $PLOT_VARNAME at the gridpoint nearest to Cardington over the full time period.
+
+steps:
+  - operator: read.read_cubes
+    file_paths: $INPUT_PATHS
+    model_names:
+      - $OBS_NAME
+      - $MODEL_NAME
+    constraint:
+      - $OBS_VARNAME
+      - $VARNAME
+    preserve_attributes: [height]
+
+  - operator: filters.apply_mask
+    mask:
+      operator: filters.generate_mask
+      condition: 'lt'
+      value: 1.0e+10
+
+  - operator: filters.filter_multiple_cubes
+    $OBS_NAME:
+      operator: constraints.combine_constraints
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $OBS_VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $OBS_VARNAME
+      height_constraint:
+        operator: constraints.generate_attribute_constraint
+        attribute: height
+        value: $OBS_HEIGHT
+
+    $MODEL_NAME:
+      operator: constraints.combine_constraints
+      model_name_constraint:
+        operator: constraints.generate_attribute_constraint
+        attribute: model_name
+        value: $MODEL_NAME
+      varname_constraint:
+        operator: constraints.generate_var_constraint
+        varname: $VARNAME
+      cell_methods_constraint:
+        operator: constraints.generate_cell_methods_constraint
+        cell_methods: []
+        varname: $VARNAME
+      pressure_level_constraint:
+        operator: constraints.generate_level_constraint
+        levels: []
+        coordinate: pressure
+
+  - operator: misc.convert_units
+    units: $UNITS
+
+  - operator: regrid.regrid_to_single_point
+    lat_pt: 52.10438
+    lon_pt: -0.42286
+    latlon_in_type: realworld
+    method: Nearest
+    boundary_margin: 0
+
+  - operator: plot.plot_histogram_series
+    sequence_coordinate: realization
