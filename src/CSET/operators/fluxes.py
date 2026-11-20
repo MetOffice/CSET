@@ -157,3 +157,112 @@ def latent_heat_units(
         out.append(cube_a)
 
     return out[0] if len(out) == 1 else out
+
+
+def net_radiative_flux(
+    downwelling_flux: iris.cube.Cube | iris.cube.CubeList,
+    upwelling_flux: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """
+    Calculate net downward radiative flux.
+
+    Computes:
+
+        F_net = F_down - F_up
+
+    where positive values indicate a net downward flux.
+    Will work for a pair of downwelling and upwelling fluxes at any atmospheric level.
+
+    Parameters
+    ----------
+    downwelling_flux : iris.cube.Cube or iris.cube.CubeList
+        Downwelling radiative flux.
+
+    upwelling_flux : iris.cube.Cube or iris.cube.CubeList
+        Upwelling radiative flux.
+
+    Returns
+    -------
+    iris.cube.Cube or iris.cube.CubeList
+        Net downward radiative flux cube(s).
+        Returned cube name is set to either shortwave or longwave
+        (or neither) depending on input names (if specified).
+    """
+    out = iris.cube.CubeList()
+
+    for down_cube, up_cube in zip(
+        iter_maybe(downwelling_flux),
+        iter_maybe(upwelling_flux),
+        strict=True,
+    ):
+        down_name = down_cube.name().lower()
+        up_name = up_cube.name().lower()
+        if ("shortwave" in down_name and "longwave" in up_name) or (
+            "longwave" in down_name and "shortwave" in up_name
+        ):
+            raise ValueError("Cannot combine shortwave and longwave fluxes")
+
+        net_flux = down_cube - up_cube
+        name = down_cube.name().lower()
+        if "shortwave" in name:
+            output_name = "net_downward_shortwave_flux"
+        elif "longwave" in name:
+            output_name = "net_downward_longwave_flux"
+        else:
+            output_name = "net_downward_radiative_flux"
+
+        net_flux.rename(output_name)
+        net_flux.units = down_cube.units
+        net_flux.var_name = output_name
+
+        out.append(net_flux)
+
+    return out[0] if len(out) == 1 else out
+
+
+def add_fluxes(
+    flux_a: iris.cube.Cube | iris.cube.CubeList,
+    flux_b: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """
+    Add two fluxes, for example net shortwave and net longwave.
+
+    If the fluxes are not on the same time points (such as UM shortwave and
+    longwave output, which are offset by a minute), ``flux_b`` is linearly
+    interpolated onto the time points of ``flux_a``. Points outside the range
+    of ``flux_b`` are set to NaN.
+
+    Parameters
+    ----------
+    flux_a : iris.cube.Cube or iris.cube.CubeList
+        First flux. Its attributes and time points are retained.
+
+    flux_b : iris.cube.Cube or iris.cube.CubeList
+        Second flux, with units convertible to those of ``flux_a``.
+
+    Returns
+    -------
+    iris.cube.Cube or iris.cube.CubeList
+        The summed flux cube(s), named after ``flux_a``.
+    """
+    out = iris.cube.CubeList()
+
+    for cube_a, cube_b in zip(iter_maybe(flux_a), iter_maybe(flux_b), strict=True):
+        times_a = cube_a.coord("time")
+        times_b = cube_b.coord("time")
+        if (
+            times_a.shape != times_b.shape
+            or not (times_a.points == times_b.points).all()
+        ):
+            cube_b = cube_b.interpolate(
+                [("time", times_a.points)],
+                iris.analysis.Linear(extrapolation_mode="nan"),
+            )
+        cube_b = cube_b.copy()
+        cube_b.convert_units(cube_a.units)
+        # Sum the data directly, as the two cubes' auxiliary time coordinates
+        # (e.g. forecast_period) differ when their times are offset.
+        total = cube_a.copy(data=cube_a.core_data() + cube_b.core_data())
+        out.append(total)
+
+    return out[0] if len(out) == 1 else out

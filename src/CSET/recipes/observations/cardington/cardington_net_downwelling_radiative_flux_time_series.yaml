@@ -1,8 +1,9 @@
 category: Time series of $PLOT_VARNAME radiative flux at single point
-title: "Time series of $PLOT_VARNAME radiative flux at Cardington [52.10438N, -0.42286E]"
+title: "Time series of $OBS_HEIGHT m $PLOT_VARNAME radiative flux at Cardington [52.10438N, -0.42286E]"
 description: "Plots a time series of global $PLOT_VARNAME at gridpoint nearest to Cardington."
 steps:
   - operator: read.read_cubes
+    preserve_attributes: [height]
     file_paths: $INPUT_PATHS
     model_names:
       - $OBS_NAME
@@ -10,7 +11,7 @@ steps:
     constraint:
       - $OBS_DN
       - $OBS_UP
-      - $STASH
+      - $VARNAME
 
   - operator: filters.apply_mask
     mask:
@@ -40,11 +41,6 @@ steps:
         varname_constraint:
           operator: constraints.generate_var_constraint
           varname: $VARNAME
-        stash_constraint:
-          operator: constraints.generate_attribute_constraint
-          attribute: STASH
-          values:
-          - $STASH
         cell_methods_constraint:
           operator: constraints.generate_cell_methods_constraint
           cell_methods: []
