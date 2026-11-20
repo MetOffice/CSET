@@ -20,47 +20,43 @@ steps:
        condition: 'lt'
        value: 1.0e+10
 
-  - operator: filters.filter_multiple_cubes
-    Cardington_obs:
-      operator: constraints.combine_constraints
-      varname_constraint:
-        operator: constraints.generate_var_constraint
-        varname: net_radiation_down
-      cell_methods_constraint:
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: []
-        varname: net_radiation_down
+  - operator: misc.combine_cubes_into_cubelist
+    first:
+      operator: filters.filter_cubes
+      constraint:
+        operator: constraints.combine_constraints
+        varname_constraint:
+          operator: constraints.generate_var_constraint
+          varname: net_radiation_down
+        cell_methods_constraint:
+          operator: constraints.generate_cell_methods_constraint
+          cell_methods: []
+          varname: net_radiation_down
 
-    RAL3LFRic_model:
-      operator: constraints.combine_constraints
-      varname_constraint:
-        operator: constraints.generate_var_constraint
-        varname: surface_net_shortwave_flux
-      cell_methods_constraint:
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: []
-        varname: surface_net_shortwave_flux
-      pressure_level_constraint:
-            operator: constraints.generate_level_constraint
-            levels: [ ]
-            coordinate: "pressure"
-
-  - operator: filters.filter_multiple_cubes
-    RAL3LFRic_model:
-      operator: constraints.combine_constraints
-      varname_constraint:
-        operator: constraints.generate_var_constraint
-        varname: surface_net_longwave_flux
-      cell_methods_constraint:
-        operator: constraints.generate_cell_methods_constraint
-        cell_methods: []
-        varname: surface_net_longwave_flux
-      pressure_level_constraint:
-            operator: constraints.generate_level_constraint
-            levels: [ ]
-            coordinate: "pressure"
-
-  - operator: fluxes.add_fluxes
+    second:
+      operator: fluxes.add_fluxes
+      flux_a:
+        operator: filters.filter_cubes
+        constraint:
+          operator: constraints.combine_constraints
+          varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: surface_net_shortwave_flux
+          cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+            varname: surface_net_shortwave_flux
+      flux_b:
+        operator: filters.filter_cubes
+        constraint:
+          operator: constraints.combine_constraints
+          varname_constraint:
+            operator: constraints.generate_var_constraint
+            varname: surface_net_longwave_flux
+          cell_methods_constraint:
+            operator: constraints.generate_cell_methods_constraint
+            cell_methods: []
+            varname: surface_net_longwave_flux
 
   - operator: regrid.regrid_to_single_point
     lat_pt: 52.10438

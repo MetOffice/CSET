@@ -1,0 +1,5 @@
+{
+  "category": "Scatter plot of total net radiation at single point",
+  "title": "Scatter of total net radiation at Cardington [52.10438N, -0.42286E]",
+  "description": "Scatter plot of model total net radiation (SW + LW) against observed net radiation at gridpoint nearest to Cardington."
+}
