@@ -178,3 +178,53 @@ def test_latent_heat_units_unknown_units_passthrough():
     cube = _make_scalar_latent_cube(1.0, "unknown", units=None)
     out = fluxes.latent_heat_units(cube)
     assert out is cube
+
+
+def test_net_radiative_flux_calculation():
+    """Test net radiative flux calculation (downwelling - upwelling)."""
+    downwelling = _make_scalar_cube(
+        1000.0,
+        "downwelling_shortwave_flux",
+        units=Unit("W m-2"),
+    )
+    upwelling = _make_scalar_cube(
+        300.0,
+        "upwelling_shortwave_flux",
+        units=Unit("W m-2"),
+    )
+    out = fluxes.net_radiative_flux(
+        downwelling_flux=downwelling,
+        upwelling_flux=upwelling,
+    )
+    arr = out.data
+    if hasattr(arr, "compute"):
+        arr = arr.compute()
+
+    expected = 1000.0 - 300.0
+    assert np.isclose(arr[0, 0], expected)
+    assert out.units == Unit("W m-2")
+
+
+def test_add_fluxes_calculation():
+    """Test adding two flux components together."""
+    flux_a = _make_scalar_cube(
+        700.0,
+        "shortwave_net",
+        units=Unit("W m-2"),
+    )
+    flux_b = _make_scalar_cube(
+        150.0,
+        "longwave_net",
+        units=Unit("W m-2"),
+    )
+    out = fluxes.add_fluxes(
+        flux_a=flux_a,
+        flux_b=flux_b,
+    )
+    arr = out.data
+    if hasattr(arr, "compute"):
+        arr = arr.compute()
+
+    expected = 700.0 + 150.0
+    assert np.isclose(arr[0, 0], expected)
+    assert out.units == Unit("W m-2")

@@ -157,3 +157,72 @@ def latent_heat_units(
         out.append(cube_a)
 
     return out[0] if len(out) == 1 else out
+
+
+def net_radiative_flux(
+    downwelling_flux: Cube | CubeList,
+    upwelling_flux: Cube | CubeList,
+) -> Cube | CubeList:
+    """
+    Calculate net radiative flux from downwelling and upwelling components.
+
+    Computes:
+        Net flux = downwelling - upwelling
+
+    Parameters
+    ----------
+    downwelling_flux : iris.cube.Cube or iris.cube.CubeList
+        Downwelling (incident) radiative flux.
+
+    upwelling_flux : iris.cube.Cube or iris.cube.CubeList
+        Upwelling (reflected/emitted) radiative flux.
+
+    Returns
+    -------
+    iris.cube.Cube or iris.cube.CubeList
+        Net radiative flux cube(s).
+    """
+    out = iris.cube.CubeList()
+    for dn_cube, up_cube in zip(
+        iter_maybe(downwelling_flux),
+        iter_maybe(upwelling_flux),
+        strict=True,
+    ):
+        net_flux = dn_cube - up_cube
+        out.append(net_flux)
+
+    return out[0] if len(out) == 1 else out
+
+
+def add_fluxes(
+    flux_a: Cube | CubeList,
+    flux_b: Cube | CubeList,
+) -> Cube | CubeList:
+    """
+    Add two radiative flux components together.
+
+    Used to combine shortwave and longwave fluxes or other flux components.
+
+    Parameters
+    ----------
+    flux_a : iris.cube.Cube or iris.cube.CubeList
+        First flux component.
+
+    flux_b : iris.cube.Cube or iris.cube.CubeList
+        Second flux component.
+
+    Returns
+    -------
+    iris.cube.Cube or iris.cube.CubeList
+        Combined flux cube(s).
+    """
+    out = iris.cube.CubeList()
+    for a_cube, b_cube in zip(
+        iter_maybe(flux_a),
+        iter_maybe(flux_b),
+        strict=True,
+    ):
+        combined = a_cube + b_cube
+        out.append(combined)
+
+    return out[0] if len(out) == 1 else out

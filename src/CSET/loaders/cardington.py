@@ -247,3 +247,52 @@ def load(conf: Config):
                             "PLOTNAME": plot_field,
                         },
                     )
+
+        # --- Net downwelling radiative flux (shortwave or longwave only) ---
+        if conf.CARDINGTON_NET_DOWNWELLING_RADIATIVE_FLUX_SINGLE_POINT_TIME_SERIES:
+            flux_types = [
+                (
+                    "shortwave",
+                    "m01s01i201",  # UM SW downwelling
+                    "m01s01i202",  # UM SW upwelling
+                    "downwelling_shortwave_flux",
+                    "upwelling_shortwave_flux",
+                ),
+                (
+                    "longwave",
+                    "m01s02i201",  # UM LW downwelling
+                    "m01s02i202",  # UM LW upwelling
+                    "downwelling_longwave_flux",
+                    "upwelling_longwave_flux",
+                ),
+            ]
+            for flux_name, _um_dn, _um_up, card_dn, card_up in flux_types:
+                yield make_recipe(
+                    recipe="cardington_net_downwelling_radiative_flux_time_series.yaml",
+                    variables={
+                        "OBS_NAME": [m["name"] for m in cardington_models],
+                        "OBS_DN": card_dn,
+                        "OBS_UP": card_up,
+                        "VARNAME": f"surface_net_downward_{flux_name}_flux",
+                        "MODEL_NAME": um_model["name"],
+                        "PLOT_VARNAME": flux_name,
+                        "OBS_HEIGHT": "2",
+                    },
+                )
+
+        # --- Total net radiative flux (shortwave + longwave) ---
+        if conf.CARDINGTON_TOTAL_NET_RADIATIVE_FLUX_SINGLE_POINT_TIME_SERIES:
+            yield make_recipe(
+                recipe="cardington_total_net_radiative_flux_time_series.yaml",
+                variables={
+                    "OBS_NAME": [m["name"] for m in cardington_models],
+                    "OBS_SW_DN": "downwelling_shortwave_flux",
+                    "OBS_SW_UP": "upwelling_shortwave_flux",
+                    "OBS_LW_DN": "downwelling_longwave_flux",
+                    "OBS_LW_UP": "upwelling_longwave_flux",
+                    "MODEL_SW": "m01s01i235",  # UM net shortwave
+                    "MODEL_LW": "m01s02i235",  # UM net longwave
+                    "PLOT_VARNAME": "net_radiative_flux",
+                    "OBS_HEIGHT": "2",
+                },
+            )
