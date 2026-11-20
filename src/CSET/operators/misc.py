@@ -288,6 +288,59 @@ def difference(cubes: CubeList):
     return difference
 
 
+def interpolate_to_reference_times(cubes: CubeList) -> CubeList:
+    """Linearly interpolate cubes onto the time points of the first cube.
+
+    Used to compare series sampled at different frequencies, such as half-hourly
+    observations against hourly model output. Reference points outside the time
+    range of any other cube are dropped, so no extrapolation takes place.
+
+    Parameters
+    ----------
+    cubes: CubeList
+        Cubes with a one dimensional ``time`` coordinate. The first cube is the
+        reference whose time points are kept.
+
+    Returns
+    -------
+    CubeList
+        The reference cube (restricted to the usable time points) followed by
+        the other cubes interpolated onto those same times.
+
+    Raises
+    ------
+    ValueError
+        If fewer than two cubes are given, or the cubes share no time range.
+    """
+    cubes = CubeList(iter_maybe(cubes))
+    if len(cubes) < 2:
+        raise ValueError("At least two cubes are needed to interpolate in time.")
+
+    reference = cubes[0]
+    ref_time = reference.coord("time")
+    keep = np.ones(ref_time.shape, dtype=bool)
+    for cube in cubes[1:]:
+        points = ref_time.units.convert(ref_time.points, cube.coord("time").units)
+        cube_points = cube.coord("time").points
+        keep &= (points >= cube_points.min()) & (points <= cube_points.max())
+    if not keep.any():
+        raise ValueError("Cubes do not overlap in time.")
+
+    time_dim = reference.coord_dims("time")[0]
+    index = [slice(None)] * reference.ndim
+    index[time_dim] = np.flatnonzero(keep)
+    reference = reference[tuple(index)]
+
+    result = CubeList([reference])
+    for cube in cubes[1:]:
+        units = cube.coord("time").units
+        sample_points = ref_time.units.convert(reference.coord("time").points, units)
+        result.append(
+            cube.interpolate([("time", sample_points)], iris.analysis.Linear())
+        )
+    return result
+
+
 def extract_common_time_points(cubes: CubeList | Cube) -> CubeList | Cube:
     """Return cubes restricted to their common time points.
 

@@ -614,3 +614,45 @@ def test_ensure_same_frt_one_cube_no_frt(make_frt_cube, make_simple_1d_time_cube
         ValueError, match="Cube does not contain any forecast_reference_times."
     ):
         misc._ensure_same_frt(cube_list)
+
+
+def _time_series_cube(hours, values):
+    """Create a 1D cube of values on time points given in hours."""
+    time = iris.coords.DimCoord(
+        np.array(hours, dtype=float),
+        standard_name="time",
+        units="hours since 1970-01-01",
+    )
+    return iris.cube.Cube(
+        np.array(values, dtype=float),
+        long_name="x",
+        units="K",
+        dim_coords_and_dims=[(time, 0)],
+    )
+
+
+def test_interpolate_to_reference_times():
+    """Hourly cube is interpolated onto half-hourly reference times in range."""
+    obs = _time_series_cube([100, 100.5, 101, 101.5, 102.5], [0, 0, 0, 0, 0])
+    model = _time_series_cube([100, 101, 102], [0, 10, 20])
+    ref, interp = misc.interpolate_to_reference_times(CubeList([obs, model]))
+    # 102.5 is beyond the model range and is dropped.
+    assert ref.coord("time").points.tolist() == [100, 100.5, 101, 101.5]
+    np.testing.assert_allclose(interp.data, [0, 5, 10, 15])
+    np.testing.assert_allclose(interp.coord("time").points, ref.coord("time").points)
+
+
+def test_interpolate_to_reference_times_no_overlap():
+    """Error raised when the cubes share no time range."""
+    obs = _time_series_cube([200, 201], [0, 0])
+    model = _time_series_cube([100, 101], [0, 1])
+    with pytest.raises(ValueError, match="do not overlap"):
+        misc.interpolate_to_reference_times(CubeList([obs, model]))
+
+
+def test_interpolate_to_reference_times_single_cube():
+    """Error raised when only one cube is given."""
+    with pytest.raises(ValueError, match="At least two"):
+        misc.interpolate_to_reference_times(
+            CubeList([_time_series_cube([1, 2], [0, 1])])
+        )

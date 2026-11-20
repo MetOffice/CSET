@@ -65,6 +65,7 @@ from CSET.operators._utils import (
     validate_cubes_coords,
 )
 from CSET.operators.collapse import collapse
+from CSET.operators.misc import interpolate_to_reference_times
 from CSET.operators.regrid import regrid_onto_cube
 
 logger = logging.getLogger(__name__)
@@ -3138,6 +3139,65 @@ def scatter_plot(
     plot_index = _append_to_plot_index([plot_filename])
 
     # Make a page to display the plots.
+    _make_plot_html_page(plot_index)
+
+    return iris.cube.CubeList([cube_x, cube_y])
+
+
+def plot_scatter_comparison(
+    cubes: iris.cube.CubeList,
+    filename: str | None = None,
+    one_to_one: bool = True,
+    **kwargs,
+) -> iris.cube.CubeList:
+    """Plot a scatter of a time series from two sources, matched in time.
+
+    The first cube (typically the observations) is plotted on the x-axis and
+    the second (typically the model) on the y-axis. The second cube is
+    interpolated linearly onto the time points of the first, so series with
+    different sampling intervals can be compared.
+
+    Parameters
+    ----------
+    cubes: CubeList
+        Two cubes, each with a one dimensional ``time`` coordinate.
+    filename: str, optional
+        Name of the plot to write. Defaults to the recipe title.
+    one_to_one: bool, optional
+        If True a 1:1 line is plotted. Default is True.
+
+    Returns
+    -------
+    CubeList
+        The two cubes as plotted, on common time points.
+
+    Raises
+    ------
+    ValueError
+        If not exactly two cubes are given.
+    """
+    cubes = iris.cube.CubeList(iter_maybe(cubes))
+    if len(cubes) != 2:
+        raise ValueError("plot_scatter_comparison requires exactly two cubes.")
+
+    cube_x, cube_y = interpolate_to_reference_times(cubes)
+    for cube in (cube_x, cube_y):
+        if cube.ndim > 1:
+            raise ValueError("Cubes must be 1D in time.")
+
+    recipe_title = get_recipe_metadata().get("title", "Scatter_plot")
+    if filename is None:
+        filename = slugify(recipe_title)
+    plot_filename = f"{filename.rsplit('.', 1)[0]}.png"
+
+    model_names = [
+        cube.attributes.get("model_name", cube.name()) for cube in (cube_x, cube_y)
+    ]
+    _plot_and_save_scatter_plot(
+        cube_x, cube_y, plot_filename, recipe_title, one_to_one, model_names
+    )
+
+    plot_index = _append_to_plot_index([plot_filename])
     _make_plot_html_page(plot_index)
 
     return iris.cube.CubeList([cube_x, cube_y])

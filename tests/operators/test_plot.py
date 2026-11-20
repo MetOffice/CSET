@@ -1603,3 +1603,30 @@ def test_hinton_plot_raises_for_wrong_dimension_name(
             base_name="UM",
             other_name="LF",
         )
+
+
+def test_plot_scatter_comparison(tmp_working_dir):
+    """Save a scatter plot of obs against model on different time sampling."""
+    time_obs = iris.coords.DimCoord(
+        np.arange(100, 102.1, 0.5), standard_name="time", units="hours since 1970-01-01"
+    )
+    time_model = iris.coords.DimCoord(
+        [100.0, 101.0, 102.0], standard_name="time", units="hours since 1970-01-01"
+    )
+    obs = iris.cube.Cube(
+        np.arange(5.0), long_name="t", units="K", dim_coords_and_dims=[(time_obs, 0)]
+    )
+    model = iris.cube.Cube(
+        np.array([0.0, 2.0, 4.0]),
+        long_name="t",
+        units="K",
+        dim_coords_and_dims=[(time_model, 0)],
+    )
+    plot.plot_scatter_comparison(iris.cube.CubeList([obs, model]), filename="cmp.png")
+    assert Path("cmp.png").is_file()
+
+
+def test_plot_scatter_comparison_wrong_number_of_cubes(tmp_working_dir):
+    """Error raised unless exactly two cubes are given."""
+    with pytest.raises(ValueError, match="exactly two"):
+        plot.plot_scatter_comparison(iris.cube.CubeList([]))
