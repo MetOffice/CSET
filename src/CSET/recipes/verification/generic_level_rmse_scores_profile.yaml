@@ -3,7 +3,7 @@ title: "$VARNAME\nRMSE vertical profile between $OTHER_MODELS and $BASE_MODEL ($
 description: |
   Extracts and plots the Root Mean Square Error (RMSE) of $VARNAME
   as a vertical profile on pressure levels. The RMSE is calculated
-  pairwise between $BASE_MODEL and $OTHER_MODEL for each pressure
+  pairwise between $BASE_MODEL and $OTHER_MODELS for each pressure
   level field utilising the preserved coordinates in the scores package.
 
   By adding a preserved coordinate to the recipe, the RMSE can be calculated for each
