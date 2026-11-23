@@ -171,10 +171,10 @@ CSET.operators.scoreswrappers
    :members:
 
 Vorticity Operators
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 CSET.operators.vorticity
--------------------
+------------------------
 
 .. automodule:: CSET.operators.vorticity
    :members:
