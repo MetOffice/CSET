@@ -2212,7 +2212,7 @@ def spatial_multi_pcolormesh_plot(
         contour_cube=contour_cube,
         point_cube=point_cube,
     )
-    return cube, overlay_cube, contour_cube, point_cube
+    return cube
 
 
 # TODO: Expand function to handle ensemble data.
