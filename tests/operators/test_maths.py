@@ -203,3 +203,21 @@ def test_round_data_preserves_mask():
     result = maths.round_data(cb, decimals=1)
     assert np.ma.isMaskedArray(result.data)
     np.testing.assert_array_equal(result.data.mask, mask)
+
+
+def test_round_data_down_floating_point_inaccuracy():
+    """Data is down to rounded to the requested number of decimals. With floating point inaccuracy."""
+    data = np.array([[0.1 + 0.2, 0.299999999999999999999999999], [2.345, 9.999]])
+    cb = iris.cube.Cube(data, var_name="test_field")
+    result = maths.round_data(cb, decimals=1, rounding="down")
+    expected = np.array([[0.3, 0.3], [2.3, 9.9]])
+    np.testing.assert_allclose(result.data, expected)
+
+
+def test_round_data_up_floating_point_inaccuracy():
+    """Data is up to rounded to the requested number of decimals. With floating point inaccuracy."""
+    data = np.array([[0.1 + 0.2, 0.299999999999999999999999999], [2.345, 9.999]])
+    cb = iris.cube.Cube(data, var_name="test_field")
+    result = maths.round_data(cb, decimals=1, rounding="up")
+    expected = np.array([[0.3, 0.3], [2.4, 10.0]])
+    np.testing.assert_allclose(result.data, expected)
