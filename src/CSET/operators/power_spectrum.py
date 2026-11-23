@@ -65,6 +65,13 @@ def calculate_power_spectrum(
     """
     out = iris.cube.CubeList()
     for input_cube in iter_maybe(cubes):
+        # When comparing with radar data, where a mask is applied
+        # there will exist NaNs outside the mask
+        # for both model and obs data.  Set all NaNs to 0.0
+        # to address this.
+
+        input_cube.data[np.isnan(input_cube.data)] = 0.0
+
         model = input_cube.attributes.get("model_name")
 
         # Check whether data has realization,

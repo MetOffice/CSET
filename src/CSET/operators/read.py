@@ -41,6 +41,7 @@ from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
 from CSET.operators._utils import (
     get_cube_coordindex,
     get_cube_yxcoordname,
+    get_xy_coords,
     is_spatialdim,
 )
 
@@ -140,6 +141,7 @@ def read_cubes(
     model_names: str | list[str] | None = None,
     subarea_type: str | None = None,
     subarea_extent: list | None = None,
+    preserve_attributes: str | list[str] | None = None,
     **kwargs,
 ) -> iris.cube.CubeList:
     """Read cubes from files.
@@ -173,6 +175,9 @@ def read_cubes(
     subarea_extent: list[float], optional
         List of coordinates to constraint data by, in order lower latitude,
         upper latitude, lower longitude, upper longitude.
+    preserve_attributes: str | list[str], optional
+        Names of extra cube attributes to keep, in addition to those always
+        preserved.
 
     Returns
     -------
@@ -229,7 +234,7 @@ def read_cubes(
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
 
     # Clean unwanted cube attributes
-    cubes = _clean_unwanted_cube_attributes(cubes)
+    cubes = _clean_unwanted_cube_attributes(cubes, preserve_attributes)
 
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = _merge_cubes_check_ensemble(cubes)
@@ -410,8 +415,7 @@ def _cutout_cubes(
         else:
             raise ValueError("Unknown subarea_type:", subarea_type)
 
-        x = cube.coord(axis="X", dim_coords=True)
-        y = cube.coord(axis="Y", dim_coords=True)
+        x, y = get_xy_coords(cube)
 
         if (
             x.name() == "projection_x_coordinate"
@@ -493,6 +497,7 @@ def _extract_projected_latlon(
 
 def _clean_unwanted_cube_attributes(
     cubes: iris.cube.Cube | iris.cube.CubeList,
+    extra_attributes: str | list[str] | None = None,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Remove unwanted cube attributes, apart from those in an exception list.
 
@@ -513,6 +518,7 @@ def _clean_unwanted_cube_attributes(
         "cset_comparison_base",
         "STASH",
         "um_stash_source",
+        *(iter_maybe(extra_attributes) if extra_attributes else []),
     ]
 
     # Iterate through each cube and check each attribute.
@@ -1005,9 +1011,16 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
     # Convert visibility diagnostic units if required.
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("visibility" in name for name in varnames) and cube.units == "m":
-        _log_once("Converting visibility units m to km.", level=logging.DEBUG)
-        # Convert the units to km.
-        cube.convert_units("km")
+        if cube.var_name == "visibility_belfort_2m":
+            # Cardington Belfort values are already in km despite their metadata.
+            cube.units = "km"
+        else:
+            _log_once("Converting visibility units m to km.", level=logging.DEBUG)
+            cube.convert_units("km")
+
+    # The UM surface net shortwave flux (m01s01i202) lacks units in the data.
+    if cube.long_name == "surface_net_shortwave_flux" and cube.units.is_unknown():
+        cube.units = "W m-2"
 
     return cube
 

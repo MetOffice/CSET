@@ -38,6 +38,7 @@ from CSET.operators import (
     fluxes,
     humidity,
     imageprocessing,
+    maths,
     mesoscale,
     misc,
     plot,
@@ -50,6 +51,7 @@ from CSET.operators import (
     scoreswrappers,
     temperature,
     transect,
+    vorticity,
     wind,
     write,
 )
@@ -70,6 +72,7 @@ __all__ = [
     "get_operator",
     "humidity",
     "imageprocessing",
+    "maths",
     "mesoscale",
     "misc",
     "plot",
@@ -82,6 +85,7 @@ __all__ = [
     "scoreswrappers",
     "temperature",
     "transect",
+    "vorticity",
     "wind",
     "write",
 ]

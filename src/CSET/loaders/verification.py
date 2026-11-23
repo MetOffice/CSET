@@ -138,7 +138,7 @@ def _get_scores_timeseries_categorical(conf):
     return scores_timeseries_categorical
 
 
-def _collapse_settings(method_from_recipe: str, obs=False) -> tuple[str, list[str]]:
+def _collapse_settings(method_from_recipe, obs: bool = False) -> tuple[str, list[str]]:
     """Get the collapse method and preserved coordinates for spatial scores metrics."""
     if obs:
         preserved_coords = ["time", "latitude", "longitude"]
@@ -218,7 +218,7 @@ def load(conf: Config):
         collapse_method, preserved_coords = _collapse_settings(method_from_recipe)
 
         yield RawRecipe(
-            recipe=f"surface_difference_scores_{scores_method}.yaml",
+            recipe=f"surface_scores_{scores_method}.yaml",
             variables={
                 "VARNAME": field,
                 "BASE_MODEL": base_model["name"],
@@ -260,13 +260,17 @@ def load(conf: Config):
         scores_spatial_methods_aggregated,
     ):
         yield RawRecipe(
-            recipe=f"surface_difference_scores_{scores_method}_aggregated.yaml",
+            recipe=f"surface_scores_{scores_method}_aggregated.yaml",
             variables={
                 "VARNAME": field,
                 "BASE_MODEL": base_model["name"],
                 "OTHER_MODELS": model["name"],
                 "AGGREGATION_MODE": "Case Date",
-                "PRESERVED_COORD": "forecast_period",
+                "PRESERVED_COORDS": [
+                    "forecast_period",
+                    "grid_latitude",
+                    "grid_longitude",
+                ],
                 **subarea_vars,
             },
             model_ids=[base_model["id"], model["id"]],
@@ -284,7 +288,7 @@ def load(conf: Config):
                 "VARNAME": field,
                 "MODEL_NAME": ["OBS"] + [model["name"]],
                 "AGGREGATION_MODE": "Case Date",
-                "PRESERVED_COORD": "forecast_period",
+                "PRESERVED_COORDS": ["forecast_period", "latitude", "longitude"],
                 **subarea_vars,
             },
             model_ids=["OBS"] + [model["id"]],
@@ -299,7 +303,7 @@ def load(conf: Config):
         conf.SURFACE_FIELDS, scores_timeseries_methods
     ):
         yield RawRecipe(
-            recipe=f"timeseries_surface_difference_scores_{scores_method}.yaml",
+            recipe=f"timeseries_scores_{scores_method}.yaml",
             variables={
                 "VARNAME": field,
                 "BASE_MODEL": base_model["name"],
@@ -330,13 +334,12 @@ def load(conf: Config):
             conf.SURFACE_FIELDS, scores_timeseries_methods_aggregated
         ):
             yield RawRecipe(
-                recipe=f"timeseries_difference_scores_{scores_method}_aggregated.yaml",
+                recipe=f"timeseries_scores_{scores_method}_aggregated.yaml",
                 variables={
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODELS": [model["name"] for model in models[1:]],
                     "AGGREGATION_MODE": "Case Date",
-                    "PRESERVED_COORD": "forecast_period",
                     **subarea_vars,
                 },
                 model_ids=[base_model["id"]] + [model["id"] for model in models[1:]],
@@ -370,7 +373,6 @@ def load(conf: Config):
                     "VARNAME": field,
                     "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
                     "AGGREGATION_MODE": "Case Date",
-                    "PRESERVED_COORD": "forecast_period",
                     **subarea_vars,
                 },
                 model_ids=["OBS"] + [model["id"] for model in models],
