@@ -38,19 +38,31 @@ def load(conf: Config):
     """Yield recipes from the given workflow configuration."""
     # Load a list of model detail dictionaries.
     models = get_models(conf.asdict())
-    T30 = "30min"
-    T05 = "05min"
     if conf.CARDINGTON_SINGLE_POINT_TIME_SERIES:
-        cardington_models = [m for m in models if "Cardington" in m["name"]]
-        um_model = next(m for m in models if "Cardington" not in m["name"])
-        all_model_ids = [m["id"] for m in cardington_models] + [um_model["id"]]
-        second_cardington_model_ids = [cardington_models[1]["id"], um_model["id"]]
+        cardington_models = [model for model in models if "Cardington" in model["name"]]
+        non_cardington_models = [
+            model for model in models if "Cardington" not in model["name"]
+        ]
+        if len(cardington_models) != 1:
+            raise ValueError(
+                "Exactly one Cardington input must be configured; "
+                f"found {len(cardington_models)}."
+            )
+        if len(non_cardington_models) != 1:
+            raise ValueError(
+                "Exactly one forecast model must be configured for the "
+                "Cardington diagnostics; "
+                f"found {len(non_cardington_models)}."
+            )
+        cardington_model = cardington_models[0]
+        um_model = non_cardington_models[0]
+        model_ids = [cardington_model["id"], um_model["id"]]
 
-        def make_recipe(recipe, variables, model_ids=None):
+        def make_recipe(recipe, variables):
             return RawRecipe(
                 recipe=recipe,
                 variables={"MODEL_NAME": um_model["name"], **variables},
-                model_ids=all_model_ids if model_ids is None else model_ids,
+                model_ids=model_ids,
                 aggregation=False,
             )
 
@@ -61,15 +73,11 @@ def load(conf: Config):
             2,
         ]
 
-        card_label_30 = f"Cardington {T30} ({height} m)"
-        card_label_05 = f"Cardington {T05} ({height} m)"
         varname = f"{card_field}_{height_token(height)}"
         yield make_recipe(
             recipe="cardington_visibility_single_point_time_series.yaml",
             variables={
                 "VARNAME": varname,
-                "CARDINGTON_30_LABEL": card_label_30,
-                "CARDINGTON_05_LABEL": card_label_05,
                 "UM_VARNAME": model_field,
                 "HEIGHT": height,
                 "PLOTNAME": plot_field,
@@ -77,14 +85,10 @@ def load(conf: Config):
         )
 
         field = "surface_temperature"
-        card_label_30 = f"Cardington {T30}"
-        card_label_05 = f"Cardington {T05}"
         yield make_recipe(
             recipe="cardington_surface_temperature_time_series.yaml",
             variables={
                 "VARNAME": field,
-                "CARDINGTON_30_LABEL": card_label_30,
-                "CARDINGTON_05_LABEL": card_label_05,
                 "UM_VARNAME": "m01s00i024",
                 "PLOTNAME": field,
             },
@@ -92,14 +96,10 @@ def load(conf: Config):
 
         fields = [("surface_air_pressure", "air_pressure")]
         for model_field, card_field in fields:
-            card_label_30 = f"Cardington {T30}"
-            card_label_05 = f"Cardington {T05}"
             yield make_recipe(
                 recipe="cardington_surface_pressure_time_series.yaml",
                 variables={
                     "VARNAME": card_field,
-                    "CARDINGTON_30_LABEL": card_label_30,
-                    "CARDINGTON_05_LABEL": card_label_05,
                     "UM_VARNAME": model_field,
                     "PLOTNAME": card_field,
                 },
@@ -111,14 +111,10 @@ def load(conf: Config):
         ]
         for plot_field, card_field, heights in fields:
             for ht in heights:
-                card_label_30 = f"Cardington {T30} ({ht} m)"
-                card_label_05 = f"Cardington {T05} ({ht} m)"
                 yield make_recipe(
                     recipe="cardington_wind_single_point_time_series.yaml",
                     variables={
                         "VARNAME": f"{card_field}_{height_token(ht)}",
-                        "CARDINGTON_30_LABEL": card_label_30,
-                        "CARDINGTON_05_LABEL": card_label_05,
                         "UM_U_VARNAME": "x_wind",
                         "UM_V_VARNAME": "y_wind",
                         "PLOT_VARNAME": plot_field,
@@ -155,8 +151,6 @@ def load(conf: Config):
         ]
         for plot_field, model_field, card_field, heights in fields:
             for ht in heights:
-                card_label_30 = f"Cardington {T30} ({ht} m)"
-                card_label_05 = f"Cardington {T05} ({ht} m)"
                 varname = None
                 if isinstance(card_field, str):
                     varname = f"{card_field}_{height_token(ht)}"
@@ -166,12 +160,10 @@ def load(conf: Config):
                         recipe="cardington_latent_heat_single_point_time_series.yaml",
                         variables={
                             "VARNAME": varname,
-                            "CARDINGTON_30_LABEL": card_label_30,
                             "UM_VARNAME": model_field,
                             "HEIGHT": ht,
                             "PLOTNAME": plot_field,
                         },
-                        model_ids=second_cardington_model_ids,
                     )
                 elif "sensible" in plot_field and isinstance(card_field, dict):
                     card_varnames = []
@@ -191,19 +183,17 @@ def load(conf: Config):
                     yield make_recipe(
                         recipe="cardington_sensible_heat_single_point_time_series.yaml",
                         variables={
-                            "CARDINGTON_30_LABEL": card_label_30,
                             "UM_VARNAME": model_field,  # m01s03i217 (unchanged)
                             "HEIGHT": ht,
                             "PLOTNAME": plot_field,
                             "WT_VARNAMES": ",".join(card_varnames),
                         },
-                        model_ids=second_cardington_model_ids,
                     )
                 elif plot_field == "relative humidity":
                     yield make_recipe(
                         recipe="cardington_relative_humidity_single_point_time_series.yaml",
                         variables={
-                            "OBS_NAME": [m["name"] for m in cardington_models],
+                            "OBS_NAME": cardington_model["name"],
                             "OBS_VARNAME": varname,
                             "VARNAME": model_field,
                             "STASH": "m01s03i245",
@@ -215,7 +205,7 @@ def load(conf: Config):
                     yield make_recipe(
                         recipe="cardington_dewpoint_temperature_single_point_time_series.yaml",
                         variables={
-                            "OBS_NAME": [m["name"] for m in cardington_models],
+                            "OBS_NAME": cardington_model["name"],
                             "OBS_VARNAME": varname,
                             "VARNAME": model_field,
                             "STASH": model_field,
@@ -228,8 +218,6 @@ def load(conf: Config):
                         recipe="cardington_temperature_single_point_time_series.yaml",
                         variables={
                             "VARNAME": varname,
-                            "CARDINGTON_30_LABEL": card_label_30,
-                            "CARDINGTON_05_LABEL": card_label_05,
                             "UM_VARNAME": model_field,
                             "HEIGHT": ht,
                             "PLOTNAME": plot_field,
@@ -240,8 +228,6 @@ def load(conf: Config):
                         recipe="cardington_wind_gust_single_point_time_series.yaml",
                         variables={
                             "VARNAME": varname,
-                            "CARDINGTON_30_LABEL": card_label_30,
-                            "CARDINGTON_05_LABEL": card_label_05,
                             "UM_VARNAME": model_field,
                             "HEIGHT": ht,
                             "PLOTNAME": plot_field,
@@ -270,7 +256,7 @@ def load(conf: Config):
                 yield make_recipe(
                     recipe="cardington_net_downwelling_radiative_flux_time_series.yaml",
                     variables={
-                        "OBS_NAME": [m["name"] for m in cardington_models],
+                        "OBS_NAME": cardington_model["name"],
                         "OBS_DN": card_dn,
                         "OBS_UP": card_up,
                         "VARNAME": f"surface_net_downward_{flux_name}_flux",
@@ -285,7 +271,7 @@ def load(conf: Config):
             yield make_recipe(
                 recipe="cardington_total_net_radiative_flux_time_series.yaml",
                 variables={
-                    "OBS_NAME": [m["name"] for m in cardington_models],
+                    "OBS_NAME": cardington_model["name"],
                     "OBS_SW_DN": "downwelling_shortwave_flux",
                     "OBS_SW_UP": "upwelling_shortwave_flux",
                     "OBS_LW_DN": "downwelling_longwave_flux",
