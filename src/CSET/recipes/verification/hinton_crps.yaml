@@ -31,7 +31,7 @@ steps:
         cubes:
           operator: aggregate.time_aggregate
           method: MEAN
-          interval_iso: PT6H
+          interval_iso: PT3H
           cubes:
             operator: misc.combine_cubes_into_cubelist
             first:
@@ -65,7 +65,7 @@ steps:
         cubes:
           operator: aggregate.time_aggregate
           method: MEAN
-          interval_iso: PT6H
+          interval_iso: PT3H
           cubes:
             operator: misc.combine_cubes_into_cubelist
             first:
@@ -99,7 +99,7 @@ steps:
         cubes:
           operator: aggregate.time_aggregate
           method: MEAN
-          interval_iso: PT6H
+          interval_iso: PT3H
           cubes:
             operator: misc.combine_cubes_into_cubelist
             first:
@@ -134,7 +134,7 @@ steps:
         cubes:
           operator: aggregate.time_aggregate
           method: MEAN
-          interval_iso: PT6H
+          interval_iso: PT3H
           cubes:
             operator: misc.combine_cubes_into_cubelist
             first:
