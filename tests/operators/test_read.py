@@ -805,6 +805,17 @@ def test_convert_visibility_units():
     assert np.allclose(cube.data, np.array([1, 2, 3]))
 
 
+def test_cardington_belfort_visibility_values_are_already_km():
+    """Correct the Cardington Belfort units metadata without scaling its data."""
+    values = np.array([3.558, 17.33379])
+    cube = iris.cube.Cube(values.copy(), var_name="visibility_belfort_2m", units="m")
+
+    cube = read._convert_cube_units_callback(cube)
+
+    assert cube.units == "km"
+    assert np.allclose(cube.data, values)
+
+
 def test_convert_visibility_no_units(cube):
     """Check no processing for unexpected units in visibility conversions."""
     cube = iris.cube.Cube(
