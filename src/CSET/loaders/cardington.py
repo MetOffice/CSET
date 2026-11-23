@@ -82,37 +82,40 @@ def load(conf: Config):
 
         obs_varname = f"{card_field}_{height_token(height)}"
         yield make_recipe(
-            recipe="cardington_visibility_single_point_time_series.yaml",
+            recipe="cardington_generic_single_point_time_series.yaml",
             variables={
                 "OBS_VARNAME": obs_varname,
                 "VARNAME": model_field,
-                "HEIGHT": height,
-                "PLOTNAME": plot_field,
+                "OBS_HEIGHT": height,
+                "PLOT_VARNAME": plot_field,
+                "UNITS": "km",
             },
         )
 
         # Surface (skin) temperature.
         field = "surface_temperature"
         yield make_recipe(
-            recipe="cardington_surface_temperature_time_series.yaml",
+            recipe="cardington_generic_single_point_time_series.yaml",
             variables={
                 "OBS_VARNAME": field,
                 "VARNAME": "grid_surface_temperature",
-                "PLOTNAME": field,
+                "PLOT_VARNAME": field,
+                "UNITS": "°C",
             },
         )
 
         # Surface pressure.
         fields = [
-            ("surface_air_pressure", "air_pressure"),
+            ("surface_air_pressure", "pressure_barometric"),
         ]
         for model_field, card_field in fields:
             yield make_recipe(
-                recipe="cardington_surface_pressure_time_series.yaml",
+                recipe="cardington_generic_single_point_time_series.yaml",
                 variables={
                     "OBS_VARNAME": card_field,
                     "VARNAME": model_field,
-                    "PLOTNAME": card_field,
+                    "PLOT_VARNAME": card_field,
+                    "UNITS": "hPa",
                 },
             )
 
@@ -130,7 +133,7 @@ def load(conf: Config):
                         "U_VARNAME": "x_wind",
                         "V_VARNAME": "y_wind",
                         "PLOT_VARNAME": plot_field,
-                        "HEIGHT": ht,
+                        "OBS_HEIGHT": ht,
                     },
                 )
         # other atmospheric measurements on various levels
@@ -188,24 +191,19 @@ def load(conf: Config):
                         variables={
                             "OBS_VARNAME": obs_varname,
                             "VARNAME": model_field,
-                            "HEIGHT": ht,
-                            "PLOTNAME": plot_field,
+                            "OBS_HEIGHT": ht,
+                            "PLOT_VARNAME": plot_field,
                         },
                     )
                 elif "sensible" in plot_field and isinstance(card_field, dict):
-                    card_varnames = []
-                    for var, rule in card_field.items():
-                        if rule == "HEIGHT":
-                            card_varnames.append(f"{var}_{height_token(ht)}")
-                        elif rule == "HEIGHT_EXCEPT_2M":
-                            if ht == 2:
-                                card_varnames.append(f"{var}_1p2m")
-                            else:
-                                card_varnames.append(f"{var}_{height_token(ht)}")
-                        elif rule == "FIXED":
-                            card_varnames.append(var)
-                        else:
-                            card_varnames.append(f"{var}_{rule}")
+                    wt_varname = f"wt_covariance_{height_token(ht)}"
+
+                    if ht == 2:
+                        air_temp_varname = "air_temperature_rtd_1p2m"
+                    else:
+                        air_temp_varname = f"air_temperature_rtd_{height_token(ht)}"
+
+                    pressure_varname = "pressure_barometric"
 
                     yield make_recipe(
                         recipe=(
@@ -213,54 +211,48 @@ def load(conf: Config):
                         ),
                         variables={
                             "VARNAME": model_field,
-                            "HEIGHT": ht,
-                            "PLOTNAME": plot_field,
-                            "WT_VARNAMES": ",".join(card_varnames),
+                            "OBS_HEIGHT": ht,
+                            "PLOT_VARNAME": plot_field,
+                            "WT_VARNAME": wt_varname,
+                            "AIR_TEMP_VARNAME": air_temp_varname,
+                            "PRESSURE_VARNAME": pressure_varname,
                         },
                     )
                 elif plot_field == "relative humidity":
                     yield make_recipe(
-                        recipe=(
-                            "cardington_relative_humidity_single_point_time_series.yaml"
-                        ),
+                        recipe=("cardington_generic_single_point_time_series.yaml"),
                         variables={
                             "OBS_VARNAME": obs_varname,
                             "VARNAME": model_field,
-                            "HEIGHT": ht,
+                            "OBS_HEIGHT": ht,
                             "PLOT_VARNAME": plot_field,
+                            "UNITS": "%",
                         },
                     )
-                elif plot_field == "dew point":
+                elif (
+                    plot_field == "dew point"
+                    or "temperature" in model_field
+                    or "temperature" in card_field
+                ):
                     yield make_recipe(
-                        recipe=(
-                            "cardington_dewpoint_temperature_"
-                            "single_point_time_series.yaml"
-                        ),
+                        recipe=("cardington_generic_single_point_time_series.yaml"),
                         variables={
                             "OBS_VARNAME": obs_varname,
                             "VARNAME": model_field,
-                            "HEIGHT": ht,
+                            "OBS_HEIGHT": ht,
                             "PLOT_VARNAME": plot_field,
-                        },
-                    )
-                elif "temperature" in model_field or "temperature" in card_field:
-                    yield make_recipe(
-                        recipe=("cardington_temperature_single_point_time_series.yaml"),
-                        variables={
-                            "OBS_VARNAME": obs_varname,
-                            "VARNAME": model_field,
-                            "HEIGHT": ht,
-                            "PLOTNAME": plot_field,
+                            "UNITS": "°C",
                         },
                     )
                 elif "gust" in plot_field:
                     yield make_recipe(
-                        recipe=("cardington_wind_gust_single_point_time_series.yaml"),
+                        recipe=("cardington_generic_single_point_time_series.yaml"),
                         variables={
                             "OBS_VARNAME": obs_varname,
                             "VARNAME": model_field,
-                            "HEIGHT": ht,
-                            "PLOTNAME": plot_field,
+                            "OBS_HEIGHT": ht,
+                            "PLOT_VARNAME": plot_field,
+                            "UNITS": "m s-1",
                         },
                     )
 
@@ -288,7 +280,7 @@ def load(conf: Config):
                         "OBS_UP": card_up,
                         "VARNAME": (f"surface_net_downward_{flux_name}_flux"),
                         "PLOT_VARNAME": flux_name,
-                        "OBS_HEIGHT": "2",
+                        "OBS_HEIGHT": "4",
                     },
                 )
 
@@ -304,6 +296,6 @@ def load(conf: Config):
                     "MODEL_SW": "surface_downward_shortwave_flux",
                     "MODEL_LW": "surface_downward_longwave_flux",
                     "PLOT_VARNAME": "net_radiative_flux",
-                    "OBS_HEIGHT": "2",
+                    "OBS_HEIGHT": "4",
                 },
             )
