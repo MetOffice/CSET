@@ -670,7 +670,6 @@ def get_shared_times(base: Cube, other: Cube, time_coord: str) -> set[int | date
     base_time_coord = base.coord(time_coord)
     other_time_coord = other.coord(time_coord)
     logger.debug("Base: %s\nOther: %s", base_time_coord, other_time_coord)
-    #    if time_coord == "hour":
     if time_coord in ("hour", "forecast_period"):
         # We directly compare points when comparing coordinates with
         # non-absolute units, such as hour. We can't just check the units are
