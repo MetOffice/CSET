@@ -428,3 +428,53 @@ def test_calculate_power_spectrum_raises_for_different_multi_point_times():
         ),
     ):
         power_spectrum.calculate_power_spectrum(cube)
+
+
+def test_power_spectrum_replaces_nans_with_zero():
+    """Test NaNs are treated as zero when calculating power spectrum."""
+    # Construct cube with suitable coordinates
+    cube_with_nans = make_test_cube_power_spectrum()
+
+    old_xcoord = cube_with_nans.coord("x")
+    old_ycoord = cube_with_nans.coord("y")
+
+    x_dims = cube_with_nans.coord_dims(old_xcoord)
+    y_dims = cube_with_nans.coord_dims(old_ycoord)
+
+    cube_with_nans.remove_coord("x")
+    cube_with_nans.remove_coord("y")
+
+    new_xcoord = iris.coords.DimCoord(
+        points=old_xcoord.points, standard_name="longitude", units="degrees"
+    )
+
+    new_ycoord = iris.coords.DimCoord(
+        points=old_ycoord.points, standard_name="latitude", units="degrees"
+    )
+
+    cube_with_nans.add_dim_coord(new_xcoord, x_dims)
+    cube_with_nans.add_dim_coord(new_ycoord, y_dims)
+
+    # Overwrite some points with Nans
+    cube_with_nans.data[0, 0, 0] = np.nan
+    cube_with_nans.data[0, 3, 1] = np.nan
+
+    # Copy cube_with_nans and replace Nans with zeros
+    cube_with_zeros = cube_with_nans.copy()
+    cube_with_zeros.data = np.nan_to_num(
+        cube_with_zeros.data,
+        nan=0.0,
+    )
+
+    # Check the cubes contain Nans, or not, as specified.
+    assert np.isnan(cube_with_nans.data).any()
+    assert not np.isnan(cube_with_zeros.data).any()
+
+    result_nans = power_spectrum.calculate_power_spectrum(cube_with_nans)
+    result_zeros = power_spectrum.calculate_power_spectrum(cube_with_zeros)
+
+    # Test the results are numerically the same for both cubes.
+    np.testing.assert_allclose(
+        result_nans.data,
+        result_zeros.data,
+    )

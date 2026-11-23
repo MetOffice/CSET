@@ -1,0 +1,63 @@
+category: Time series of $PLOT_VARNAME at Cardington single point
+title: "Time series of $OBS_HEIGHT m $PLOT_VARNAME at Cardington [52.10438N, -0.42286E]"
+description: "Plots a time series of $PLOT_VARNAME at gridpoint nearest to Cardington."
+
+steps:
+  - operator: read.read_cubes
+    preserve_attributes: [height]
+    file_paths: $INPUT_PATHS
+    model_names:
+      - $OBS_NAME
+      - $MODEL_NAME
+    constraint:
+      - $OBS_VARNAME
+      - $U_VARNAME
+      - $V_VARNAME
+
+  - operator: filters.apply_mask
+    mask:
+      operator: filters.generate_mask
+      condition: 'lt'
+      value: 1.0e+10
+
+  - operator: misc.combine_cubes_into_cubelist
+    first:
+      operator: misc.rename_cube
+      name: $PLOT_VARNAME
+      cubes:
+        operator: filters.filter_multiple_cubes
+        constraints:
+            operator: constraints.generate_var_constraint
+            varname: $OBS_VARNAME
+
+    second:
+      operator: wind.calculate_vector_wind
+      u:
+        operator: filters.filter_multiple_cubes
+        constraints:
+          operator: constraints.generate_var_constraint
+          varname: $U_VARNAME
+
+      v:
+        operator: filters.filter_multiple_cubes
+        constraints:
+            operator: constraints.generate_var_constraint
+            varname: $V_VARNAME
+
+  - operator: write.write_cube_to_nc
+    overwrite: True
+
+# PLOT_VARNAME is used to constrain to either speed or direction
+  - operator: filters.filter_multiple_cubes
+    to_plot:
+      operator: constraints.generate_var_constraint
+      varname: $PLOT_VARNAME
+
+  - operator: regrid.regrid_to_single_point
+    lat_pt: 52.10438
+    lon_pt: -0.42286
+    latlon_in_type: "realworld"
+    method: "Nearest"
+    boundary_margin: 0
+
+  - operator: plot.plot_line_series

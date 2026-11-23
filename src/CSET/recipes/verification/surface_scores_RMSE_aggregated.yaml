@@ -47,13 +47,8 @@ steps:
   - operator: scoreswrappers.scores_rmse
     preserved_coordinates: $PRESERVED_COORDS
 
-    # This collapse is relevant only if the RMSE has not been
-    # computed across the entire case study.
-  - operator: collapse.collapse
-    coordinate: ["time"]
-    method: $METHOD
-
   - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: "forecast_period"
 
   - operator: write.write_cube_to_nc
     overwrite: True

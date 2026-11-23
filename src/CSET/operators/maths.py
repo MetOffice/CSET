@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2025) and CSET contributors.
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Miscellaneous operators."""
+"""Mathematical operators."""
 
 import logging
 
