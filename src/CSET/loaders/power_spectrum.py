@@ -107,12 +107,12 @@ def load(conf: Config):
     AGGREGATION_OVER_CASES = [False, True]
 
     # Surface (2D) fields.
-    for atype, field in itertools.product(AGGREGATION_TYPES, conf.SURFACE_FIELDS):
-        index = AGGREGATION_TYPES.index(atype)
+    for aggr_type, field in itertools.product(AGGREGATION_TYPES, conf.SURFACE_FIELDS):
+        index = AGGREGATION_TYPES.index(aggr_type)
         aggregations = conf.SPECTRUM_SURFACE_FIELD_AGGREGATION
         if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
-                recipe=f"generic_surface_power_spectrum_series_{atype}.yaml",
+                recipe=f"generic_surface_power_spectrum_series_{aggr_type}.yaml",
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": [model["name"] for model in models],
@@ -128,14 +128,14 @@ def load(conf: Config):
             )
 
     # Pressure level fields.
-    for atype, field, plevel in itertools.product(
+    for aggr_type, field, plevel in itertools.product(
         AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS, conf.PRESSURE_LEVELS
     ):
-        index = AGGREGATION_TYPES.index(atype)
+        index = AGGREGATION_TYPES.index(aggr_type)
         aggregations = conf.SPECTRUM_PLEVEL_FIELD_AGGREGATION
         if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
-                recipe=f"generic_plevel_power_spectrum_series_{atype}.yaml",
+                recipe=f"generic_plevel_power_spectrum_series_{aggr_type}.yaml",
                 variables={
                     "VARNAME": field,
                     "LEVELTYPE": "pressure",
@@ -153,14 +153,14 @@ def load(conf: Config):
             )
 
     # Model level fields.
-    for atype, field, mlevel in itertools.product(
+    for aggr_type, field, mlevel in itertools.product(
         AGGREGATION_TYPES, conf.MODEL_LEVEL_FIELDS, conf.MODEL_LEVELS
     ):
-        index = AGGREGATION_TYPES.index(atype)
+        index = AGGREGATION_TYPES.index(aggr_type)
         aggregations = conf.SPECTRUM_MLEVEL_FIELD_AGGREGATION
         if len(aggregations) > index and aggregations[index]:
             yield RawRecipe(
-                recipe=f"generic_mlevel_power_spectrum_series_{atype}.yaml",
+                recipe=f"generic_mlevel_power_spectrum_series_{aggr_type}.yaml",
                 variables={
                     "VARNAME": field,
                     "LEVELTYPE": "model_level_number",
