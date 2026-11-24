@@ -300,20 +300,20 @@ function evaluate_and(conditions) {
   return anded_conditions;
 }
 
-// Collapse all ORs in a list of conditions.
+// Collapse all ORs in a list of conditions, left to right.
 function evaluate_or(conditions) {
   const ored_conditions = [];
   let index = 0;
   while (index < conditions.length) {
+    const left = ored_conditions.at(-1);
     if (
-      conditions[index] instanceof Condition &&
-      conditions[index + 1] === Combiner.OR &&
-      conditions[index + 2]
+      left instanceof Condition &&
+      conditions[index] === Combiner.OR &&
+      conditions[index + 1] instanceof Condition
     ) {
-      const left = conditions[index];
-      const right = conditions[index + 2];
-      ored_conditions.push(left.or(right));
-      index += 3;
+      // Fold into the previous result so chains like A OR B OR C work.
+      ored_conditions[ored_conditions.length - 1] = left.or(conditions[index + 1]);
+      index += 2;
     } else if (conditions[index] !== Combiner.OR) {
       ored_conditions.push(conditions[index]);
       index += 1;

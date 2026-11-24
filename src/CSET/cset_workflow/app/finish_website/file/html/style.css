@@ -313,5 +313,110 @@ body.sidebar-collapsed #plot-selector {
 
 /* End loading throbber. */
 
-#preset-form label { display: block; margin: 0.25rem 0; }
-#preset-form fieldset { margin-bottom: 1rem; }
+/* ---------- Home page (index.html) ---------- */
+
+body.home {
+  height: auto;
+  min-height: 100vh;
+  background-color: var(--secondary-bg-colour);
+}
+
+.home-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.5rem 1.5rem;
+  background-color: var(--primary-bg-colour);
+  border-bottom: 1px solid var(--secondary-fg-colour);
+  box-shadow: 0 4px 4px var(--shadow-colour);
+
+  > h1 {
+    font-size: xx-large;
+    margin: 0;
+  }
+}
+
+.home-layout {
+  display: grid;
+  grid-template-columns: minmax(18rem, 28rem) minmax(0, 1fr);
+  gap: 1.5rem;
+  max-width: 75rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+  align-items: start;
+}
+
+.home-presets,
+.home-help {
+  background-color: var(--primary-bg-colour);
+  border: 1px solid var(--secondary-fg-colour);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+
+  > h2 {
+    margin-top: 0;
+    font-size: x-large;
+  }
+}
+
+#preset-form {
+  fieldset {
+    border: 1px solid var(--alternate-bg-colour);
+    border-radius: 6px;
+    margin: 0 0 0.75rem;
+    padding: 0.25rem 0.75rem 0.5rem;
+  }
+
+  legend {
+    font-weight: bold;
+    padding: 0 0.25rem;
+  }
+
+  label {
+    display: block;
+    padding: 0.15rem 0;
+    cursor: pointer;
+  }
+
+  .preset-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  button {
+    border: 1px solid var(--secondary-fg-colour);
+    border-radius: 3em;
+    padding: 0.25rem 1.25rem;
+    cursor: pointer;
+
+    &[type="submit"] {
+      background-color: var(--button-2-colour);
+      font-weight: bold;
+    }
+
+    &:focus,
+    &:hover {
+      background-color: var(--hover-bg-colour);
+      color: var(--hover-fg-colour);
+    }
+  }
+}
+
+.home-help {
+  dt {
+    margin-top: 0.5rem;
+  }
+
+  dd {
+    margin-left: 1rem;
+    color: var(--secondary-fg-colour);
+  }
+}
+
+/* Stack the two columns on narrow screens. */
+@media (max-width: 50rem) {
+  .home-layout {
+    grid-template-columns: 1fr;
+  }
+}

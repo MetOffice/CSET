@@ -1,69 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CSET</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSET</title>
+    <link rel="stylesheet" href="style.css?v=CACHEBUSTER">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
 </head>
-<body>
-  <h1>CSET</h1>
-  <p>Use the buttons to direct to preset search criteria.</p>
 
-  <a href="viewer.html">Full list of diagnostics →</a>
+<body class="home">
+    <header class="home-header">
+        <h1>CSET</h1>
+        <a href="viewer.html">Full list of diagnostics →</a>
+    </header>
 
-<form id="preset-form">
-  <fieldset>
-    <legend>Surface fields</legend>
-    <label><input type="checkbox" value='CATEGORY:surface' data-title="Surface"> All surface fields</label>
-    <label><input type="checkbox" value='CATEGORY:surface AND aggregated' data-title="Surface: aggregated"> Aggregated</label>
-  </fieldset>
+    <div class="home-layout">
+        <form id="preset-form" class="home-presets">
+            <h2>Preset searches</h2>
 
-  <fieldset>
-    <legend>Pressure fields</legend>
-    <label><input type="checkbox" value='CATEGORY:pressure' data-title="Pressure"> All pressure fields</label>
-    <label><input type="checkbox" value='CATEGORY:pressure AND aggregated' data-title="Pressure: aggregated"> Aggregated</label>
-  </fieldset>
+            <fieldset>
+                <legend>Fields</legend>
+                <label><input type="checkbox" name="field" value="category=diagnostics AND level_type=surface" data-title="Surface"> Surface</label>
+                <label><input type="checkbox" name="field" value="category=diagnostics AND level_type=pressure" data-title="Pressure"> Pressure</label>
+                <label><input type="checkbox" name="field" value="category=diagnostics AND level_type=model_level" data-title="Model level"> Model level</label>
+                <label><input type="checkbox" name="field" value="category=verification" data-title="Verification"> Verification</label>
+            </fieldset>
 
-  <fieldset>
-    <legend>Model Level fields</legend>
-    <label><input type="checkbox" value='CATEGORY:pressure' data-title="Pressure"> All pressure fields</label>
-    <label><input type="checkbox" value='CATEGORY:pressure AND aggregated' data-title="Pressure: aggregated"> Aggregated</label>
-  </fieldset>
+            <fieldset>
+                <legend>Show</legend>
+                <label><input type="radio" name="kind" value="" data-title="" checked> All</label>
+                <label><input type="radio" name="kind" value="aggregated" data-title="aggregated only"> Aggregated only</label>
+                <label><input type="radio" name="kind" value="NOT aggregated" data-title="non-aggregated only"> Non-aggregated only</label>
+            </fieldset>
 
-  <fieldset>
-    <legend>Verification</legend>
-    <label><input type="checkbox" value='CATEGORY:scores' data-title="Pressure"> All pressure fields</label>
-    <label><input type="checkbox" value='CATEGORY:pressure AND aggregated' data-title="Pressure: aggregated"> Aggregated</label>
-  </fieldset>
+            <div class="preset-actions">
+                <button type="reset">Clear</button>
+                <button type="submit">Go →</button>
+            </div>
+        </form>
 
+        <aside class="home-help">
+            <h2>How to use this page</h2>
+            <p>
+                Choose which fields you're interested in and what kind of diagnostics to show,
+                then press <strong>Go</strong> to open the diagnostics viewer with a ready-made filter.
+            </p>
+            <ul>
+                <li>Ticking several fields shows diagnostics from <em>any</em> of them.</li>
+                <li>The <strong>Show</strong> option then narrows those down to aggregated or non-aggregated diagnostics.</li>
+                <li>With no fields ticked, the <strong>Show</strong> option applies to every diagnostic.</li>
+                <li>Once in the viewer you can refine the filter by typing in the search box.</li>
+            </ul>
 
-  <button type="submit">Go</button>
-</form>
+            <h3>Filter syntax</h3>
+            <p>Each condition has the form <code>facet operator value</code>, for example:</p>
+            <dl>
+                <dt><code>field:temperature</code></dt>
+                <dd>"temperature" appears in the field name.</dd>
+                <dt><code>field=x_wind OR field=y_wind</code></dt>
+                <dd>Field is exactly "x_wind" or "y_wind".</dd>
+                <dt><code>histogram AND NOT aggregated</code></dt>
+                <dd>Histograms that aren't aggregated (no facet means "search the title").</dd>
+            </dl>
+            <p>Full details are under <em>Filter help</em> in the viewer sidebar.</p>
+        </aside>
+    </div>
 
-<script>
-  const form = document.getElementById("preset-form");
-  form.addEventListener("submit", (event) => {
-    // Stop the form doing its default "reload the page" behaviour.
-    event.preventDefault();
+    <script>
+        const form = document.getElementById("preset-form");
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
 
-    const ticked = form.querySelectorAll('input[type="checkbox"]:checked');
+            const fields = [...form.querySelectorAll('input[name="field"]:checked')];
+            const kind = form.querySelector('input[name="kind"]:checked');
 
-    // Nothing ticked: just open the viewer with everything.
-    if (ticked.length === 0) {
-      window.location.href = "viewer.html";
-      return;
-    }
+            // Fields combine with OR; the "Show" choice is ANDed on top.
+            const parts = [];
+            if (fields.length) parts.push(`(${fields.map(box => box.value).join(" OR ")})`);
+            if (kind.value) parts.push(kind.value);
 
-    // Combine ticked boxes: show diagnostics matching ANY of them.
-    let query = "";
-    const titles = [];
-    for (const box of ticked) {
-      query = query ? `(${query}) OR (${box.value})` : box.value;
-      titles.push(box.dataset.title);
-    }
+            // Nothing chosen: just open the viewer with everything.
+            if (parts.length === 0) {
+                window.location.href = "viewer.html";
+                return;
+            }
 
-    window.location.href = "viewer.html?base=" + encodeURIComponent(query)
-      + "&title=" + encodeURIComponent(titles.join(", "));
-  });
-</script>
+            // e.g. "Surface, Verification (aggregated only)"
+            let title = fields.length ? fields.map(box => box.dataset.title).join(", ") : "All fields";
+            if (kind.dataset.title) title += ` (${kind.dataset.title})`;
+
+            window.location.href = "viewer.html?base=" + encodeURIComponent(parts.join(" AND "))
+                + "&title=" + encodeURIComponent(title);
+        });
+    </script>
+</body>
+
+</html>
