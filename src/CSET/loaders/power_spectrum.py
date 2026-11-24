@@ -83,7 +83,7 @@ def load(conf: Config):
                 recipe="generic_mlevel_power_spectrum_series.yaml",
                 variables={
                     "VARNAME": field,
-                    "LEVELTYPE": "model_level_number",
+                    "LEVELTYPE": "model",
                     "LEVEL": mlevel,
                     "MODEL_NAME": [model["name"] for model in models],
                     "SEQUENCE": "time"
@@ -156,7 +156,7 @@ def load(conf: Config):
         ):
             variables = {
                 "VARNAME": field,
-                "LEVELTYPE": "model_level_number",
+                "LEVELTYPE": "model",
                 "LEVEL": [mlevel],
                 "MODEL_NAME": [model["name"] for model in models],
                 "SEQUENCE": "time"

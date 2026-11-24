@@ -89,7 +89,7 @@ def load(conf: Config):
                 recipe="level_spatial_difference.yaml",
                 variables={
                     "VARNAME": field,
-                    "LEVELTYPE": "model_level_number",
+                    "LEVELTYPE": "model",
                     "LEVEL": mlevel,
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODEL": model["name"],
@@ -570,7 +570,7 @@ def load(conf: Config):
                 recipe=f"level_spatial_difference_case_aggregation_mean_{atype}.yaml",
                 variables={
                     "VARNAME": field,
-                    "LEVELTYPE": "model_level_number",
+                    "LEVELTYPE": "model",
                     "LEVEL": mlevel,
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODEL": model["name"],

@@ -1,4 +1,6 @@
-category: Histogram
+category: observations
+plot_type: histogram
+observation_type: nimrod
 title: "dev3 Histogram masked Nimrod $VARNAME\n$RADAR_NAME"
 description: Histograms of Nimrod radar observations
 #  Extracts and plots the probability density of surface `$VARNAME`. It uses

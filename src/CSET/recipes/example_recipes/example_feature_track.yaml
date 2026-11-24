@@ -1,4 +1,4 @@
-category: Quick Look
+category: diagnostics
 title: Precipitation flux feature lifetime spatial plot
 description: |
   Uses the feature.track operator to identify and track features in a cube with "time" series coordinate,

@@ -1,4 +1,6 @@
-category: Surface Spatial Plot
+category: diagnostics
+level_type: surface
+plot_type: spatial
 title: Mesoscale Uniform Filter Spatial Perturbation Plot
 description: |
   Creates a spatial map of a perturbation field based on a uniform filter

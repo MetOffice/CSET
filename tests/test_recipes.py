@@ -15,14 +15,16 @@
 """Recipe tests."""
 
 import logging
+import re
 from pathlib import Path
 from textwrap import dedent
 
 import pytest
 from ruamel.yaml import YAML
 
-from CSET import _valid_recipe_categories, recipes
+from CSET import recipes
 from CSET._common import sstrip
+from CSET._valid_recipe_categories import *
 
 
 def test_recipe_files_in_tree():
@@ -310,10 +312,26 @@ def test_all_recipes_valid_categories(recipe_path):
     """Every packaged recipe parses and has the basic structure."""
     recipe = YAML(typ="safe").load(recipe_path)
     assert "category" in recipe
-    assert recipe["category"] in _valid_recipe_categories.CATEGORIES
+    assert recipe["category"] in CATEGORIES
 
     if "level_type" in recipe:
-        assert recipe["level_type"] in _valid_recipe_categories.LEVEL_TYPES
+        assert (
+            recipe["level_type"] in LEVEL_TYPES or recipe["level_type"] == "$LEVELTYPE"
+        )
 
     if "observation_type" in recipe:
-        assert recipe["observation_type"] in _valid_recipe_categories.OBSERVATION_TYPES
+        assert recipe["observation_type"] in OBSERVATION_TYPES
+
+
+LEVELTYPE_REGEX = re.compile(r"""["']LEVELTYPE["']\s*:\s*["']([^"']+)["']""")
+
+
+def test_loader_level_types():
+    """Ensure loaders template correct level types."""
+    loader_dir = Path("src/CSET/loaders")  # adjust to the real location
+    found = 0
+    for path in loader_dir.rglob("*.py"):
+        for match in LEVELTYPE_REGEX.finditer(path.read_text()):
+            found += 1
+            assert match.group(1) in LEVEL_TYPES, f"{path.name}: {match.group(1)!r}"
+    assert found > 0

@@ -1,4 +1,6 @@
-category: Surface Spatial Plot
+category: observations
+observation_type: nimrod
+plot_type: spatial
 title: "Mean Power Spectrum $MODEL_VARNAME\n $TITLE_STRING common domain model and Nimrod radar"
 description: |
   Creates mean power spectra of the model rainfall rate and

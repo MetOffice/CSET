@@ -1,4 +1,6 @@
-category: Time series of $PLOT_VARNAME at single point
+category: observations
+observation_type: cardington
+plot_type: time series
 title: "Time series of $OBS_HEIGHT m $PLOT_VARNAME flux at Cardington [52.10438N, -0.42286E]"
 description: "Plots a time series of $PLOT_VARNAME at gridpoint nearest to Cardington."
 

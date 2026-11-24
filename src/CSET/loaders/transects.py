@@ -151,7 +151,7 @@ def load(conf: Config):
                 recipe="transect.yaml",
                 variables={
                     "VARNAME": field,
-                    "VERTICAL_COORDINATE": "model_level_number",
+                    "VERTICAL_COORDINATE": "model level number",
                     "MODEL_NAME": model["name"],
                     "START_COORDS": conf.MLEVEL_TRANSECT_STARTCOORDS,
                     "FINISH_COORDS": conf.MLEVEL_TRANSECT_FINISHCOORDS,

@@ -21,17 +21,17 @@
 
             <fieldset>
                 <legend>Fields</legend>
-                <label><input type="checkbox" name="field" value="category=diagnostics AND level_type=surface" data-title="Surface Level"> Surface</label>
-                <label><input type="checkbox" name="field" value="category=diagnostics AND level_type=pressure" data-title="Pressure Level"> Pressure</label>
-                <label><input type="checkbox" name="field" value="category=diagnostics AND level_type=model_level" data-title="Model level"> Model level</label>
-                <label><input type="checkbox" name="field" value="category=verification" data-title="Verification"> Verification</label>
+                <label data-help="Only show diagnostics of surface (single-level) fields, such as screen temperature or 10 m wind."><input type="checkbox" name="field" value="category=diagnostics AND level_type=surface" data-title="Surface Level"> Surface</label>
+                <label data-help="Only show diagnostics on pressure levels, such as 500 hPa geopotential height."><input type="checkbox" name="field" value="category=diagnostics AND level_type=pressure" data-title="Pressure Level"> Pressure</label>
+                <label data-help="Only show diagnostics on model levels."><input type="checkbox" name="field" value="category=diagnostics AND level_type=model" data-title="Model level"> Model level</label>
+                <label data-help="Only show verification scores comparing the model against observations or analyses."><input type="checkbox" name="field" value="category=verification" data-title="Verification"> Verification</label>
             </fieldset>
 
             <fieldset>
                 <legend>Show</legend>
-                <label><input type="radio" name="kind" value="" data-title="" checked> All</label>
-                <label><input type="radio" name="kind" value="aggregated" data-title="aggregated only"> Aggregated only</label>
-                <label><input type="radio" name="kind" value="NOT aggregated" data-title="non-aggregated only"> Non-aggregated only</label>
+                <label data-help="Show both aggregated and non-aggregated diagnostics."><input type="radio" name="kind" value="" data-title="" checked> All</label>
+                <label data-help="Only show diagnostics aggregated over time or over several cases, such as averages across forecasts."><input type="radio" name="kind" value="aggregated" data-title="aggregated only"> Aggregated only</label>
+                <label data-help="Only show individual, non-aggregated diagnostics."><input type="radio" name="kind" value="NOT aggregated" data-title="non-aggregated only"> Non-aggregated only</label>
             </fieldset>
 
             <div class="preset-actions">
@@ -47,6 +47,7 @@
                 then press <strong>Go</strong> to open the diagnostics viewer with a ready-made filter.
             </p>
             <ul>
+                <li>Hover over an option to see what it does.</li>
                 <li>Ticking several fields shows diagnostics from <em>any</em> of them.</li>
                 <li>The <strong>Show</strong> option then narrows those down to aggregated or non-aggregated diagnostics.</li>
                 <li>With no fields ticked, the <strong>Show</strong> option applies to every diagnostic.</li>

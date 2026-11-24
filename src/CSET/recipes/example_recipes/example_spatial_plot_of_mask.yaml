@@ -1,4 +1,6 @@
-category: Surface Spatial Plot
+category: diagnostics
+level_type: surface
+plot_type: spatial
 title: Example plot of a mask
 description: |
   Generates a mask and then provides a spatial map of the mask.

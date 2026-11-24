@@ -126,7 +126,7 @@ def load(conf: Config):
                 recipe="generic_level_domain_mean_time_series.yaml",
                 variables={
                     "VARNAME": field,
-                    "LEVELTYPE": "model_level_number",
+                    "LEVELTYPE": "model",
                     "LEVEL": mlevel,
                     "MODEL_NAME": [model["name"] for model in models],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
@@ -197,7 +197,7 @@ def load(conf: Config):
                 recipe="level_structural_similarity_mean.yaml",
                 variables={
                     "VARNAME": field,
-                    "LEVELTYPE": "model_level_number",
+                    "LEVELTYPE": "model",
                     "LEVEL": mlevel,
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODEL": model["name"],
@@ -546,7 +546,7 @@ def load(conf: Config):
                 recipe=f"generic_level_domain_mean_time_series_case_aggregation_{atype}.yaml",
                 variables={
                     "VARNAME": field,
-                    "LEVELTYPE": "model_level_number",
+                    "LEVELTYPE": "model",
                     "LEVEL": mlevel,
                     "MODEL_NAME": [model["name"] for model in models],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
