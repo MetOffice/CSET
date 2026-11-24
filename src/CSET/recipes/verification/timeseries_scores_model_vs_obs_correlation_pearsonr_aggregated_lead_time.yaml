@@ -1,19 +1,15 @@
 category: Scores Model vs Observation Time Series Aggregation
-title: "$VARNAME\nscores MAE time series for model vs observation points aggregated by $AGGREGATION_MODE $SUBAREA_NAME"
+title: "$VARNAME\nscores Pearson's Correlation time series for model vs observation points aggregated by lead time $SUBAREA_NAME"
 description: |
-  The mean absolute error (MAE) is calculated based on that used in the
-  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.mae).
-
-  This recipe allows the preservation of the time coordinate to produce a time series. Therefore, the MAE is
+  Extracts and plots the Pearson's Correlation (PC) coefficient in $VARNAME
+  computed over the domain for each timestep. The PC is calculated based on that used in the
+  package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.correlation.pearsonr).
+  This recipe allows the preservation of the time coordinate to produce a time series. Therefore, the PC is
   collapsed over all other coordinates in the cube and calculated for every timestep.
 
-
-  A larger MAE implies a greater error than a smaller MAE. An
-  MAE of zero indicates the two fields most likely match. The MAE is calculated
-  on the grid point and thus a spatial view of the MAE provides useful
-  information about where the differences are, or if placement errors
-  are domininating the score (usually indicated by dipoles). MAE is a fair
-  measure of error when forecasting the median and is not sensitive to outliers.
+  The PC coefficient provides information on the linear relationship between two fields.
+  Perfectly correlated fields would yield a PC coefficient of 1, whereas perfectly anti-correlated
+  fields would yield a PC coefficient of -1. A value of 0 would indicate that the fields are non-correlated.
 
 steps:
   - operator: read.read_cubes
@@ -58,7 +54,8 @@ steps:
             operator: constraints.generate_var_constraint
             varname: observed_$VARNAME
 
-  - operator: scoreswrappers.scores_mae
+
+  - operator: scoreswrappers.scores_correlation_pearsonr
     preserved_coordinates: "forecast_period"
 
   - operator: plot.plot_line_series

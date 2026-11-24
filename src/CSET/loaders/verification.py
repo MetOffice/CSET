@@ -260,12 +260,11 @@ def load(conf: Config):
         scores_spatial_methods_aggregated,
     ):
         yield RawRecipe(
-            recipe=f"surface_scores_{scores_method}_aggregated.yaml",
+            recipe=f"surface_scores_{scores_method}_aggregated_lead_time.yaml",
             variables={
                 "VARNAME": field,
                 "BASE_MODEL": base_model["name"],
                 "OTHER_MODELS": model["name"],
-                "AGGREGATION_MODE": "Case Date",
                 "PRESERVED_COORDS": [
                     "forecast_period",
                     "grid_latitude",
@@ -283,11 +282,10 @@ def load(conf: Config):
         scores_spatial_methods_model_vs_obs_aggregated,
     ):
         yield RawRecipe(
-            recipe=f"surface_scores_model_vs_obs_{scores_method}_aggregated.yaml",
+            recipe=f"surface_scores_model_vs_obs_{scores_method}_aggregated_lead_time.yaml",
             variables={
                 "VARNAME": field,
                 "MODEL_NAME": ["OBS"] + [model["name"]],
-                "AGGREGATION_MODE": "Case Date",
                 "PRESERVED_COORDS": ["forecast_period", "latitude", "longitude"],
                 **subarea_vars,
             },
@@ -334,12 +332,11 @@ def load(conf: Config):
             conf.SURFACE_FIELDS, scores_timeseries_methods_aggregated
         ):
             yield RawRecipe(
-                recipe=f"timeseries_scores_{scores_method}_aggregated.yaml",
+                recipe=f"timeseries_scores_{scores_method}_aggregated_lead_time.yaml",
                 variables={
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODELS": [model["name"] for model in models[1:]],
-                    "AGGREGATION_MODE": "Case Date",
                     **subarea_vars,
                 },
                 model_ids=[base_model["id"]] + [model["id"] for model in models[1:]],
@@ -368,11 +365,10 @@ def load(conf: Config):
             scores_timeseries_methods_model_vs_obs_aggregated,
         ):
             yield RawRecipe(
-                recipe=f"timeseries_scores_model_vs_obs_{scores_method}_aggregation.yaml",
+                recipe=f"timeseries_scores_model_vs_obs_{scores_method}_aggregated_lead_time.yaml",
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
-                    "AGGREGATION_MODE": "Case Date",
                     **subarea_vars,
                 },
                 model_ids=["OBS"] + [model["id"] for model in models],
