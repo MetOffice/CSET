@@ -260,7 +260,7 @@ def load(conf: Config):
         scores_spatial_methods_aggregated,
     ):
         yield RawRecipe(
-            recipe=f"surface_scores_{scores_method}_aggregated.yaml",
+            recipe=f"surface_scores_{scores_method}_aggregated_lead_time.yaml",
             variables={
                 "VARNAME": field,
                 "BASE_MODEL": base_model["name"],
@@ -282,7 +282,7 @@ def load(conf: Config):
         scores_spatial_methods_model_vs_obs_aggregated,
     ):
         yield RawRecipe(
-            recipe=f"surface_scores_model_vs_obs_{scores_method}_aggregated.yaml",
+            recipe=f"surface_scores_model_vs_obs_{scores_method}_aggregated_lead_time.yaml",
             variables={
                 "VARNAME": field,
                 "MODEL_NAME": ["OBS"] + [model["name"]],
@@ -332,7 +332,7 @@ def load(conf: Config):
             conf.SURFACE_FIELDS, scores_timeseries_methods_aggregated
         ):
             yield RawRecipe(
-                recipe=f"timeseries_scores_{scores_method}_aggregated.yaml",
+                recipe=f"timeseries_scores_{scores_method}_aggregated_lead_time.yaml",
                 variables={
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
@@ -365,7 +365,7 @@ def load(conf: Config):
             scores_timeseries_methods_model_vs_obs_aggregated,
         ):
             yield RawRecipe(
-                recipe=f"timeseries_scores_model_vs_obs_{scores_method}_aggregation.yaml",
+                recipe=f"timeseries_scores_model_vs_obs_{scores_method}_aggregated_lead_time.yaml",
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
