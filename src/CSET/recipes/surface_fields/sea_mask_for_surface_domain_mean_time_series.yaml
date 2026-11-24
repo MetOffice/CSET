@@ -1,6 +1,6 @@
 category: diagnostics
 plot_type: time series
-level_type: Surface
+level_type: surface
 title: "Sea mask domain mean $VARNAME time series $SUBAREA_NAME"
 description: |
   Creates a sea mask and applies it to $VARNAME. It then creates and plots

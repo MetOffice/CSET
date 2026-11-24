@@ -1,7 +1,7 @@
 category: observations
 observation_type: nimrod
 plot_type: spatial
-level_type: Surface
+level_type: surface
 title: "Histogram $MODEL_VARNAME\n $TITLE_STRING common domain model and Nimrod radar"
 description: |
   Creates histograms of the model rainfall rate and

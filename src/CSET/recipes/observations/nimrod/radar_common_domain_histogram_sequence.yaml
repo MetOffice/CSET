@@ -1,7 +1,7 @@
 category: observations
 observation_type: nimrod
 plot_type: spatial
-level_type: Surface
+level_type: surface
 title: "bmc8b Histogram $VARNAME\n common domain model and radar $NIMROD_LABEL"
 description: |
   Creates time sequence histograms of the model rainfall rate and

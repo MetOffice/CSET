@@ -1,7 +1,7 @@
 category: observations
 observation_type: nimrod
 plot_type: spatial
-level_type: Surface
+level_type: surface
 title: "$RADAR_LABEL $RADAR_VARNAME.\n Common domain $MODEL_NAME and $RADAR_LABEL"
 description: |
   Creates a 2-d surface plot of the observed radar rain accumualation

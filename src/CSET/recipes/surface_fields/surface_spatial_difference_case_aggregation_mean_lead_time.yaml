@@ -1,6 +1,6 @@
 category: diagnostics
 plot_type: spatial difference
-level_type: Surface
+level_type: surface
 title: "$VARNAME\nDifference ($OTHER_MODEL - $BASE_MODEL)\nAggregation by lead time $SUBAREA_NAME"
 description: |
   Extracts and plot the difference in $VARNAME for all times. The cases
