@@ -328,7 +328,7 @@ LEVELTYPE_REGEX = re.compile(r"""["']LEVELTYPE["']\s*:\s*["']([^"']+)["']""")
 
 def test_loader_level_types():
     """Ensure loaders template correct level types."""
-    loader_dir = Path("src/CSET/loaders")  # adjust to the real location
+    loader_dir = Path("src/CSET/loaders")
     found = 0
     for path in loader_dir.rglob("*.py"):
         for match in LEVELTYPE_REGEX.finditer(path.read_text()):
