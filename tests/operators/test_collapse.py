@@ -21,7 +21,7 @@ import iris
 import iris.cube
 import numpy as np
 import pytest
-from iris.coords import DimCoord
+from iris.coords import AuxCoord, DimCoord
 
 from CSET.operators import collapse
 
@@ -462,9 +462,6 @@ def test_collapse_by_proportion_less_than(ensemble_cube):
     assert np.allclose(expected_cube.data, actual_cube.data, rtol=1e-6, atol=1e-2)
 
 
-# new test
-
-
 def make_power_spectrum_cube():
     """Create dummy power spectrum cube."""
     data = np.random.rand(3, 10)
@@ -481,12 +478,28 @@ def make_power_spectrum_cube():
         units="1",
     )
 
+    forecast_period = AuxCoord(
+        np.array([0, 1, 2], dtype=np.float64),
+        standard_name="forecast_period",
+        units="hours",
+    )
+
+    forecast_reference_time = AuxCoord(
+        0.0,
+        standard_name="forecast_reference_time",
+        units="hours since 2000-01-01 00:00:00",
+    )
+
     cube = iris.cube.Cube(
         data,
         long_name="power_spectrum",
         dim_coords_and_dims=[
             (time, 0),
             (physical_wavenumber, 1),
+        ],
+        aux_coords_and_dims=[
+            (forecast_period, 0),
+            (forecast_reference_time, ()),
         ],
     )
 
@@ -498,8 +511,13 @@ def test_power_spectrum_non_overlapping():
     cube1 = make_power_spectrum_cube()
     cube2 = cube1.copy()
 
+    # Create 2 cubes that do not overlap in any dimension
+
     cube1.coord("time").points = np.array([0, 1, 2], dtype=np.int32)
     cube2.coord("time").points = np.array([3, 4, 5], dtype=np.int32)
+
+    cube1.coord("forecast_reference_time").points = 0.0
+    cube2.coord("forecast_reference_time").points = 1.0
 
     cubes = iris.cube.CubeList([cube1, cube2])
 
