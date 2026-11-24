@@ -19,8 +19,9 @@ from pathlib import Path
 from textwrap import dedent
 
 import pytest
+from ruamel.yaml import YAML
 
-from CSET import recipes
+from CSET import _valid_recipe_categories, recipes
 from CSET._common import sstrip
 
 
@@ -299,3 +300,20 @@ def test_load_recipes():
         recipes.RawRecipe("test-agg.yaml", 1, {}, aggregation=True),
     ]
     assert loaded_recipes == expected
+
+
+ALL_RECIPES = sorted(recipes._recipe_files_in_tree(), key=lambda p: p.name)
+
+
+@pytest.mark.parametrize("recipe_path", ALL_RECIPES, ids=lambda p: p.name)
+def test_all_recipes_valid_categories(recipe_path):
+    """Every packaged recipe parses and has the basic structure."""
+    recipe = YAML(typ="safe").load(recipe_path)
+    assert "category" in recipe
+    assert recipe["category"] in _valid_recipe_categories.CATEGORIES
+
+    if "level_type" in recipe:
+        assert recipe["level_type"] in _valid_recipe_categories.LEVEL_TYPES
+
+    if "observation_type" in recipe:
+        assert recipe["observation_type"] in _valid_recipe_categories.OBSERVATION_TYPES
