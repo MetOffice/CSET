@@ -488,7 +488,7 @@ def load(conf: Config):
             )
 
     # ==================================================================
-    # 5. SCORES ENSEMBLE METHODS
+    # 6. SCORES ENSEMBLE METHODS
     # ==================================================================
 
     if conf.SCORES_CRPS_FOR_ENSEMBLE:
