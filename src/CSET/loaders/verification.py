@@ -447,45 +447,10 @@ def load(conf: Config):
                 model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=False,
             )
-    # ==================================================================
-    # 5. SCORES ENSEMBLE METHODS
-    # ==================================================================
 
-    if conf.HINTON_RMSE:
-        # Skip obs and control model, and iterate over experiments.
-        for model in models[1:]:
-            yield RawRecipe(
-                recipe="hinton_rmse.yaml",
-                variables={
-                    "BASE_MODEL": models[0]["name"],
-                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                model_ids=["OBS", models[0]["id"], model["id"]],
-                aggregation=True,
-            )
-
-    if conf.HINTON_MSE:
-        # Skip obs and control model, and iterate over experiments.
-        for model in models[1:]:
-            yield RawRecipe(
-                recipe="hinton_mse.yaml",
-                variables={
-                    "BASE_MODEL": models[0]["name"],
-                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                model_ids=["OBS", models[0]["id"], model["id"]],
-                aggregation=True,
-            )
+    # ==================================================================
+    # 5. SCORES AGGREGATION METHODS
+    # ==================================================================
 
     if conf.HINTON_CRPS:
         # Skip obs and control model, and iterate over experiments.
@@ -521,7 +486,11 @@ def load(conf: Config):
                 model_ids=["OBS"] + [model["id"] for model in models],
                 aggregation=True,
             )
-            
+
+    # ==================================================================
+    # 5. SCORES ENSEMBLE METHODS
+    # ==================================================================
+
     if conf.SCORES_CRPS_FOR_ENSEMBLE:
         for model, field in itertools.product(models, conf.SURFACE_FIELDS):
             yield RawRecipe(
