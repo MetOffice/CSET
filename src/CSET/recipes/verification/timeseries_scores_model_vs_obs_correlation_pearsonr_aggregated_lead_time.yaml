@@ -1,6 +1,6 @@
 category: verification
 plot_type: time series
-title: "$VARNAME\nscores Pearson's Correlation time series for model vs observation points aggregated by $AGGREGATION_MODE $SUBAREA_NAME"
+title: "$VARNAME\nscores Pearson's Correlation time series for model vs observation points aggregated by lead time $SUBAREA_NAME"
 description: |
   Extracts and plots the Pearson's Correlation (PC) coefficient in $VARNAME
   computed over the domain for each timestep. The PC is calculated based on that used in the
