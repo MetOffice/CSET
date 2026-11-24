@@ -265,7 +265,6 @@ def load(conf: Config):
                 "VARNAME": field,
                 "BASE_MODEL": base_model["name"],
                 "OTHER_MODELS": model["name"],
-                "AGGREGATION_MODE": "Case Date",
                 "PRESERVED_COORDS": [
                     "forecast_period",
                     "grid_latitude",
@@ -287,7 +286,6 @@ def load(conf: Config):
             variables={
                 "VARNAME": field,
                 "MODEL_NAME": ["OBS"] + [model["name"]],
-                "AGGREGATION_MODE": "Case Date",
                 "PRESERVED_COORDS": ["forecast_period", "latitude", "longitude"],
                 **subarea_vars,
             },
@@ -339,7 +337,6 @@ def load(conf: Config):
                     "VARNAME": field,
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODELS": [model["name"] for model in models[1:]],
-                    "AGGREGATION_MODE": "Case Date",
                     **subarea_vars,
                 },
                 model_ids=[base_model["id"]] + [model["id"] for model in models[1:]],
@@ -372,7 +369,6 @@ def load(conf: Config):
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
-                    "AGGREGATION_MODE": "Case Date",
                     **subarea_vars,
                 },
                 model_ids=["OBS"] + [model["id"] for model in models],
