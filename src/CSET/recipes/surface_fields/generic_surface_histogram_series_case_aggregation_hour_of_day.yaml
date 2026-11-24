@@ -1,6 +1,6 @@
 category: diagnostics
 plot_type: histogram
-level_type: Surface
+level_type: surface
 title: "Histogram $VARNAME\n Aggregation by hour of day $SUBAREA_NAME"
 description: |
   Extracts and plots the probability density of surface `$VARNAME`. It uses

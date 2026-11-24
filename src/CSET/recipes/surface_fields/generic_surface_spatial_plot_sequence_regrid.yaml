@@ -1,6 +1,6 @@
 category: diagnostics
 plot_type: spatial
-level_type: Surface
+level_type: surface
 title: "$MODEL_NAME Surface $VARNAME $METHOD $SUBAREA_NAME"
 description: Extracts and plots the surface $VARNAME for all times in $MODEL_NAME.
 

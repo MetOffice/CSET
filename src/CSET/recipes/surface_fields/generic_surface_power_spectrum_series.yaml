@@ -1,6 +1,6 @@
 category: diagnostics
 plot_type: power spectrum
-level_type: Surface
+level_type: surface
 title: "Power Spectrum $VARNAME $SUBAREA_NAME"
 description: |
   Extracts and plots the power spectral density of surface $VARNAME

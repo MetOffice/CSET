@@ -1,7 +1,7 @@
 category: observations
 observation_type: nimrod
 plot_type: spatial
-level_type: Surface
+level_type: surface
 title: "bmc2d"
 #title: "bmc2c $RADAR_VARNAME\n common domain $MODEL_LABEL and radar"
 description: |

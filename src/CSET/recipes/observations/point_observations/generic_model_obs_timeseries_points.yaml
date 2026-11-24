@@ -1,7 +1,7 @@
 category: observations
 observation_type: point
 plot_type: time series
-level_type: Surface
+level_type: surface
 title: "$VARNAME time series $SUBAREA_NAME"
 description: Extracts and plot a time series of $VARNAME for all times at specific observation points.
 

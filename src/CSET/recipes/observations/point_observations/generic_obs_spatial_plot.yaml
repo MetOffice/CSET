@@ -1,7 +1,7 @@
 category: observations
 observation_type: point
 plot_type: spatial
-level_type: Surface
+level_type: surface
 title: $VARNAME $METHOD $SUBAREA_NAME
 description: |
     Plots the $METHOD of $VARNAME as points at observation locations.
