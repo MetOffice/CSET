@@ -758,7 +758,7 @@ def _plot_and_save_spatial_plot(
     # In the bbox dictionary, fc and ec are hex colour codes for grey shade.
     cube_min, cube_max, cube_mean = calc_array_stats(cube.data)
     axes.annotate(
-        f"Min: {cube_min:.3g} Max: {cube_max:.3g} Mean: {cube_mean:.3g}",
+        f"Min: {np.nanmin(cube.data):.3g} Max: {np.nanmax(cube.data):.3g} Mean: {np.nanmean(cube.data):.3g}",
         xy=(0.025, yinfopad),
         xycoords="axes fraction",
         xytext=(-5, 5),
@@ -1903,6 +1903,7 @@ def _spatial_plot(
     filename: str | None,
     sequence_coordinate: str,
     stamp_coordinate: str,
+    strict_title: bool = False,
     overlay_cube: iris.cube.Cube | None = None,
     contour_cube: iris.cube.Cube | None = None,
     point_cube: iris.cube.Cube | None = None,
@@ -1936,6 +1937,9 @@ def _spatial_plot(
     stamp_coordinate: str
         Coordinate about which to plot postage stamp plots. Defaults to
         ``"realization"``.
+    strict_title: bool, optional
+        Logical switch that if set to True will ensure that the MODEL_NAME
+        string is not prepended to the plot title. The default is False.
     overlay_cube: Cube | None, optional
         Optional 2 dimensional (lat and lon) Cube of data to overplot on top of base cube
     contour_cube: Cube | None, optional
@@ -1997,6 +2001,8 @@ def _spatial_plot(
         if "model_name" in cube.attributes:
             model_name = cube.attributes["model_name"]
         else:
+            model_name = None
+        if strict_title:
             model_name = None
 
         plot_title, plot_filename = _set_title_and_filename(
@@ -2086,6 +2092,7 @@ def spatial_pcolormesh_plot(
     filename: str | None = None,
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
+    strict_title: bool = False,
     **kwargs,
 ) -> iris.cube.Cube:
     """Plot a spatial variable onto a map from a 2D, 3D, or 4D cube.
@@ -2113,6 +2120,9 @@ def spatial_pcolormesh_plot(
     stamp_coordinate: str, optional
         Coordinate about which to plot postage stamp plots. Defaults to
         ``"realization"``.
+    strict_title: bool, optional
+        Logical switch that if set to True will ensure that the MODEL_NAME
+        string is not prepended to the plot title. The default is False.
 
     Returns
     -------
@@ -2132,6 +2142,7 @@ def spatial_pcolormesh_plot(
                 filename,
                 sequence_coordinate,
                 stamp_coordinate,
+                strict_title,
                 **kwargs,
             )
     elif isinstance(cubes, iris.cube.Cube):
@@ -2141,6 +2152,7 @@ def spatial_pcolormesh_plot(
             filename,
             sequence_coordinate,
             stamp_coordinate,
+            strict_title,
             **kwargs,
         )
     return cubes

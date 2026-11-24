@@ -1,5 +1,5 @@
 category: Power Spectrum
-title: Power Spectrum $VARNAME $LEVELTYPE $LEVEL
+title: Power Spectrum $VARNAME $LEVELTYPE $LEVEL $SUBAREA_NAME
 description: |
   Extracts and plots the power spectral density of $VARNAME from a
   file at $LEVELTYPE level $LEVEL of $MODEL_NAME.
@@ -43,10 +43,13 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
+  - operator: misc.extract_common_time_points
+
   - operator: power_spectrum.calculate_power_spectrum
 
   - operator: plot.plot_line_series
     series_coordinate: "physical_wavenumber"
+    sequence_coordinate: "forecast_period"
     stamp_coordinate: "realization"
     single_plot: $SPECTRUM_PLEVEL_FIELD_SEQUENCE
 

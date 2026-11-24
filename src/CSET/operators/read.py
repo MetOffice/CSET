@@ -24,6 +24,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Literal
 
+import cartopy.crs as ccrs
 import dask
 import iris
 import iris.coord_systems
@@ -40,6 +41,7 @@ from CSET.operators._stash_to_lfric import STASH_TO_LFRIC
 from CSET.operators._utils import (
     get_cube_coordindex,
     get_cube_yxcoordname,
+    get_xy_coords,
     is_spatialdim,
 )
 
@@ -139,6 +141,7 @@ def read_cubes(
     model_names: str | list[str] | None = None,
     subarea_type: str | None = None,
     subarea_extent: list | None = None,
+    preserve_attributes: str | list[str] | None = None,
     **kwargs,
 ) -> iris.cube.CubeList:
     """Read cubes from files.
@@ -172,6 +175,9 @@ def read_cubes(
     subarea_extent: list[float], optional
         List of coordinates to constraint data by, in order lower latitude,
         upper latitude, lower longitude, upper longitude.
+    preserve_attributes: str | list[str], optional
+        Names of extra cube attributes to keep, in addition to those always
+        preserved.
 
     Returns
     -------
@@ -228,7 +234,7 @@ def read_cubes(
     cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
 
     # Clean unwanted cube attributes
-    cubes = _clean_unwanted_cube_attributes(cubes)
+    cubes = _clean_unwanted_cube_attributes(cubes, preserve_attributes)
 
     # Merge and concatenate cubes now metadata has been fixed.
     cubes = _merge_cubes_check_ensemble(cubes)
@@ -409,23 +415,89 @@ def _cutout_cubes(
         else:
             raise ValueError("Unknown subarea_type:", subarea_type)
 
-        # Do cutout and add to cutout_cubes.
-        intersection_args = {lat_name: lats, lon_name: lons}
-        logger.debug("Cutting out coords: %s", intersection_args)
-        try:
-            cutout_cubes.append(cube.intersection(**intersection_args))
-        except IndexError as err:
-            raise ValueError(
-                "Region cutout error. Check and update SUBAREA_EXTENT."
-                "Cutout region requested should be contained within data area. "
-                "Also check if cutout region requested is smaller than input grid spacing."
-            ) from err
+        x, y = get_xy_coords(cube)
+
+        if (
+            x.name() == "projection_x_coordinate"
+            and y.name() == "projection_y_coordinate"
+        ):
+            cutout_cubes.append(_extract_projected_latlon(cube, lats, lons))
+        else:
+            # Do cutout and add to cutout_cubes.
+            intersection_args = {lat_name: lats, lon_name: lons}
+            logger.debug("Cutting out coords: %s", intersection_args)
+            try:
+                cutout_cubes.append(cube.intersection(**intersection_args))
+            except IndexError as err:
+                raise ValueError(
+                    "Region cutout error. Check and update SUBAREA_EXTENT."
+                    "Cutout region requested should be contained within data area. "
+                    "Also check if cutout region requested is smaller than input grid spacing."
+                ) from err
 
     return cutout_cubes
 
 
+def _extract_projected_latlon(
+    cube: iris.cube.Cube, lats: tuple[float, float], lons: tuple[float, float]
+) -> iris.cube.Cube:
+    cs_x = cube.coord("projection_x_coordinate").coord_system
+    cs_y = cube.coord("projection_y_coordinate").coord_system
+
+    if cs_x is None or cs_y is None:
+        raise ValueError(
+            f"{cube.name()!r} has no coordinate system on its projection coordinates."
+        )
+    if cs_x != cs_y:
+        raise ValueError(
+            f"{cube.name()!r} has mismatched coordinate systems: x={cs_x}, y={cs_y}."
+        )
+
+    crs = cs_x.as_cartopy_crs()
+
+    x = cube.coord(axis="X", dim_coords=True)
+    y = cube.coord(axis="Y", dim_coords=True)
+
+    # make a meshgrid of the projected x and y points
+    xx, yy = np.meshgrid(x.points, y.points)
+
+    # convert to lat/lon
+    lonlat = ccrs.PlateCarree().transform_points(crs, xx, yy)
+
+    # grab the x and y dim, without the z dim ..
+    grid_lon, grid_lat = lonlat[:, :, 0], lonlat[:, :, 1]
+
+    # make a boolean area where if true then point is inside the
+    # subarea cutout
+    inside_subarea: np.array(bool) = (
+        (lats[0] <= grid_lat)
+        & (grid_lat <= lats[1])
+        & (lons[0] <= grid_lon)
+        & (grid_lon <= lons[1])
+    )
+
+    # if no values are true
+    if not inside_subarea.any():
+        raise ValueError(
+            "Region cutout error. Check and update SUBAREA_EXTENT."
+            "Cutout region requested should be contained within data area. "
+            "Also check if cutout region requested is smaller than input grid spacing."
+        )
+
+    # Smallest block of rows/columns containing every point inside the box.
+    rows = np.flatnonzero(inside_subarea.any(axis=1))
+    cols = np.flatnonzero(inside_subarea.any(axis=0))
+
+    index = [slice(None)] * cube.ndim
+    index[cube.coord_dims(y)[0]] = slice(rows[0], rows[-1] + 1)
+    index[cube.coord_dims(x)[0]] = slice(cols[0], cols[-1] + 1)
+
+    return cube[tuple(index)]
+
+
 def _clean_unwanted_cube_attributes(
     cubes: iris.cube.Cube | iris.cube.CubeList,
+    extra_attributes: str | list[str] | None = None,
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Remove unwanted cube attributes, apart from those in an exception list.
 
@@ -446,6 +518,7 @@ def _clean_unwanted_cube_attributes(
         "cset_comparison_base",
         "STASH",
         "um_stash_source",
+        *(iter_maybe(extra_attributes) if extra_attributes else []),
     ]
 
     # Iterate through each cube and check each attribute.
@@ -466,6 +539,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _realization_callback(cube)
     _um_normalise_callback(cube)
     _lfric_stash_source_callback(cube)
+    _nimrod_normalise_callback(cube)
     cube = _lfric_time_coord_fix_callback(cube)
     _normalise_var0_varname(cube)
     cube = _fix_no_spatial_coords_callback(cube)
@@ -482,6 +556,15 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     cube = _fix_no_time_coords_callback(cube)
     _normalise_longname(cube)
     return cube
+
+
+def _nimrod_normalise_callback(cube: iris.cube.Cube):
+    """Normalise attributes that prevents NIMROD radar cubes from merging."""
+    # Remove unwanted attributes.
+    cube.attributes.pop("radar_sites", None)
+    cube.attributes.pop("additional_radar_sites", None)
+    cube.attributes.pop("recursive_filter_iterations", None)
+    cube.attributes.pop("Probability methods", None)
 
 
 def _remove_cset_comparison_base_attribute_callback(cube):
@@ -928,9 +1011,16 @@ def _convert_cube_units_callback(cube: iris.cube.Cube):
     # Convert visibility diagnostic units if required.
     varnames = filter(None, [cube.long_name, cube.standard_name, cube.var_name])
     if any("visibility" in name for name in varnames) and cube.units == "m":
-        _log_once("Converting visibility units m to km.", level=logging.DEBUG)
-        # Convert the units to km.
-        cube.convert_units("km")
+        if cube.var_name == "visibility_belfort_2m":
+            # Cardington Belfort values are already in km despite their metadata.
+            cube.units = "km"
+        else:
+            _log_once("Converting visibility units m to km.", level=logging.DEBUG)
+            cube.convert_units("km")
+
+    # The UM surface net shortwave flux (m01s01i202) lacks units in the data.
+    if cube.long_name == "surface_net_shortwave_flux" and cube.units.is_unknown():
+        cube.units = "W m-2"
 
     return cube
 

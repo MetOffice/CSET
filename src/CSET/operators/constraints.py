@@ -228,6 +228,10 @@ def generate_cell_methods_constraint(
             """Check that any cell methods are "mean"."""
             return {cm.method for cm in cube.cell_methods} == {"mean"}
 
+        def check_cell_maximum(cube: iris.cube.Cube) -> bool:
+            """Check that any cell methods are "maximum"."""
+            return {cm.method for cm in cube.cell_methods} == {"maximum"}
+
         if varname:
             # Require number_of_lightning_flashes to be "sum" cell_method input.
             # Require surface_microphyisical_rainfall_amount and surface_microphysical_snowfall_amount to be "sum" cell_method inputs.
@@ -235,6 +239,10 @@ def generate_cell_methods_constraint(
                 "surface_microphysical" in varname and "amount" in varname
             ):
                 cell_methods_constraint = iris.Constraint(cube_func=check_cell_sum)
+                return cell_methods_constraint
+            # Require wind gust to be a "maximum" cell_method input.
+            if "gust" in varname:
+                cell_methods_constraint = iris.Constraint(cube_func=check_cell_maximum)
                 return cell_methods_constraint
             # Require climatological ancillary as time-average mean.
             if ("albedo" in varname) or (
@@ -521,7 +529,7 @@ def combine_constraints(
 
 
 def generate_attribute_constraint(
-    attribute: str, value: str | None = None, **kwargs
+    attribute: str, value: object | None = None, **kwargs
 ) -> iris.AttributeConstraint:
     """Generate constraint on cube attributes.
 
@@ -533,7 +541,7 @@ def generate_attribute_constraint(
     attribute: str
         Attribute to constraint on.
 
-    value: str
+    value: object
         Attribute value to constrain on. If omitted the constraint merely checks
         for the presence of an attribute.
 

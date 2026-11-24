@@ -436,11 +436,9 @@ def interpolate_to_point_cube(
     point_lat_name, point_lon_name = get_cube_yxcoordname(point_cube)
     point_lats = point_cube.coord(point_lat_name).points
     point_lons = point_cube.coord(point_lon_name).points
-
     # Iterate over all cubes and regrid.
     for cube in iter_maybe(fld):
         y_coord, x_coord = get_cube_yxcoordname(cube)
-
         # Rotate point_cube coords if required to match model coord rotation.
         if (
             isinstance(
@@ -473,17 +471,32 @@ def interpolate_to_point_cube(
 
         # Retain only diagonal elements of 2D interpolated cube to vector points
         od_index = point_cube.coord_dims("station")[0]
+
         fv_cube = iris.cube.Cube(
             fld_point_cube.data.diagonal(axis1=od_index, axis2=od_index + 1),
             standard_name=cube.standard_name,
             long_name=cube.long_name,
             units=cube.units,
         )
+
         # Copy all non-lat/lon coordinates and cube attributes
+
         if "time" in [coord.name() for coord in fld_point_cube.coords(dim_coords=True)]:
             fv_cube.add_dim_coord(
-                point_cube.coord("time"), point_cube.coord_dims("time")[0]
+                fld_point_cube.coord("time"), fld_point_cube.coord_dims("time")[0]
             )
+        if "forecast_period" in [
+            coord.name() for coord in fld_point_cube.coords(dim_coords=True)
+        ]:
+            original_fp_index = fld_point_cube.coord_dims("forecast_period")[0]
+            original_frt_index = fld_point_cube.coord_dims("forecast_reference_time")[0]
+            fv_cube.add_dim_coord(
+                fld_point_cube.coord("forecast_period"), original_fp_index
+            )
+            fv_cube.add_dim_coord(
+                fld_point_cube.coord("forecast_reference_time"), original_frt_index
+            )
+
         for coord in cube.coords():
             if coord.name() not in [
                 "time",
@@ -509,6 +522,7 @@ def interpolate_to_point_cube(
         regridded_cubes.append(fv_cube)
 
     # Preserve returning a cube if only a cube has been supplied to regrid.
+
     if len(regridded_cubes) == 1:
         return regridded_cubes[0]
     else:
