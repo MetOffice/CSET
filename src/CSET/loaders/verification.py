@@ -470,23 +470,6 @@ def load(conf: Config):
                 aggregation=True,
             )
 
-    if conf.SCORES_TIMESERIES_RMSE_MODEL_VS_OBS_AGGREGATION:
-        for field in conf.POINT_OBS_FIELDS:
-            yield RawRecipe(
-                recipe="timeseries_surface_scores_model_vs_obs_RMSE_aggregation.yaml",
-                variables={
-                    "VARNAME": field,
-                    "MODEL_NAME": ["OBS"] + [model["name"] for model in models],
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                },
-                model_ids=["OBS"] + [model["id"] for model in models],
-                aggregation=True,
-            )
-
     # ==================================================================
     # 6. SCORES ENSEMBLE METHODS
     # ==================================================================
