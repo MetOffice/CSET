@@ -2225,7 +2225,7 @@ def spatial_multi_pcolormesh_plot(
     cubes = iris.cube.CubeList([cube])
     for optional_cube in (overlay_cube, contour_cube, point_cube):
         if optional_cube is not None:
-            cubes.append(overlay_cube)
+            cubes.append(optional_cube)
 
     return cubes if len(cubes) > 1 else cubes[0]
 
