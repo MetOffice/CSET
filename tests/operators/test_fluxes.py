@@ -18,10 +18,12 @@ import iris
 import iris.coords
 import iris.cube
 import numpy as np
+import pytest
 from cf_units import Unit
 
 from CSET.operators import fluxes
 from CSET.operators._atmospheric_constants import CPD, LV, RD
+from CSET.operators.fluxes import net_radiative_flux
 
 
 def _make_scalar_cube(
@@ -181,50 +183,151 @@ def test_latent_heat_units_unknown_units_passthrough():
 
 
 def test_net_radiative_flux_calculation():
-    """Test net radiative flux calculation (downwelling - upwelling)."""
-    downwelling = _make_scalar_cube(
-        1000.0,
-        "downwelling_shortwave_flux",
-        units=Unit("W m-2"),
-    )
-    upwelling = _make_scalar_cube(
+    """Test net flux is computed as downwelling minus upwelling."""
+    down = _make_scalar_cube(
         300.0,
-        "upwelling_shortwave_flux",
-        units=Unit("W m-2"),
+        var_name="lwrad_down",
+        standard_name="downwelling_longwave_flux_in_air",
+        units="W m-2",
     )
-    out = fluxes.net_radiative_flux(
-        downwelling_flux=downwelling,
-        upwelling_flux=upwelling,
+    up = _make_scalar_cube(
+        50.0,
+        var_name="lwrad_up",
+        standard_name="upwelling_longwave_flux_in_air",
+        units="W m-2",
     )
-    arr = out.data
-    if hasattr(arr, "compute"):
-        arr = arr.compute()
+    result = net_radiative_flux(down, up)
+    assert result.data.item() == 250.0
+    assert result.units == down.units
 
-    expected = 1000.0 - 300.0
-    assert np.isclose(arr[0, 0], expected)
-    assert out.units == Unit("W m-2")
+
+def test_net_shortwave_flux_name():
+    """Test shortwave inputs produce correct output name."""
+    down = _make_scalar_cube(
+        np.array([300.0]),
+        var_name="swrad_down",
+        standard_name="downwelling_shortwave_flux_in_air",
+        units="W m-2",
+    )
+    up = _make_scalar_cube(
+        np.array([100.0]),
+        var_name="swrad_up",
+        standard_name="upwelling_shortwave_flux_in_air",
+        units="W m-2",
+    )
+    result = net_radiative_flux(down, up)
+    assert result.name() == "net_downward_shortwave_flux"
+    assert result.var_name == "net_downward_shortwave_flux"
 
 
-def test_add_fluxes_calculation():
-    """Test adding two flux components together."""
-    flux_a = _make_scalar_cube(
-        700.0,
-        "shortwave_net",
-        units=Unit("W m-2"),
+def test_net_longwave_flux_name():
+    """Test longwave inputs produce correct output name."""
+    down = _make_scalar_cube(
+        np.array([300.0]),
+        var_name="lwrad_down",
+        standard_name="downwelling_longwave_flux_in_air",
+        units="W m-2",
     )
-    flux_b = _make_scalar_cube(
-        150.0,
-        "longwave_net",
-        units=Unit("W m-2"),
+    up = _make_scalar_cube(
+        np.array([350.0]),
+        var_name="lwrad_up",
+        standard_name="upwelling_longwave_flux_in_air",
+        units="W m-2",
     )
-    out = fluxes.add_fluxes(
-        flux_a=flux_a,
-        flux_b=flux_b,
-    )
-    arr = out.data
-    if hasattr(arr, "compute"):
-        arr = arr.compute()
+    result = net_radiative_flux(down, up)
+    assert result.name() == "net_downward_longwave_flux"
+    assert result.var_name == "net_downward_longwave_flux"
 
-    expected = 700.0 + 150.0
-    assert np.isclose(arr[0, 0], expected)
-    assert out.units == Unit("W m-2")
+
+def test_mixed_shortwave_longwave_raises():
+    """Test incompatible flux types raise an error."""
+    down = _make_scalar_cube(
+        np.array([300.0]),
+        var_name="swrad_down",
+        standard_name="downwelling_shortwave_flux_in_air",
+        units="W m-2",
+    )
+    up = _make_scalar_cube(
+        np.array([100.0]),
+        var_name="lwrad_up",
+        standard_name="upwelling_longwave_flux_in_air",
+        units="W m-2",
+    )
+    with pytest.raises(
+        ValueError,
+        match="Cannot combine shortwave and longwave fluxes",
+    ):
+        net_radiative_flux(down, up)
+
+
+def test_net_radiative_flux_cubelist():
+    """Test CubeList input returns a CubeList."""
+    down = iris.cube.CubeList(
+        [
+            _make_scalar_cube(
+                np.array([300.0]),
+                var_name="lwrad_down",
+                standard_name="downwelling_longwave_flux_in_air",
+                units="W m-2",
+            ),
+            _make_scalar_cube(
+                np.array([400.0]),
+                var_name="lwrad_down",
+                standard_name="downwelling_longwave_flux_in_air",
+                units="W m-2",
+            ),
+        ]
+    )
+    up = iris.cube.CubeList(
+        [
+            _make_scalar_cube(
+                np.array([100.0]),
+                var_name="lwrad_up",
+                standard_name="upwelling_longwave_flux_in_air",
+                units="W m-2",
+            ),
+            _make_scalar_cube(
+                np.array([150.0]),
+                var_name="lwrad_up",
+                standard_name="upwelling_longwave_flux_in_air",
+                units="W m-2",
+            ),
+        ]
+    )
+
+    result = net_radiative_flux(down, up)
+    assert isinstance(result, iris.cube.CubeList)
+    assert len(result) == 2
+    assert result[0].data.item() == 200.0
+    assert result[1].data.item() == 250.0
+
+
+def test_add_fluxes_interpolates_onto_first_flux_times():
+    """Test fluxes on offset time points are summed on the first flux's times."""
+
+    def make(values, times, name):
+        cube = iris.cube.Cube(
+            np.array(values, dtype=np.float64),
+            long_name=name,
+            units="W m-2",
+            dim_coords_and_dims=[
+                (
+                    iris.coords.DimCoord(
+                        times,
+                        standard_name="time",
+                        units=Unit("hours since 2024-01-21", calendar="standard"),
+                    ),
+                    0,
+                )
+            ],
+        )
+        return cube
+
+    sw = make([10.0, 20.0, 30.0], [1.0, 2.0, 3.0], "sw")
+    lw = make([-1.0, -2.0], [1.5, 2.5], "lw")
+    result = fluxes.add_fluxes(sw, lw)
+    assert result.long_name == "sw"
+    assert result.shape == (3,)
+    # LW is linearly interpolated at hours 1.5 and 2.5, and NaN outside its range.
+    assert result.data[1] == pytest.approx(20.0 - 1.5)
+    assert np.isnan(result.data[0])
