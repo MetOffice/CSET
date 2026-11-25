@@ -14,6 +14,7 @@
 
 """Recipe tests."""
 
+import json
 import logging
 import re
 from pathlib import Path
@@ -25,6 +26,7 @@ from ruamel.yaml import YAML
 from CSET import recipes
 from CSET._common import sstrip
 from CSET._valid_recipe_categories import *
+from CSET.operators import _write_metadata
 
 
 def test_recipe_files_in_tree():
@@ -319,6 +321,9 @@ def test_all_recipes_valid_categories(recipe_path):
             recipe["level_type"] in LEVEL_TYPES or recipe["level_type"] == "$LEVELTYPE"
         )
 
+    if recipe["category"] == "observation":
+        assert recipe["observation_type"] in OBSERVATION_TYPES
+
     if "observation_type" in recipe:
         assert recipe["observation_type"] in OBSERVATION_TYPES
 
@@ -335,3 +340,13 @@ def test_loader_level_types():
             found += 1
             assert match.group(1) in LEVEL_TYPES, f"{path.name}: {match.group(1)!r}"
     assert found > 0
+
+
+@pytest.mark.parametrize("recipe_path", ALL_RECIPES, ids=lambda p: p.name)
+def test_all_recipes_metadata_valid(recipe_path, tmp_working_dir):
+    """Every packaged recipe parses and has the basic structure."""
+    recipe = YAML(typ="safe").load(recipe_path)
+    _write_metadata(recipe)
+    with open(tmp_working_dir / "meta.json", "r") as fp:
+        metadata = json.load(fp)
+        validate_metadata(metadata)

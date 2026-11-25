@@ -25,6 +25,7 @@ from iris import FUTURE
 
 # Import operators here so they are exported for use by recipes.
 import CSET.operators
+from CSET._valid_recipe_categories import DEFAULT_METADATA
 from CSET.operators import (
     ageofair,
     aggregate,
@@ -142,6 +143,9 @@ def _write_metadata(recipe: dict):
     metadata = recipe.copy()
     # Remove steps, as not needed, and might contain non-serialisable types.
     metadata.pop("steps", None)
+    # fill missing values with default metadata
+    for key, value in DEFAULT_METADATA.items():
+        metadata.setdefault(key, value)
     # To remove long variable names with suffix
     if "title" in metadata:
         metadata["title"] = metadata["title"].replace("_for_climate_averaging", "")

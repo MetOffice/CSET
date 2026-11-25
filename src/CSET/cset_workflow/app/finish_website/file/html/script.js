@@ -468,7 +468,7 @@ function create_diagnostic_element(record) {
   // Create card for diagnostic.
   const facets = document.createElement("dl");
   for (const facet in record) {
-    if (facet !== "title" && facet !== "path") {
+    if (facet !== "title" && facet !== "path" && !["none", "unknown"].includes(record[facet])) {
       const facet_node = document.createElement("div");
       const name = document.createElement("dt");
       const value = document.createElement("dd");
