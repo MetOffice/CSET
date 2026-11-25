@@ -101,6 +101,7 @@ def load(conf: Config):
                 "VARNAME": "grid_surface_temperature",
                 "PLOT_VARNAME": field,
                 "UNITS": "°C",
+                "OBS_HEIGHT": 2,
             },
         )
 
@@ -116,6 +117,7 @@ def load(conf: Config):
                     "VARNAME": model_field,
                     "PLOT_VARNAME": card_field,
                     "UNITS": "hPa",
+                    "OBS_HEIGHT": 1.5,
                 },
             )
 
@@ -261,13 +263,13 @@ def load(conf: Config):
             flux_types = [
                 (
                     "shortwave",
-                    "downwelling_shortwave_flux",
-                    "upwelling_shortwave_flux",
+                    "swrad_downwelling",
+                    "swrad_upwelling",
                 ),
                 (
                     "longwave",
-                    "downwelling_longwave_flux",
-                    "upwelling_longwave_flux",
+                    "lwrad_downwelling",
+                    "lwrad_upwelling",
                 ),
             ]
             for flux_name, card_dn, card_up in flux_types:
@@ -289,12 +291,12 @@ def load(conf: Config):
             yield make_recipe(
                 recipe=("cardington_total_net_radiative_flux_time_series.yaml"),
                 variables={
-                    "OBS_SW_DN": "downwelling_shortwave_flux",
-                    "OBS_SW_UP": "upwelling_shortwave_flux",
-                    "OBS_LW_DN": "downwelling_longwave_flux",
-                    "OBS_LW_UP": "upwelling_longwave_flux",
-                    "MODEL_SW": "surface_downward_shortwave_flux",
-                    "MODEL_LW": "surface_downward_longwave_flux",
+                    "OBS_SW_DN": "swrad_downwelling",
+                    "OBS_SW_UP": "swrad_upwelling",
+                    "OBS_LW_DN": "lwrad_downwelling",
+                    "OBS_LW_UP": "lwrad_upwelling",
+                    "MODEL_SW": "surface_net_downward_shortwave_flux",
+                    "MODEL_LW": "surface_net_downward_longwave_flux",
                     "PLOT_VARNAME": "net_radiative_flux",
                     "OBS_HEIGHT": "4",
                 },
