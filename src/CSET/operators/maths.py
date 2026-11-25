@@ -1,4 +1,4 @@
-# © Crown copyright, Met Office (2022-2025) and CSET contributors.
+# © Crown copyright, Met Office (2022-2026) and CSET contributors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Miscellaneous operators."""
+"""Mathematical operators."""
 
 import logging
+from typing import Literal
 
 import iris
 import iris.analysis.calculus
+import numpy as np
 from iris.cube import Cube, CubeList
 
 from CSET._common import iter_maybe
@@ -251,3 +253,63 @@ def differentiate(
         return new_cubelist[0]
     else:
         return new_cubelist
+
+
+def round_data(
+    cubes: Cube | CubeList,
+    decimals: int,
+    rounding: Literal["nearest", "up", "down"] = "nearest",
+) -> Cube | CubeList:
+    """Round data in a cube or cubelist to a specified number of decimal places.
+
+    Parameters
+    ----------
+    cubes : Cube | CubeList
+        A Cube or CubeList of fields to be rounded.
+    decimals : int
+        The number of decimal places to round to. Negative values round to
+        the left of the decimal point (e.g. -1 rounds to the nearest 10).
+    rounding : {"nearest", "up", "down"}, optional
+        Direction of rounding. Defaults to "nearest" which rounds half to even, as
+        in the default behaviour of numpy.round. "up" round towards upward, as in the ceiling operator.
+        and "down" rounds downward, as in the floor operator.
+
+    Returns
+    -------
+    Cube | CubeList
+        The rounded cube, or a CubeList of rounded cubes if more than one
+        cube was given.
+
+    Raises
+    ------
+    TypeError
+        If ``decimals`` is not an integer.
+    ValueError
+        If ``rounding`` is not one of "nearest", "up" or "down".
+    """
+    if not isinstance(decimals, int):
+        raise TypeError(
+            f"decimals must be an integer, got {type(decimals).__name__}: {decimals!r}"
+        )
+    if rounding not in ("nearest", "up", "down"):
+        raise ValueError(
+            f"rounding must be 'nearest', 'up' or 'down', got {rounding!r}"
+        )
+
+    factor = 10.0**decimals
+
+    rounded_cubes = CubeList()
+    for cube in iter_maybe(cubes):
+        rounded_cube = cube.copy()
+        data = rounded_cube.core_data()
+        if rounding == "nearest":
+            rounded_cube.data = np.round(data, decimals)
+        else:
+            # deal with floating point issues by first rounding
+            # to nearest at 9 decimals of data*factor
+            scaled = np.round(data * factor, 9)
+            func = np.ceil if rounding == "up" else np.floor
+            rounded_cube.data = func(scaled) / factor
+        rounded_cubes.append(rounded_cube)
+
+    return rounded_cubes[0] if len(rounded_cubes) == 1 else rounded_cubes

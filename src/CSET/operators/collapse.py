@@ -78,25 +78,12 @@ def collapse(
 
     # Retain only common time points between different models if multiple model inputs.
     if isinstance(cubes, iris.cube.CubeList) and len(cubes) > 1:
-        # Determine if cube is power spectrum and check use time coordinates.
-        is_power_spectrum = any(
-            cubes[0].coords(coord)
-            for coord in ["frequency", "physical_wavenumber", "wavelength"]
-        )
-        if is_power_spectrum:
-            coord_names = ["time"]
-        else:
-            coord_names = ["forecast_reference_time", "forecast_period"]
+        coord_names = ["forecast_reference_time", "forecast_period"]
 
         for cube in cubes:
             for coord_name in coord_names:
                 cube.coord(coord_name).bounds = None
         cubes = cubes.extract_overlapping(coord_names)
-
-        if is_power_spectrum:
-            for cube in cubes:
-                t = cube.coord("time")
-                t.points = t.points.astype(np.float64)
 
         if len(cubes) == 0:
             raise ValueError("No overlapping times detected in input cubes.")

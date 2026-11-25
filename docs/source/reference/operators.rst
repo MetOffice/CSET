@@ -38,6 +38,12 @@ CSET.operators.filters
 .. automodule:: CSET.operators.filters
    :members:
 
+CSET.operators.maths
+--------------------
+
+.. automodule:: CSET.operators.maths
+   :members:
+
 CSET.operators.misc
 -------------------
 
@@ -162,6 +168,15 @@ CSET.operators.scoreswrappers
 -----------------------------
 
 .. automodule:: CSET.operators.scoreswrappers
+   :members:
+
+Vorticity Operators
+~~~~~~~~~~~~~~~~~~~
+
+CSET.operators.vorticity
+------------------------
+
+.. automodule:: CSET.operators.vorticity
    :members:
 
 Wind Operators

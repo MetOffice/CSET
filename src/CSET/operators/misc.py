@@ -333,7 +333,6 @@ def extract_common_time_points(cubes: CubeList | Cube) -> CubeList | Cube:
                     "All cubes must have a forecast_reference_time coordinate."
                 )
         cubes_common = extract_common_points(cubes, "forecast_period")
-
         return cubes_common
     else:
         return _extract_common_time_points_one_frt(cubes)
@@ -365,8 +364,7 @@ def _ensure_same_frt(cubes: CubeList) -> None:
 
 
 def _extract_common_time_points_one_frt(cubes: CubeList) -> CubeList:
-
-    # typehints
+    """Extract common time points from cubes where there is only one frt."""
     obs: Cube | None
     models: CubeList
     obs, models = split_obs_and_models(cubes)
