@@ -14,14 +14,19 @@
 
 """Recipe tests."""
 
+import json
 import logging
+import re
 from pathlib import Path
 from textwrap import dedent
 
 import pytest
+from ruamel.yaml import YAML
 
 from CSET import recipes
 from CSET._common import sstrip
+from CSET._valid_recipe_categories import *
+from CSET.operators import _write_metadata
 
 
 def test_recipe_files_in_tree():
@@ -299,3 +304,49 @@ def test_load_recipes():
         recipes.RawRecipe("test-agg.yaml", 1, {}, aggregation=True),
     ]
     assert loaded_recipes == expected
+
+
+ALL_RECIPES = sorted(recipes._recipe_files_in_tree(), key=lambda p: p.name)
+
+
+@pytest.mark.parametrize("recipe_path", ALL_RECIPES, ids=lambda p: p.name)
+def test_all_recipes_valid_categories(recipe_path):
+    """Every packaged recipe parses and has the basic structure."""
+    recipe = YAML(typ="safe").load(recipe_path)
+    assert "category" in recipe
+    assert recipe["category"] in CATEGORIES
+
+    if "level_type" in recipe:
+        assert (
+            recipe["level_type"] in LEVEL_TYPES or recipe["level_type"] == "$LEVELTYPE"
+        )
+
+    if recipe["category"] == "observation":
+        assert recipe["observation_type"] in OBSERVATION_TYPES
+
+    if "observation_type" in recipe:
+        assert recipe["observation_type"] in OBSERVATION_TYPES
+
+
+LEVELTYPE_REGEX = re.compile(r"""["']LEVELTYPE["']\s*:\s*["']([^"']+)["']""")
+
+
+def test_loader_level_types():
+    """Ensure loaders template correct level types."""
+    loader_dir = Path("src/CSET/loaders")
+    found = 0
+    for path in loader_dir.rglob("*.py"):
+        for match in LEVELTYPE_REGEX.finditer(path.read_text()):
+            found += 1
+            assert match.group(1) in LEVEL_TYPES, f"{path.name}: {match.group(1)!r}"
+    assert found > 0
+
+
+@pytest.mark.parametrize("recipe_path", ALL_RECIPES, ids=lambda p: p.name)
+def test_all_recipes_metadata_valid(recipe_path, tmp_working_dir):
+    """Every packaged recipe parses and has the basic structure."""
+    recipe = YAML(typ="safe").load(recipe_path)
+    _write_metadata(recipe)
+    with open(tmp_working_dir / "meta.json", "r") as fp:
+        metadata = json.load(fp)
+        validate_metadata(metadata)

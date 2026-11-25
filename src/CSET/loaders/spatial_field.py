@@ -83,7 +83,7 @@ def load(conf: Config):
                 recipe="generic_level_spatial_plot_sequence.yaml",
                 variables={
                     "VARNAME": field,
-                    "LEVELTYPE": "model_level_number",
+                    "LEVELTYPE": "model",
                     "LEVEL": mlevel,
                     "MODEL_NAME": model["name"],
                     "METHOD": method,
@@ -161,7 +161,7 @@ def load(conf: Config):
                 recipe="level_structural_similarity_spatial_plot.yaml",
                 variables={
                     "VARNAME": field,
-                    "LEVELTYPE": "model_level_number",
+                    "LEVELTYPE": "model",
                     "LEVEL": mlevel,
                     "BASE_MODEL": base_model["name"],
                     "OTHER_MODEL": model["name"],
@@ -803,7 +803,7 @@ def load(conf: Config):
                 recipe=f"generic_level_spatial_plot_sequence_case_aggregation_mean_{atype}.yaml",
                 variables={
                     "VARNAME": field,
-                    "LEVELTYPE": "model_level_number",
+                    "LEVELTYPE": "model",
                     "LEVEL": mlevel,
                     "MODEL_NAME": model["name"],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,

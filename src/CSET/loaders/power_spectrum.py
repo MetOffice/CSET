@@ -83,7 +83,7 @@ def load(conf: Config):
                 recipe="generic_mlevel_power_spectrum_series.yaml",
                 variables={
                     "VARNAME": field,
-                    "LEVELTYPE": "model_level_number",
+                    "LEVELTYPE": "model",
                     "LEVEL": mlevel,
                     "MODEL_NAME": [model["name"] for model in models],
                     "SEQUENCE": "time"
@@ -102,17 +102,11 @@ def load(conf: Config):
 
     # Mean spectra on surface and pressure/model levels.
 
-    # Create a list of case aggregation types and whether or not they aggregate over all cases.
-    AGGREGATION_TYPES = ["mean_over_time", "mean_over_all_cases"]
-    AGGREGATION_OVER_CASES = [False, True]
-
     # Surface (2D) fields.
-    for aggr_type, field in itertools.product(AGGREGATION_TYPES, conf.SURFACE_FIELDS):
-        index = AGGREGATION_TYPES.index(aggr_type)
-        aggregations = conf.SPECTRUM_SURFACE_FIELD_AGGREGATION
-        if len(aggregations) > index and aggregations[index]:
+    if conf.SPECTRUM_SURFACE_FIELD and conf.SPECTRUM_SURFACE_FIELD_AGGREGATION:
+        for field in conf.SURFACE_FIELDS:
             yield RawRecipe(
-                recipe=f"generic_surface_power_spectrum_series_{aggr_type}.yaml",
+                recipe="generic_surface_power_spectrum_series_mean_over_time.yaml",
                 variables={
                     "VARNAME": field,
                     "MODEL_NAME": [model["name"] for model in models],
@@ -124,55 +118,59 @@ def load(conf: Config):
                     "SPECTRUM_SURFACE_FIELD_SEQUENCE": conf.SPECTRUM_SURFACE_FIELD_SEQUENCE,
                 },
                 model_ids=[model["id"] for model in models],
-                aggregation=AGGREGATION_OVER_CASES[index],
+                aggregation=False,
             )
 
     # Pressure level fields.
-    for aggr_type, field, plevel in itertools.product(
-        AGGREGATION_TYPES, conf.PRESSURE_LEVEL_FIELDS, conf.PRESSURE_LEVELS
-    ):
-        index = AGGREGATION_TYPES.index(aggr_type)
-        aggregations = conf.SPECTRUM_PLEVEL_FIELD_AGGREGATION
-        if len(aggregations) > index and aggregations[index]:
+    if conf.SPECTRUM_PLEVEL_FIELD and conf.SPECTRUM_PLEVEL_FIELD_AGGREGATION:
+        for field, plevel in itertools.product(
+            conf.PRESSURE_LEVEL_FIELDS,
+            conf.PRESSURE_LEVELS,
+        ):
+            variables = {
+                "VARNAME": field,
+                "LEVELTYPE": "pressure",
+                "LEVEL": [plevel],
+                "MODEL_NAME": [model["name"] for model in models],
+                "SEQUENCE": "time"
+                if conf.SPECTRUM_PLEVEL_FIELD_SEQUENCE
+                else "realization",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                "SPECTRUM_PLEVEL_FIELD_SEQUENCE": conf.SPECTRUM_PLEVEL_FIELD_SEQUENCE,
+            }
+
             yield RawRecipe(
-                recipe=f"generic_plevel_power_spectrum_series_{aggr_type}.yaml",
-                variables={
-                    "VARNAME": field,
-                    "LEVELTYPE": "pressure",
-                    "LEVEL": plevel,
-                    "MODEL_NAME": [model["name"] for model in models],
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SPECTRUM_PLEVEL_FIELD_SEQUENCE": conf.SPECTRUM_PLEVEL_FIELD_SEQUENCE,
-                },
+                recipe="generic_plevel_power_spectrum_series_mean_over_time.yaml",
+                variables=variables,
                 model_ids=[model["id"] for model in models],
-                aggregation=AGGREGATION_OVER_CASES[index],
+                aggregation=False,
             )
 
     # Model level fields.
-    for aggr_type, field, mlevel in itertools.product(
-        AGGREGATION_TYPES, conf.MODEL_LEVEL_FIELDS, conf.MODEL_LEVELS
-    ):
-        index = AGGREGATION_TYPES.index(aggr_type)
-        aggregations = conf.SPECTRUM_MLEVEL_FIELD_AGGREGATION
-        if len(aggregations) > index and aggregations[index]:
+    if conf.SPECTRUM_MLEVEL_FIELD and conf.POWER_SPECTRUM_MLEVEL_FIELD_AGGREGATION:
+        for field, mlevel in itertools.product(
+            conf.MODEL_LEVEL_FIELDS,
+            conf.MODEL_LEVELS,
+        ):
+            variables = {
+                "VARNAME": field,
+                "LEVELTYPE": "model",
+                "LEVEL": [mlevel],
+                "MODEL_NAME": [model["name"] for model in models],
+                "SEQUENCE": "time"
+                if conf.SPECTRUM_MLEVEL_FIELD_SEQUENCE
+                else "realization",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                "SPECTRUM_MLEVEL_FIELD_SEQUENCE": conf.SPECTRUM_MLEVEL_FIELD_SEQUENCE,
+            }
+
             yield RawRecipe(
-                recipe=f"generic_mlevel_power_spectrum_series_{aggr_type}.yaml",
-                variables={
-                    "VARNAME": field,
-                    "LEVELTYPE": "model_level_number",
-                    "LEVEL": mlevel,
-                    "MODEL_NAME": [model["name"] for model in models],
-                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
-                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
-                    if conf.SELECT_SUBAREA
-                    else None,
-                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
-                    "SPECTRUM_MLEVEL_FIELD_SEQUENCE": conf.SPECTRUM_MLEVEL_FIELD_SEQUENCE,
-                },
+                recipe="generic_mlevel_power_spectrum_series_mean_over_time.yaml",
+                variables=variables,
                 model_ids=[model["id"] for model in models],
-                aggregation=AGGREGATION_OVER_CASES[index],
+                aggregation=False,
             )

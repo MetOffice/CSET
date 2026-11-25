@@ -81,7 +81,7 @@ def load(conf: Config):
                 recipe="generic_level_histogram_series.yaml",
                 variables={
                     "VARNAME": field,
-                    "LEVELTYPE": "model_level_number",
+                    "LEVELTYPE": "model",
                     "LEVEL": mlevel,
                     "MODEL_NAME": [model["name"] for model in models],
                     "SEQUENCE": "time"
@@ -155,7 +155,7 @@ def load(conf: Config):
                 recipe=f"generic_level_histogram_series_case_aggregation_{atype}.yaml",
                 variables={
                     "VARNAME": field,
-                    "LEVELTYPE": "model_level_number",
+                    "LEVELTYPE": "model",
                     "LEVEL": mlevel,
                     "MODEL_NAME": [model["name"] for model in models],
                     "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
