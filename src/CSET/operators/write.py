@@ -28,7 +28,7 @@ def write_cube_to_nc(
     filename: str | None = None,
     overwrite: bool = False,
     **kwargs,
-) -> str:
+) -> iris.cube.Cube | iris.cube.CubeList:
     """Write a cube to a NetCDF file.
 
     This operator expects an iris cube object that will then be saved to disk.
