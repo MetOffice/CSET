@@ -2141,7 +2141,7 @@ def spatial_multi_pcolormesh_plot(
     sequence_coordinate: str = "time",
     stamp_coordinate: str = "realization",
     **kwargs,
-) -> iris.cube.Cube:
+) -> iris.cube.Cube | iris.cube.CubeList:
     """Plot a set of spatial variables onto a map from a 2D, 3D, or 4D cube.
 
     A 2D basis cube spatial field can be plotted, but if the sequence_coordinate is present
@@ -2192,8 +2192,17 @@ def spatial_multi_pcolormesh_plot(
 
     Returns
     -------
-    Cube
-        The original cube (so further operations can be applied).
+    Cubes: Cube | CubeList
+        Containing the following cubes:
+        Cube: Cube
+            The original data cube.
+        overlay_cube: Cube | None
+            The original cube of the data to plot as an overlay on top of basis cube.
+        contour_cube: Cube | None
+            The original cube of the data to plot as a contour overlay on top of basis cube (and overlay_cube).
+        point_cube: Cube | None
+            The original cube of the data to plot as a scatter map overlay on top of basis cube (overlay_cube and/or contour_cube).
+
 
     Raises
     ------
@@ -2212,7 +2221,13 @@ def spatial_multi_pcolormesh_plot(
         contour_cube=contour_cube,
         point_cube=point_cube,
     )
-    return cube, overlay_cube, contour_cube, point_cube
+
+    cubes = iris.cube.CubeList([cube])
+    for optional_cube in (overlay_cube, contour_cube, point_cube):
+        if optional_cube is not None:
+            cubes.append(optional_cube)
+
+    return cubes if len(cubes) > 1 else cubes[0]
 
 
 # TODO: Expand function to handle ensemble data.
