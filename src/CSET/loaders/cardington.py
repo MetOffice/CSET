@@ -11,13 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-"""Load cardington recipes."""
-# long_name='VIS AT 1.5M  (incl precip)         M'
-#'SURFACE SENSIBLE  HEAT FLUX     W/M2'
-#'SURFACE LATENT HEAT FLUX        W/M2'
-#'DEWPOINT AT 1.5M (K)'
-
 """Load Cardington recipes."""
 
 from CSET.recipes import Config, RawRecipe, get_models
