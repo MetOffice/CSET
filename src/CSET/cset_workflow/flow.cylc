@@ -9,6 +9,17 @@ URL = https://metoffice.github.io/CSET
 # Load a list a model detail dictionaries.
 {% set models = get_models(ROSE_SUITE_VARIABLES) %}
 
+{% for model in models %}
+    {% if "Cardington" in model["name"] %}
+        {% set _ = model.update({
+            "name": "Cardington " ~ CARDINGTON_INTERVAL,
+            "data_path": "/data/users/cdpc/surface_site/processed_v1/%Y/metoffice-obr-fluxtower_cardington_boundary-layer-met_%Y%m%d_" ~ CARDINGTON_INTERVAL ~ "_v1.nc",
+            "date_type": "validity",
+            "data_period": "P1D",
+            "analysis_offset": "PT0H"
+        }) %}
+    {% endif %}
+{% endfor %}
 
 [scheduling]
 # Allow many concurrent cycles to maximise workflow parallelism.
