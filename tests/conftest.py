@@ -1364,6 +1364,7 @@ def _make_test_cube_stations(
     long_name: str,
     standard_name: str | None = None,
     model_name: str | None = None,
+    delta: float = 0,
 ):
     rng = np.random.default_rng(seed)
 
@@ -1385,13 +1386,13 @@ def _make_test_cube_stations(
     )
 
     latitude_coord = iris.coords.AuxCoord(
-        points=50 + (0.5 * np.arange(shape[1])),
+        points=delta + 50 + (0.5 * np.arange(shape[1])),
         standard_name="latitude",
         units="degrees",
     )
 
     longitude_coord = iris.coords.AuxCoord(
-        points=-5 + (0.2 * np.arange(shape[1])),
+        points=delta + -5 + (0.2 * np.arange(shape[1])),
         standard_name="longitude",
         units="degrees",
     )
@@ -1412,50 +1413,58 @@ def _make_test_cube_stations(
     )
 
 
+def _add_time_coords(cube, day, hour_step=1):
+    TIME_UNITS = cf_units.Unit("hours since 1970-01-01", calendar="360_day")
+    """Add a per-row time coord (from 06Z) and a scalar frt (00Z) for 2024-01-<day>, in place."""
+    frt = cftime.datetime(2024, 1, day, 0, calendar="360_day")
+    start = frt + datetime.timedelta(hours=6)
+    times = [
+        start + datetime.timedelta(hours=hour_step * i) for i in range(cube.shape[0])
+    ]
+    cube.add_aux_coord(
+        AuxCoord(TIME_UNITS.date2num(times), standard_name="time", units=TIME_UNITS),
+        data_dims=0,
+    )
+    cube.add_aux_coord(
+        AuxCoord(
+            TIME_UNITS.date2num(frt),
+            standard_name="forecast_reference_time",
+            units=TIME_UNITS,
+        )
+    )
+    return cube
+
+
+def _make_obs_cubelist(**cube2_kwargs):
+    """CubeList of two obs cubes (3 and 5 stations) on consecutive days.
+
+    Extra kwargs (e.g. ``delta``) are passed to the second cube only.
+    """
+    OBS_NAME = "observed_temperature_at_screen_level"
+
+    cube1 = _make_test_cube_stations(shape=(10, 3), seed=1, long_name=OBS_NAME)
+    cube2 = _make_test_cube_stations(
+        shape=(10, 5), seed=1, long_name=OBS_NAME, **cube2_kwargs
+    )
+    return CubeList([_add_time_coords(cube1, day=1), _add_time_coords(cube2, day=2)])
+
+
 @pytest.fixture
 def dummy_cubelist_obs_3_common_stations():
-    """CubeList of [obs_cube1, obs_cube2] with time (per-row) and scalar forecast reference time coords."""
-    time_units = cf_units.Unit("hours since 1970-01-01", calendar="360_day")
+    """Obs CubeList with 3 stations in common at identical lat/lon."""
+    return _make_obs_cubelist()
 
-    def add_time_coords(cube, time_start, frt_dt, hour_step=1):
-        """Add a per-row time coord (data_dims=0) and scalar frt coord to a cube, in place."""
-        n_times = cube.shape[0]
-        time_datetimes = [
-            time_start + datetime.timedelta(hours=hour_step * i) for i in range(n_times)
-        ]
-        cube.add_aux_coord(
-            AuxCoord(
-                points=time_units.date2num(time_datetimes),
-                standard_name="time",
-                units=time_units,
-            ),
-            data_dims=0,
-        )
-        cube.add_aux_coord(
-            AuxCoord(
-                points=time_units.date2num(frt_dt),
-                standard_name="forecast_reference_time",
-                units=time_units,
-            )
-        )
-        return cube
 
-    obs_cube1 = add_time_coords(
-        _make_test_cube_stations(
-            shape=(10, 3), seed=1, long_name="observed_temperature_at_screen_level"
-        ),
-        time_start=cftime.datetime(2024, 1, 1, 6, 0, calendar="360_day"),
-        frt_dt=cftime.datetime(2024, 1, 1, 0, 0, calendar="360_day"),
-    )
-    obs_cube2 = add_time_coords(
-        _make_test_cube_stations(
-            shape=(10, 5), seed=1, long_name="observed_temperature_at_screen_level"
-        ),
-        time_start=cftime.datetime(2024, 1, 2, 6, 0, calendar="360_day"),
-        frt_dt=cftime.datetime(2024, 1, 2, 0, 0, calendar="360_day"),
-    )
+@pytest.fixture
+def dummy_cubelist_obs_3_common_stations_latlon_in_tol():
+    """Obs CubeList where the second cube's lat/lon is shifted by 0.009 (inside the tolerance)."""
+    return _make_obs_cubelist(delta=0.009)
 
-    return CubeList([obs_cube1, obs_cube2])
+
+@pytest.fixture
+def dummy_cubelist_obs_3_common_stations_latlon_outwith_tol():
+    """Obs CubeList where the second cube's lat/lon is shifted by 0.1 (outside the tolerance)."""
+    return _make_obs_cubelist(delta=0.1)
 
 
 def _make_test_cube_multi_forecasts(
