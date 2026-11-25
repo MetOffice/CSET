@@ -254,7 +254,7 @@ def test_bootstrap_significance_missing_frt():
         ]
     )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(iris.exceptions.CoordinateNotFoundError):
         bootstrap_significance(cubes)
 
 
