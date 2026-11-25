@@ -18,10 +18,12 @@ import iris
 import iris.coords
 import iris.cube
 import numpy as np
+import pytest
 from cf_units import Unit
 
 from CSET.operators import fluxes
 from CSET.operators._atmospheric_constants import CPD, LV, RD
+from CSET.operators.fluxes import net_radiative_flux
 
 
 def _make_scalar_cube(
