@@ -13,6 +13,9 @@
 # limitations under the License.
 """Constants for the atmosphere."""
 
+# Radius of Earth in km.
+Ra = 6371.0  # km.
+
 # Reference pressure.
 P0 = 1000.0  # hPa.
 
