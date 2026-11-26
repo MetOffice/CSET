@@ -119,19 +119,16 @@ def retrieve_gpm():
         gpm_cube_obs = _load_gpm(gpm_obs_path)
 
         # Cut out the required GPM domain.
-        gpm_cubes_list = iris.cube.CubeList()
-        gpm_cubes_list.append(gpm_cube_obs)
-        # gpm_cutout_cubes = iris.cube.CubeList()
         subarea_type = "realworld"
         if os.environ["GPM_DOMAIN_UKV"]:
             subarea_extent = gpm_domain_dict["ukv_domain"]
             gpm_cutout_cubes = cutout_cubes_function(
-                gpm_cubes_list, subarea_type, subarea_extent
+                gpm_cube_obs, subarea_type, subarea_extent
             )
-            gpm_cube_obs = gpm_cutout_cubes[0]
+            gpm_cube_obs = gpm_cutout_cubes
 
         # TODO need a small function to fettle the GPM cubes
-        # i.e. construct forecast_reference_time
+        # i.e. construct forecast_reference_time and forecast_period
 
         # Write the GPM obs to a NetCDF file.
         if gpm_cube_obs is not None:
