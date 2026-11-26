@@ -23,8 +23,8 @@ import logging
 import iris
 import numpy as np
 
-from CSET._atmospheric_constants import Ra
 from CSET._common import iter_maybe
+from CSET.operators._atmospheric_constants import Ra
 
 logger = logging.getLogger(__name__)
 
