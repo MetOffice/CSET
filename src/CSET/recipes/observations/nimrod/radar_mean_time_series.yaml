@@ -1,4 +1,6 @@
-category: Surface Time Series
+category: observations
+observation_type: nimrod
+plot_type: time series
 title: "bmc6 Domain mean $VARNAME time series $SUBAREA_NAME"
 description: Plots a time series of the domain horizontal mean $VARNAME.
 
