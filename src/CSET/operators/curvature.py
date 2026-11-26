@@ -51,13 +51,48 @@ def _lat_lon_identifier(original_lat, original_lon, distance, bearing):
     return new_lat, new_lon
 
 
-def global_curv(central, radius, num_radial_points=16, tol=400.0):
-    """Calculate the CURV diagnostic for a global model VERSION 2 for faster calculation speed."""
+def global_curv(
+    central: iris.cube.Cube | iris.cube.CubeList,
+    radius: float,
+    num_radial_points: int = 16,
+    tol: float = 400.0,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Calculate the CURV for a global model.
+
+    Parameters
+    ----------
+    central: iris.cube.Cube | iris.cube.CubeList
+        The raw pressure or geopotential height field that acts as the central
+        point for determining the curvature around.
+    radius: float
+        The radius of interest for CURV to be calculated over.
+    num_radial_points: integer, default 16.
+        The number of points around your central point to consider. It defaults
+        to 16, but you can also consider 8 points.
+    tol: float, default 400.0
+        The tolerance for the CURV calculation. This is used to help reduce noise
+        in the field. The current default is 400.0. It takes the units of the field
+        you are considering Pascals for pressure, metres for geopotenital height.
+
+    Returns
+    -------
+    curv: iris.cube.Cube | iris.cube.CubeList
+        The results of the CURV calculation as either a Cube or a CubeList.
+
+    Raises
+    ------
+    ValueError
+        If the number of radial points specified is not 8 or 16.
+
+    Notes
+    -----
+    TBD
+    """
     if (num_radial_points == 8) or (num_radial_points == 16):
         bearing = np.linspace(0.0, 360.0, num_radial_points + 1)[:-1]
     else:
         raise ValueError(
-            f"Number of radial points should be 8 or 16. You have provided {num_radial_points}."
+            f"Number of radial points should be 8 or 16. You have provided {num_radial_points}. Support may be added in the future for different numbers of points."
         )
 
     logger.info(
