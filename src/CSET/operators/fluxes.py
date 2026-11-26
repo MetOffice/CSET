@@ -180,10 +180,10 @@ def net_radiative_flux(
     Parameters
     ----------
     downwelling_flux : iris.cube.Cube or iris.cube.CubeList
-        Downwelling radiative flux.
+        Downwelling (incident) radiative flux.
 
     upwelling_flux : iris.cube.Cube or iris.cube.CubeList
-        Upwelling radiative flux.
+        Upwelling (reflected/emitted) radiative flux.
 
     Returns
     -------
