@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Tests for the Cardington recipe loader."""
 
 import pytest
@@ -20,20 +19,22 @@ from CSET.loaders import cardington
 from CSET.recipes import Config
 
 MODELS = [
-    {"id": 2, "name": "Cardington"},
-    {"id": 1, "name": "RAL3-LFRic"},
+    {"id": "obs", "name": "Cardington"},
+    {"id": "model", "name": "Test Model"},
 ]
 
 
 def _load_recipes(monkeypatch, **config):
     """Load Cardington recipes using a minimal two-model configuration."""
     monkeypatch.setattr(cardington, "get_models", lambda _: MODELS)
+
     variables = {
         "CARDINGTON_SINGLE_POINT_TIME_SERIES": True,
         "CARDINGTON_NET_DOWNWELLING_RADIATIVE_FLUX_SINGLE_POINT_TIME_SERIES": True,
         "CARDINGTON_TOTAL_NET_RADIATIVE_FLUX_SINGLE_POINT_TIME_SERIES": True,
         **config,
     }
+
     return list(cardington.load(Config(variables)))
 
 
@@ -45,10 +46,12 @@ def _find_recipe(recipes, recipe_name, **variables):
         if recipe.recipe == recipe_name
         and all(recipe.variables.get(key) == value for key, value in variables.items())
     ]
+
     assert len(matches) == 1, (
         f"Expected one {recipe_name!r} recipe matching {variables!r}; "
         f"found {len(matches)}."
     )
+
     return matches[0]
 
 
@@ -71,15 +74,16 @@ def test_loader_sets_model_names_and_ids(monkeypatch):
     recipes = _load_recipes(monkeypatch)
     recipe = recipes[0]
 
-    assert recipe.model_ids == [2, 1]
+    assert recipe.model_ids == ["obs", "model"]
     assert recipe.variables["OBS_NAME"] == "Cardington"
-    assert recipe.variables["MODEL_NAME"] == "RAL3-LFRic"
+    assert recipe.variables["MODEL_NAME"] == "Test Model"
     assert recipe.aggregation is False
 
 
 def test_surface_temperature_metadata(monkeypatch):
     """Surface temperature uses the verified 2 m Cardington metadata height."""
     recipes = _load_recipes(monkeypatch)
+
     recipe = _find_recipe(
         recipes,
         "cardington_generic_single_point_time_series.yaml",
@@ -94,6 +98,7 @@ def test_surface_temperature_metadata(monkeypatch):
 def test_surface_pressure_metadata(monkeypatch):
     """Barometric pressure uses the verified 1.5 m Cardington metadata height."""
     recipes = _load_recipes(monkeypatch)
+
     recipe = _find_recipe(
         recipes,
         "cardington_generic_single_point_time_series.yaml",
@@ -106,18 +111,30 @@ def test_surface_pressure_metadata(monkeypatch):
 
 
 def test_wind_recipe_variables(monkeypatch):
-    """Wind recipes request the Cardington observation and LFRic U/V components."""
+    """Wind recipes use the expected observation and calculated model names."""
     recipes = _load_recipes(monkeypatch)
-    recipe = _find_recipe(
+
+    speed = _find_recipe(
         recipes,
         "cardington_wind_single_point_time_series.yaml",
         OBS_VARNAME="wind_speed_vector_2m",
     )
 
-    assert recipe.variables["U_VARNAME"] == "x_wind"
-    assert recipe.variables["V_VARNAME"] == "y_wind"
-    assert recipe.variables["OBS_HEIGHT"] == 2
-    assert recipe.variables["PLOT_VARNAME"] == "wind_speed"
+    assert speed.variables["U_VARNAME"] == "x_wind"
+    assert speed.variables["V_VARNAME"] == "y_wind"
+    assert speed.variables["OBS_HEIGHT"] == 2
+    assert speed.variables["PLOT_VARNAME"] == "wind_speed"
+
+    direction = _find_recipe(
+        recipes,
+        "cardington_wind_single_point_time_series.yaml",
+        OBS_VARNAME="wind_direction_10m",
+    )
+
+    assert direction.variables["U_VARNAME"] == "x_wind"
+    assert direction.variables["V_VARNAME"] == "y_wind"
+    assert direction.variables["OBS_HEIGHT"] == 10
+    assert direction.variables["PLOT_VARNAME"] == "wind_from_direction"
 
 
 def test_net_radiation_observation_variables(monkeypatch):
@@ -129,6 +146,7 @@ def test_net_radiation_observation_variables(monkeypatch):
         "cardington_net_downwelling_radiative_flux_time_series.yaml",
         PLOT_VARNAME="shortwave",
     )
+
     assert shortwave.variables["OBS_DN"] == "swrad_downwelling"
     assert shortwave.variables["OBS_UP"] == "swrad_upwelling"
     assert shortwave.variables["VARNAME"] == "surface_net_downward_shortwave_flux"
@@ -138,6 +156,7 @@ def test_net_radiation_observation_variables(monkeypatch):
         "cardington_net_downwelling_radiative_flux_time_series.yaml",
         PLOT_VARNAME="longwave",
     )
+
     assert longwave.variables["OBS_DN"] == "lwrad_downwelling"
     assert longwave.variables["OBS_UP"] == "lwrad_upwelling"
     assert longwave.variables["VARNAME"] == "surface_net_downward_longwave_flux"
@@ -146,6 +165,7 @@ def test_net_radiation_observation_variables(monkeypatch):
 def test_total_net_radiation_variables(monkeypatch):
     """Total net radiation compares like-for-like net model and observed fluxes."""
     recipes = _load_recipes(monkeypatch)
+
     recipe = _find_recipe(
         recipes,
         "cardington_total_net_radiative_flux_time_series.yaml",
@@ -165,36 +185,49 @@ def test_cardington_loader_requires_exactly_one_cardington_model(monkeypatch):
         cardington,
         "get_models",
         lambda _: [
-            {"id": 1, "name": "RAL3-LFRic"},
-            {"id": 3, "name": "RAL3-UM"},
+            {"id": "model_a", "name": "Model A"},
+            {"id": "model_b", "name": "Model B"},
         ],
     )
 
     conf = Config({"CARDINGTON_SINGLE_POINT_TIME_SERIES": True})
-    with pytest.raises(ValueError, match="Exactly one Cardington input"):
+
+    with pytest.raises(
+        ValueError,
+        match="Exactly one Cardington input",
+    ):
         list(cardington.load(conf))
 
 
 def test_cardington_loader_requires_exactly_one_forecast_model(monkeypatch):
-    """Loader rejects configurations without exactly one comparison forecast model."""
+    """Loader rejects configurations without exactly one comparison model."""
     monkeypatch.setattr(
         cardington,
         "get_models",
         lambda _: [
-            {"id": 2, "name": "Cardington"},
-            {"id": 1, "name": "RAL3-LFRic"},
-            {"id": 3, "name": "RAL3-UM"},
+            {"id": "obs", "name": "Cardington"},
+            {"id": "model_a", "name": "Model A"},
+            {"id": "model_b", "name": "Model B"},
         ],
     )
 
     conf = Config({"CARDINGTON_SINGLE_POINT_TIME_SERIES": True})
-    with pytest.raises(ValueError, match="Exactly one forecast model"):
+
+    with pytest.raises(
+        ValueError,
+        match="Exactly one forecast model",
+    ):
         list(cardington.load(conf))
 
 
 def test_loader_disabled_yields_no_recipes(monkeypatch):
     """The Cardington loader is inactive when its workflow switch is false."""
     monkeypatch.setattr(cardington, "get_models", lambda _: MODELS)
-    conf = Config({"CARDINGTON_SINGLE_POINT_TIME_SERIES": False})
+
+    conf = Config(
+        {
+            "CARDINGTON_SINGLE_POINT_TIME_SERIES": False,
+        }
+    )
 
     assert list(cardington.load(conf)) == []

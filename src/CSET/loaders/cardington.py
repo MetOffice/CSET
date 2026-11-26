@@ -117,7 +117,7 @@ def load(conf: Config):
         # Wind speed and direction.
         fields = [
             ("wind_speed", "wind_speed_vector", [2, 10, 25, 50]),
-            ("wind_direction", "wind_direction", [2, 10, 25, 50]),
+            ("wind_from_direction", "wind_direction", [2, 10, 25, 50]),
         ]
         for plot_field, card_field, heights in fields:
             for ht in heights:
