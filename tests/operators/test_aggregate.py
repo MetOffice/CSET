@@ -280,3 +280,49 @@ def test_make_aggregated_obs_cube(dummy_cubelist_obs_3_common_stations):
         forecast_period,
     )
     assert agg_obs_cube.shape == (2, 10, 3)
+
+
+def test_make_aggregated_obs_cube_within_tol_latlot(
+    dummy_cubelist_obs_3_common_stations_latlon_in_tol,
+):
+    """Test _make_aggregated_obs_cube basic functionality."""
+    common_stations = aggregate._get_common_stations(
+        dummy_cubelist_obs_3_common_stations_latlon_in_tol
+    )
+    station_lookup = aggregate._build_station_lookup(
+        dummy_cubelist_obs_3_common_stations_latlon_in_tol, common_stations
+    )
+    forecast_period = aggregate._generate_forecast_period(
+        dummy_cubelist_obs_3_common_stations_latlon_in_tol
+    )
+
+    agg_obs_cube = aggregate._make_aggregated_obs_cube(
+        dummy_cubelist_obs_3_common_stations_latlon_in_tol,
+        station_lookup,
+        common_stations,
+        forecast_period,
+    )
+    assert agg_obs_cube.shape == (2, 10, 3)
+
+
+def test_make_aggregated_obs_cube_outwith_tol_latlot(
+    dummy_cubelist_obs_3_common_stations_latlon_outwith_tol,
+):
+    """Test _make_aggregated_obs_cube basic functionality."""
+    common_stations = aggregate._get_common_stations(
+        dummy_cubelist_obs_3_common_stations_latlon_outwith_tol
+    )
+    station_lookup = aggregate._build_station_lookup(
+        dummy_cubelist_obs_3_common_stations_latlon_outwith_tol, common_stations
+    )
+    forecast_period = aggregate._generate_forecast_period(
+        dummy_cubelist_obs_3_common_stations_latlon_outwith_tol
+    )
+
+    with pytest.raises(ValueError, match="Station metadata differs for coord "):
+        aggregate._make_aggregated_obs_cube(
+            dummy_cubelist_obs_3_common_stations_latlon_outwith_tol,
+            station_lookup,
+            common_stations,
+            forecast_period,
+        )
