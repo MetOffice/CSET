@@ -1,6 +1,8 @@
 category: Hinton
-title: Full CRPS Hinton
-description: TODO experimental
+title: CRPS Hinton for standard variables for $MODEL_NAME
+description: Hinton CRPS plot for temperature_at_screen_level, wind_speed_at_10m, visibility_in_air,
+             air_pressure_at_mean_sea_level, dew_point_temperature_at_screen_level.
+             [how computed, use of spatial ensemble like HiRA, aggregation of data.]
 steps:
   - operator: read.read_cubes
     file_paths: $INPUT_PATHS
