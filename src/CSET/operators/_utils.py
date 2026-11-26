@@ -689,3 +689,61 @@ def get_shared_times(base: Cube, other: Cube, time_coord: str) -> set[int | date
     if not shared_times:
         raise ValueError("No common time points found!")
     return shared_times
+
+
+def _sort_cube_into_base_and_other(cubes: CubeList) -> tuple[Cube, CubeList]:
+    r"""Sorts cube into base and other models.
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        A CubeList of multiple cubes.  One base cube and other model cubes.
+
+    Returns
+    -------
+    base: iris.cube.Cube
+        The cube from the "analysis" or observed cube in the same format as the other model.
+    others: iris.cube.CubeList
+        The cube list of containing the cube(s) from the model in the same format as the base model.
+
+    """
+    base: Cube = cubes.extract_cube(iris.AttributeConstraint(cset_comparison_base=1))
+    others: CubeList = cubes.extract(
+        iris.Constraint(
+            cube_func=lambda cube: "cset_comparison_base" not in cube.attributes
+        )
+    )
+
+    return base, others
+
+
+def _split_base_and_other(cubes: CubeList):
+    r"""Split the cube into base and other cubes.
+
+    Split depends on whether there
+    is an observed cube in the cubes.  If there is an observed cube,
+    then 'base' is the observed cube, if not then 'base' is the comparison
+    model cube.
+
+    Parameters
+    ----------
+    cubes: iris.cube.CubeList
+        Cubes to split into base and other cubes.
+
+    Returns
+    -------
+    tuple
+        A tuple containing a base cube, and other cube/cubelist.
+
+    """
+    obs_cube = [cb for cb in cubes if "observed" in (cb.long_name or "")]
+    if obs_cube:
+        if len(obs_cube) > 1:
+            raise ValueError(
+                f"Expected exactly one 'observed' cube, found {len(obs_cube)}"
+            )
+        base = obs_cube[0]
+        others = CubeList(cb for cb in cubes if cb is not base)
+        return base, others
+
+    return _sort_cube_into_base_and_other(cubes)
