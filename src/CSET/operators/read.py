@@ -540,6 +540,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _um_normalise_callback(cube)
     _lfric_stash_source_callback(cube)
     _nimrod_normalise_callback(cube)
+    _gpm_normalise_callback(cube)
     cube = _lfric_time_coord_fix_callback(cube)
     _normalise_var0_varname(cube)
     cube = _fix_no_spatial_coords_callback(cube)
@@ -569,8 +570,9 @@ def _nimrod_normalise_callback(cube: iris.cube.Cube):
 
 def _gpm_normalise_callback(cube: iris.cube.Cube):
     """Normalise attributes that prevents GPM rainfall cubes from merging."""
-    # Remove unwanted attributes here that prevents merging of cubes with
-    # differing attribute values.
+    # Remove unwanted attributes here that could prevent merging of
+    # cubes with differing attribute values.
+    cube.attributes.pop("Conventions", None)
 
 
 def _remove_cset_comparison_base_attribute_callback(cube):
