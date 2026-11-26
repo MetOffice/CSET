@@ -42,6 +42,7 @@ def _get_gpm_dict() -> dict:
     As of November 2026 the archive holds GPM V07 data
     from 1998-01-01 to 2025-09-30 inclusive.
     """
+    # TODO this dictionary should be in a restricted file.
     gpm_dict = {
         "filepath": "/data/users/gpm_imerg/production/current_version",
         "filename": "gpm_imerg_production_V07B_",
