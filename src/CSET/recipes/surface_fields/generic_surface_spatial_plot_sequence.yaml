@@ -1,4 +1,6 @@
-category: Surface Spatial Plot
+category: diagnostics
+plot_type: spatial
+level_type: surface
 title: "$MODEL_NAME $VARNAME $METHOD $SUBAREA_NAME"
 description: Extracts and plots the $METHOD of $VARNAME from all times in $MODEL_NAME.
 

@@ -1,4 +1,6 @@
-category: Histogram
+category: diagnostics
+plot_type: histogram
+level_type: $LEVELTYPE
 title: "Histogram $VARNAME $LEVELTYPE $LEVEL\n Aggregation by hour of day $SUBAREA_NAME"
 description: |
   Extracts and plots the probability density of $VARNAME from a

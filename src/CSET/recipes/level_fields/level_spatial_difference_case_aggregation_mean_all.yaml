@@ -1,4 +1,6 @@
-category: $LEVELTYPE Level Spatial Difference
+category: diagnostics
+plot_type: spatial difference
+level_type: $LEVELTYPE
 title: "$VARNAME $LEVELTYPE$LEVEL\n Difference ($OTHER_MODEL - $BASE_MODEL) \n Aggregation over all cases $SUBAREA_NAME"
 description: |
   Extracts and plot the mean difference $VARNAME on $LEVELTYPE level $LEVEL for all times. The cases

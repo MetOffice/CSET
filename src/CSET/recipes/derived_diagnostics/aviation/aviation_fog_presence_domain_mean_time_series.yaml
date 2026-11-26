@@ -1,4 +1,5 @@
-category: Aviation
+category: diagnostics
+derived: true
 title: Aviation Fog presence domain mean timeseries
 description: |
   Generates a mask of whether aviation fog is present in a grid box and provides a

@@ -1,4 +1,6 @@
-category: Power Spectrum
+category: diagnostics
+plot_type: power spectrum
+level_type: surface
 title: "Power Spectrum $VARNAME\n $SUBAREA_NAME Mean over all cases"
 description: |
   Extracts and plots the mean power spectral density of surface $VARNAME over all times in all cases.

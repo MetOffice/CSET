@@ -1,4 +1,4 @@
-category: Quick Look
+category: diagnostics
 title: Example adding masks for 'OR' type filters
 description: |
   Generates and applies two masks, and adds them together for more complex stratified analysis.

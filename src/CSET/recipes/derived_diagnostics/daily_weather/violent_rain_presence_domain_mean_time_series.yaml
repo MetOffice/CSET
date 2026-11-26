@@ -1,4 +1,5 @@
-category: Daily Weather
+category: diagnostics
+derived: true
 title: Violent rain presence domain mean timeseries
 description: |
   Generates a mask of whether violent rain is present in a grid box and provides a

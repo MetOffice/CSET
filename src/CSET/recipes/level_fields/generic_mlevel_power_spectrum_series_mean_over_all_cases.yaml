@@ -1,4 +1,6 @@
-category: Power Spectrum
+category: diagnostics
+plot_type: power spectrum
+level_type: $LEVELTYPE
 title: "Power Spectrum $VARNAME $LEVELTYPE $LEVEL\n $SUBAREA_NAME Mean over all cases"
 description: |
   Extracts and plots the mean power spectral density of $VARNAME from a

@@ -1,4 +1,6 @@
-category: Multivar Spatial Plot
+category: diagnostics
+plot_type: multivariable spatial
+level_type: surface
 title: "$MODEL_NAME $VARNAME_BASE $METHOD $SUBAREA_NAME\n(overlay: $VARNAME_OVER $OVERLAY_MASK_CONDITION $OVERLAY_MASK_VALUE)"
 description: Extracts and overplots the $METHOD of $VARNAME_BASE and $VARNAME_OVER from all times in $MODEL_NAME.
 
