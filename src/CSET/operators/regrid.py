@@ -406,10 +406,8 @@ def transform_lat_long_points(lon, lat, cube):
     return lon_rot, lat_rot
 
 
-from functools import reduce
-
 def interpolate_to_point_cube(
-    fld: iris.cube.Cube | iris.cube.CubeList, point_cube: iris.cube.Cube | iris.cube.CubeList, **kwargs
+    fld: iris.cube.Cube | iris.cube.CubeList, point_cube: iris.cube.Cube, **kwargs
 ) -> iris.cube.Cube | iris.cube.CubeList:
     """Interpolate a 2D field in cube or CubeList to a set of points.
 
@@ -431,7 +429,6 @@ def interpolate_to_point_cube(
         points specified by the point cube for matching times common to
         both fld and point_cube.
     """
-
     # Empty CubeList To store regridded cubes.
     regridded_cubes = iris.cube.CubeList()
 
@@ -476,7 +473,7 @@ def interpolate_to_point_cube(
         od_index = point_cube.coord_dims("station")[0]
 
         fv_cube = iris.cube.Cube(
-            diag_data,
+            fld_point_cube.data.diagonal(axis1=od_index, axis2=od_index + 1),
             standard_name=cube.standard_name,
             long_name=cube.long_name,
             units=cube.units,
@@ -501,75 +498,39 @@ def interpolate_to_point_cube(
             )
 
         for coord in cube.coords():
-
-            if coord.name() in (
+            if coord.name() not in [
+                "time",
                 "latitude",
                 "longitude",
                 "grid_latitude",
                 "grid_longitude",
-            ):
-                continue
-
-            if coord.name() in [c.name() for c in fv_cube.coords()]:
-                continue
-
-            dims = cube.coord_dims(coord)
-
-            if dims:
-                fv_cube.add_aux_coord(
-                    coord.copy(),
-                    dims,
-                )
-            else:
-                fv_cube.add_aux_coord(
-                    coord.copy(),
-                )
-
-        #
-        # Copy observation auxiliary coordinates.
-        #
+            ] and coord.name() not in [coord.name() for coord in fv_cube.coords()]:
+                fv_cube.add_aux_coord(coord.copy(), cube.coord_dims(coord))
         for coord in point_cube.coords():
-
-            if coord.name() in (
-                "station",
+            if coord.name() not in [
+                "time",
                 "forecast_period",
                 "forecast_reference_time",
-            ):
-                continue
-
-            if coord.name() in [c.name() for c in fv_cube.coords()]:
-                continue
-
-            dims = point_cube.coord_dims(coord)
-
-            if dims:
-                fv_cube.add_aux_coord(
-                    coord.copy(),
-                    dims,
-                )
-            else:
-                fv_cube.add_aux_coord(
-                    coord.copy(),
-                )
-
+                "realization",
+                "station",
+            ] and coord.name() not in [coord.name() for coord in fv_cube.coords()]:
+                fv_cube.add_aux_coord(coord.copy(), point_cube.coord_dims(coord))
+        fv_cube.add_dim_coord(point_cube.coord("station"), od_index)
         fv_cube.attributes = cube.attributes.copy()
         fv_cube.cell_methods = cube.cell_methods
         fv_cube.units = cube.units
-
         regridded_cubes.append(fv_cube)
 
     # Preserve returning a cube if only a cube has been supplied to regrid.
 
     if len(regridded_cubes) == 1:
         return regridded_cubes[0]
+    else:
+        return regridded_cubes
 
-    return regridded_cubes
 
-
-from iris.coords import AuxCoord, DimCoord
+from iris.coords import DimCoord
 from iris.cube import Cube
-
-import numpy as np
 
 
 def extract_neighbourhood_to_point_cube(
@@ -606,11 +567,8 @@ def extract_neighbourhood_to_point_cube(
          neighbourhood_y,
          neighbourhood_x)
     """
-
     if npoints % 2 == 0:
-        raise ValueError(
-            f"npoints must be odd, got {npoints}"
-        )
+        raise ValueError(f"npoints must be odd, got {npoints}")
 
     half_width = npoints // 2
 
@@ -638,7 +596,6 @@ def extract_neighbourhood_to_point_cube(
     for istation, (station_lat, station_lon) in enumerate(
         zip(station_lats, station_lons)
     ):
-
         iy = np.argmin(np.abs(lat_points - station_lat))
         ix = np.argmin(np.abs(lon_points - station_lon))
 
@@ -648,15 +605,8 @@ def extract_neighbourhood_to_point_cube(
         x0 = ix - half_width
         x1 = ix + half_width + 1
 
-        if (
-            y0 < 0
-            or x0 < 0
-            or y1 > len(lat_points)
-            or x1 > len(lon_points)
-        ):
-            station_name = point_cube.coord(
-                "Station_Name"
-            ).points[istation]
+        if y0 < 0 or x0 < 0 or y1 > len(lat_points) or x1 > len(lon_points):
+            station_name = point_cube.coord("Station_Name").points[istation]
 
             raise ValueError(
                 f"Station '{station_name}' is too close "
@@ -719,7 +669,6 @@ def extract_neighbourhood_to_point_cube(
         "latitude",
         "longitude",
     ]:
-
         coord = point_cube.coord(coord_name)
 
         cube_out.add_aux_coord(
@@ -793,11 +742,8 @@ def _interpolate_neighbourhood_to_point_cube(
     """
     Extract a neighbourhood around each station.
     """
-
     if npoints % 2 == 0:
-        raise ValueError(
-            f"npoints must be odd, got {npoints}"
-        )
+        raise ValueError(f"npoints must be odd, got {npoints}")
 
     half_width = npoints // 2
 
@@ -825,20 +771,14 @@ def _interpolate_neighbourhood_to_point_cube(
     #
     input_shape = list(fld.shape)
 
-    output_shape = (
-        input_shape[:lat_dim]
-        + [nstation, npoints, npoints]
-    )
+    output_shape = input_shape[:lat_dim] + [nstation, npoints, npoints]
 
     data = np.empty(
         output_shape,
         dtype=fld.dtype,
     )
 
-    for istation, (slat, slon) in enumerate(
-        zip(station_lat, station_lon)
-    ):
-
+    for istation, (slat, slon) in enumerate(zip(station_lat, station_lon)):
         iy = np.argmin(np.abs(lat - slat))
         ix = np.argmin(np.abs(lon - slon))
 
@@ -884,7 +824,6 @@ def _interpolate_neighbourhood_to_point_cube(
     next_dim = 0
 
     for coord in fld.dim_coords:
-
         dims = fld.coord_dims(coord)
 
         # Skip spatial dimensions
@@ -948,14 +887,12 @@ def _interpolate_neighbourhood_to_point_cube(
         "latitude",
         "longitude",
     ]:
-
         cube_out.add_aux_coord(
             point_cube.coord(coord_name).copy(),
             (station_dim,),
         )
 
     return cube_out
-
 
 
 def vertical_interpolation(
