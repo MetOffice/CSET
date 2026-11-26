@@ -2832,7 +2832,6 @@ def hinton_plot(
         Option bool when if True, then plot the numerical value difference in two values under each
         triangle.
     """
-
     # Ignore first entry, as this will always be OBS.
     base_name, other_name = models[1], models[2]
 
@@ -2849,11 +2848,7 @@ def hinton_plot(
     base_cubes = iris.cube.CubeList()
     other_cubes = iris.cube.CubeList()
     for c in cubes:
-
-        if (
-            c.long_name is not None
-            and c.long_name.startswith("significance_")
-        ):
+        if c.long_name is not None and c.long_name.startswith("significance_"):
             continue
         if c.attributes["model_name"] == base_name:
             base_cubes.append(c)
@@ -3076,8 +3071,8 @@ def hinton_plot(
     try:
         ncase = base_cube.attributes["number_reference_times"]
         recipe_title = f"{recipe_title} for {ncase} cases"
-    except:
-        pass
+    except KeyError:
+        logger.info("number_references_times already set, skipping.")
 
     title = f"{recipe_title}"
     filename = slugify(recipe_title)
