@@ -1621,7 +1621,7 @@ def test_probe_variables_no_long_names(tmp_path):
 
 def test_extract_projected_latlon_cuts_out_subarea(mercator_cube):
     """A box inside the domain returns a smaller cube on the same grid."""
-    result = read._extract_projected_latlon(
+    result = read.extract_projected_latlon(
         mercator_cube, lats=(51.0, 52.0), lons=(-3.0, -1.0)
     )
 
@@ -1635,6 +1635,6 @@ def test_extract_projected_latlon_cuts_out_subarea(mercator_cube):
 def test_extract_projected_latlon_outside_domain_raises(mercator_cube):
     """A box with no grid points in it raises a ValueError."""
     with pytest.raises(ValueError, match="Region cutout error"):
-        read._extract_projected_latlon(
+        read.extract_projected_latlon(
             mercator_cube, lats=(10.0, 11.0), lons=(100.0, 101.0)
         )
