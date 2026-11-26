@@ -25,6 +25,8 @@ import numpy as np
 
 from CSET._common import iter_maybe
 
+logger = logging.getLogger(__name__)
+
 
 def _lat_lon_identifier(original_lat, original_lon, distance, bearing):
     """Find the latitude and longitude of new points based on great circle distance."""
@@ -58,7 +60,7 @@ def global_curv(central, radius, num_radial_points=16, tol=400.0):
             f"Number of radial points should be 8 or 16. You have provided {num_radial_points}."
         )
 
-    logging.info(
+    logger.info(
         f"CURV calculated base on {num_radial_points} radial points, a {radius} km radius and {tol} tolerance."
     )
     curv_cubes = iris.cube.CubeList([])
