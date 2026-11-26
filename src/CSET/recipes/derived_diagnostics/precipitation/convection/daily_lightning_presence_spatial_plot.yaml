@@ -1,4 +1,5 @@
-category: Convection
+category: diagnostics
+derived: true
 title: "$MODEL_NAME Daily occurrence of lightning at 0900 UTC"
 description: |
   Extracts and plots the daily occurrence of lightning between 0900 UTC and 0900 UTC

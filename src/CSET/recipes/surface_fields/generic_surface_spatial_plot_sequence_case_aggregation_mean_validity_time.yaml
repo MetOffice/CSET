@@ -1,4 +1,6 @@
-category: Surface Spatial Plot
+category: diagnostics
+plot_type: spatial
+level_type: surface
 title: "$MODEL_NAME $VARNAME\n Aggregation by validity time $SUBAREA_NAME"
 description: |
   Extracts and plots the mean $VARNAME for all times in $MODEL_NAME. Case

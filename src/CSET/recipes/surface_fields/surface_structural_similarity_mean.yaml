@@ -1,4 +1,6 @@
-category: Surface Structural Similarity
+category: diagnostics
+plot_type: structural similarity
+level_type: surface
 title: "$VARNAME\nMean Structural Similarity between $OTHER_MODEL and $BASE_MODEL $SUBAREA_NAME"
 description: |
   Extracts $VARNAME for $OTHER_MODEL and $BASE_MODEL. These fields then have the

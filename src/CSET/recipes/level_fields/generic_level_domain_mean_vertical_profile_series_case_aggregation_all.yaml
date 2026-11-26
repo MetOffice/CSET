@@ -1,4 +1,6 @@
-category: Profiles
+category: diagnostics
+plot_type: vertical profile
+level_type: $LEVELTYPE
 title: "Domain mean $VARNAME vertical profile\n Aggregation over all cases $SUBAREA_NAME"
 description: |
   Plots a vertical profile for the domain horizontal mean $VARNAME using a

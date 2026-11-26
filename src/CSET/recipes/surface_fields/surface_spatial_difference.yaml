@@ -1,4 +1,6 @@
-category: Surface Spatial Plot Difference
+category: diagnostics
+plot_type: spatial difference
+level_type: surface
 title: "$METHOD $VARNAME\nDifference ($OTHER_MODEL - $BASE_MODEL) $SUBAREA_NAME"
 description: Extracts and plot the difference in $METHOD of $VARNAME for all times.
 

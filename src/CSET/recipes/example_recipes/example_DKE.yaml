@@ -1,4 +1,5 @@
-category: Ensembles
+category: diagnostics
+ensemble: True
 title: Ensemble mean 500 hPa spatial plot of Difference Kinetic Energy
 description: |
   A spatial plot of the ensemble mean Difference Kinetic Energy (DKE) at 500

@@ -1,4 +1,6 @@
-category: Profiles
+category: diagnostics
+plot_type: vertical profile
+level_type: $LEVELTYPE
 title: Domain mean $VARNAME vertical profile $METHOD $SUBAREA_NAME
 description: Plots the $METHOD of vertical profiles for the domain horizontal mean
   $VARNAME using a $LEVELTYPE coordinate. For ensembles, the control
