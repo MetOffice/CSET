@@ -97,6 +97,10 @@ def retrieve_gpm():
         gpm_cube_obs = _load_gpm(gpm_obs_path)
 
         # Cut out the required GPM domain.
+        # TODO do the cutout required i.e. use GPM_DOMAIN_UKV
+
+        # TODO need a small function to fettle the GPM cubes
+        # i.e. construct forecast_reference_time
 
         # Write the GPM obs to a NetCDF file.
         if gpm_cube_obs is not None:
