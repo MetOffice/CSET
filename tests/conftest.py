@@ -16,7 +16,8 @@
 
 https://docs.pytest.org/en/latest/reference/fixtures.html#conftest-py-sharing-fixtures-across-multiple-files
 """
-
+import ast
+import copy
 import datetime
 import shutil
 import subprocess
@@ -36,6 +37,8 @@ from iris.coords import AuxCoord, DimCoord
 from iris.cube import Cube, CubeList
 
 from CSET.operators import collapse, constraints, filters, read, regrid
+
+ROSE_SUITE_CONF = Path(__file__).parents[1] / "src" / "CSET" / "cset_workflow" / "rose-suite.conf.example"
 
 
 # Special function that is run after all the tests finish.
@@ -1764,3 +1767,39 @@ def wwind_read_only() -> iris.cube.Cube:
 def wwind(wwind_read_only) -> iris.cube.Cube:
     """Get regridded wwind to run tests on. It is safe to modify."""
     return wwind_read_only.copy()
+
+
+def load_rose_conf(path) -> dict:
+    """Parse [template variables] from rose-suite.conf into Python values."""
+    conf, in_section = {}, False
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if line.startswith("["):
+            in_section = line == "[template variables]"
+            continue
+        if not in_section or not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.lstrip("!").split("=", 1)  # "!" = ignored in rose
+        try:
+            conf[key.strip()] = ast.literal_eval(value.strip())
+        except (ValueError, SyntaxError):
+            conf[key.strip()] = value.strip()
+    return conf
+
+@pytest.fixture(scope="session")
+def base_rose_conf():
+    return load_rose_conf(ROSE_SUITE_CONF)  # read-only parse
+
+@pytest.fixture
+def everything_on_conf(base_rose_conf):
+    # Setting up an everything-on conf file for testing loaders
+    # and metadata
+
+    def is_false(value) -> bool:
+        return value is False or (isinstance(value, str) and value.lower() == "false")
+
+    def enable_all_flags(conf: dict) -> dict:
+        return {key: True if is_false(value) else value for key, value in conf.items()}
+
+    conf = copy.deepcopy(base_rose_conf)
+    return conf

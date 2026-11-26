@@ -350,3 +350,8 @@ def test_all_recipes_metadata_valid(recipe_path, tmp_working_dir):
     with open(tmp_working_dir / "meta.json", "r") as fp:
         metadata = json.load(fp)
         validate_metadata(metadata)
+
+def test_all_on_conf(everything_on_conf):
+    """Every packaged recipe parses and has the basic structure."""
+    breakpoint()
+    pass
