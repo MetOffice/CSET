@@ -564,7 +564,6 @@ def _aggregate_in_time_multiple_frt(
 
     Currently only tested for 6h means, with T+0h excluded.
     """
-
     aggregated_cycles = iris.cube.CubeList()
     for frt_cube in cube.slices_over("forecast_reference_time"):
         forecast_period = frt_cube.coord("forecast_period")
@@ -600,8 +599,8 @@ def _aggregate_in_time_multiple_frt(
     try:
         for cb in aggregated_cycles:
             cb.remove_coord("time")
-    except:
-        pass
+    except iris.exceptions.CoordinateNotFoundError:
+        logger.info("No time coord to remove, skipping...")
 
     return aggregated_cycles.concatenate_cube()
 
