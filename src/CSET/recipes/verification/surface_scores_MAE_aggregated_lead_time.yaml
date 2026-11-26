@@ -1,11 +1,13 @@
-category: Scores Time Series Aggregated
-title: "$VARNAME\nScores Mean Absolute Error time series between models and $BASE_MODEL aggregated by $AGGREGATION_MODE $SUBAREA_NAME"
+category: Scores Spatial Aggregated
+title: "Scores Mean Absolute Error between the comparison model and $BASE_MODEL aggregated by lead time $SUBAREA_NAME"
 description: |
-  Extracts and plots the Mean Absolute Error (MAE) in $VARNAME
-  computed over the domain for each timestep. The MAE is calculated based on that used in the
+  Extracts and plots the Mean Absolute Error (MAE) of $VARNAME.
+  The MAE is calculated based on that used in the
   package [`scores`](https://scores.readthedocs.io/en/stable/api.html#scores.continuous.mae).
-  This recipe allows the preservation of the time coordinate to produce a time series. Therefore, the MAE is
-  collapsed over all other coordinates in the cube and calculated for every timestep.
+  This recipe preserves the time, latitude and longitude coordinates.
+  This means a sequence of spatial plots of the MAE can be produced.
+
+  This recipe calculates the MAE across all the case studies.
 
   A larger MAE implies a greater error than a smaller MAE. An
   MAE of zero indicates the two fields most likely match. The MAE is calculated
@@ -13,6 +15,10 @@ description: |
   information about where the differences are, or if placement errors
   are dominating the score (usually indicated by dipoles). MAE is a fair
   measure of error when forecasting the median and is not sensitive to outliers.
+
+  For MAE values computed across an entire case study, the computation
+  is done within the scores MAE module, rather than trying to mean across
+  each timestep. This preserves the nonlinear nature of the MAE metric.
 
 steps:
   - operator: read.read_cubes
@@ -39,10 +45,10 @@ steps:
   - operator: aggregate.ensure_aggregatable_across_cases
 
   - operator: scoreswrappers.scores_mae
-    preserved_coordinates: "forecast_period"
+    preserved_coordinates: $PRESERVED_COORDS
 
-  - operator: plot.plot_line_series
-    series_coordinate: "forecast_period"
+  - operator: plot.spatial_pcolormesh_plot
+    sequence_coordinate: "forecast_period"
 
   - operator: write.write_cube_to_nc
     overwrite: True

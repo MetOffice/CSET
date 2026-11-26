@@ -504,11 +504,18 @@ def _make_aggregated_obs_cube(
 
             other_values = cube.coord(coord.name()).points[idx]
 
-            if not np.array_equal(
-                values,
-                other_values,
-            ):
-                raise ValueError(f"Station metadata differs for coord '{coord.name()}'")
+            if not np.array_equal(values, other_values):
+                # sometimes station lat/lon metadata is rounded to a
+                # certain number of digits, and so we give a tolerance
+                # and if the tolerance is exceeded,
+                # the ValueError is raised
+                is_latlon = coord.name() in ("latitude", "longitude")
+                within_tol = np.max(np.abs(values - other_values)) < 0.01
+
+                if not (is_latlon and within_tol):
+                    raise ValueError(
+                        f"Station metadata differs for coord '{coord.name()}'"
+                    )
 
         aux = AuxCoord(
             values,
