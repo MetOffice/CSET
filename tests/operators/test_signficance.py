@@ -261,12 +261,12 @@ def test_bootstrap_significance_missing_frt():
 def test_bootstrap_significance_single_frt():
     """Need more than one forecast reference time."""
     base = make_cube(
-        [1.0],
+        np.array([1.0]),
         is_base=True,
     )
 
     other = make_cube(
-        [2.0],
+        np.array([2.0]),
     )
 
     cubes = iris.cube.CubeList([base, other])
