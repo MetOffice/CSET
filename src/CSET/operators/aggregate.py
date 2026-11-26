@@ -561,20 +561,33 @@ def _aggregate_in_time_multiple_frt(
 
     Aggregates each forecast cycle separately, then concatenates the results
     back into a single cube along forecast_reference_time.
+
+    Currently only tested for 6h means, with T+0h excluded.
     """
     aggregated_cycles = iris.cube.CubeList()
     for frt_cube in cube.slices_over("forecast_reference_time"):
+        forecast_period = frt_cube.coord("forecast_period")
+        forecast_period.bounds = None
+
         iris.coord_categorisation.add_categorised_coord(
             frt_cube,
             "interval",
-            "time",
-            lambda coord, cell: cell // interval * interval,
+            "forecast_period",
+            lambda coord, cell: (cell - 1) // interval * interval,
         )
         agg = frt_cube.aggregated_by(
             "interval",
             getattr(iris.analysis, method),
         )
         agg.remove_coord("interval")
+
+        # # Drop singleton [0,0] interval
+        # agg = agg[1:]
+
+        # Relabel points to upper bound
+        fp = agg.coord("forecast_period")
+        fp.points = fp.bounds[:, 1]
+
         agg = iris.util.new_axis(
             agg,
             agg.coord("forecast_reference_time"),
@@ -583,8 +596,12 @@ def _aggregate_in_time_multiple_frt(
     # Current approach is to remove time 2d auxcoord as it causes issues concatenating into a single cube.
     # Time can be reconstructed from forecast_reference_time and forecast_period later on.
     # as we can construct it if needed.
-    for cb in aggregated_cycles:
-        cb.remove_coord("time")
+    try:
+        for cb in aggregated_cycles:
+            cb.remove_coord("time")
+    except iris.exceptions.CoordinateNotFoundError:
+        logger.info("No time coord to remove, skipping...")
+
     return aggregated_cycles.concatenate_cube()
 
 
@@ -594,7 +611,7 @@ def _aggregate_in_time_single_frt(cube: iris.cube.Cube, method: str, interval: i
         cube,
         "interval",
         "time",
-        lambda coord, cell: cell // interval * interval,
+        lambda coord, cell: (cell - 1) // interval * interval,
     )
     aggregated_cube = cube.aggregated_by(
         "interval",

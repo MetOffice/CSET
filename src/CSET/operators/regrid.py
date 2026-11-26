@@ -529,6 +529,372 @@ def interpolate_to_point_cube(
         return regridded_cubes
 
 
+from iris.coords import DimCoord
+from iris.cube import Cube
+
+
+def extract_neighbourhood_to_point_cube(
+    fld: Cube,
+    point_cube: Cube,
+    npoints: int = 5,
+) -> Cube:
+    """
+    Extract an npoints x npoints neighbourhood around each station.
+
+    Parameters
+    ----------
+    fld : Cube
+        Model cube with dimensions
+
+            (forecast_reference_time,
+             forecast_period,
+             latitude,
+             longitude)
+
+    point_cube : Cube
+        Observation/station cube containing station metadata.
+
+    npoints : int
+        Width of neighbourhood to extract (must be odd).
+
+    Returns
+    -------
+    Cube
+
+        (forecast_reference_time,
+         forecast_period,
+         station,
+         neighbourhood_y,
+         neighbourhood_x)
+    """
+    if npoints % 2 == 0:
+        raise ValueError(f"npoints must be odd, got {npoints}")
+
+    half_width = npoints // 2
+
+    lat_points = fld.coord("latitude").points
+    lon_points = fld.coord("longitude").points
+
+    station_lats = point_cube.coord("latitude").points
+    station_lons = point_cube.coord("longitude").points
+
+    nfrt = fld.shape[0]
+    nlead = fld.shape[1]
+    nstation = len(station_lats)
+
+    data = np.empty(
+        (
+            nfrt,
+            nlead,
+            nstation,
+            npoints,
+            npoints,
+        ),
+        dtype=fld.dtype,
+    )
+
+    for istation, (station_lat, station_lon) in enumerate(
+        zip(station_lats, station_lons)
+    ):
+        iy = np.argmin(np.abs(lat_points - station_lat))
+        ix = np.argmin(np.abs(lon_points - station_lon))
+
+        y0 = iy - half_width
+        y1 = iy + half_width + 1
+
+        x0 = ix - half_width
+        x1 = ix + half_width + 1
+
+        if y0 < 0 or x0 < 0 or y1 > len(lat_points) or x1 > len(lon_points):
+            station_name = point_cube.coord("Station_Name").points[istation]
+
+            raise ValueError(
+                f"Station '{station_name}' is too close "
+                f"to the domain boundary for a "
+                f"{npoints}x{npoints} neighbourhood."
+            )
+
+        data[:, :, istation, :, :] = fld.data[
+            :,
+            :,
+            y0:y1,
+            x0:x1,
+        ]
+
+    cube_out = Cube(
+        data,
+        standard_name=fld.standard_name,
+        long_name=fld.long_name,
+        var_name=fld.var_name,
+        units=fld.units,
+        attributes=fld.attributes.copy(),
+        dim_coords_and_dims=[
+            (
+                fld.coord("forecast_reference_time").copy(),
+                0,
+            ),
+            (
+                fld.coord("forecast_period").copy(),
+                1,
+            ),
+            (
+                DimCoord(
+                    np.arange(nstation),
+                    long_name="station",
+                ),
+                2,
+            ),
+            (
+                DimCoord(
+                    np.arange(npoints),
+                    long_name="neighbourhood_y",
+                ),
+                3,
+            ),
+            (
+                DimCoord(
+                    np.arange(npoints),
+                    long_name="neighbourhood_x",
+                ),
+                4,
+            ),
+        ],
+    )
+
+    #
+    # Preserve station metadata
+    #
+    for coord_name in [
+        "Station_Name",
+        "latitude",
+        "longitude",
+    ]:
+        coord = point_cube.coord(coord_name)
+
+        cube_out.add_aux_coord(
+            coord.copy(),
+            (2,),
+        )
+
+    return cube_out
+
+
+def interpolate_neighbourhood_to_point_cube(
+    fld: Cube | iris.cube.CubeList,
+    point_cube: Cube,
+    npoints: int = 5,
+) -> Cube | iris.cube.CubeList:
+    """
+    Extract an npoints x npoints neighbourhood around each station.
+
+    Parameters
+    ----------
+    fld : Cube | CubeList
+        Model field(s) with dimensions
+
+            (forecast_reference_time,
+             forecast_period,
+             latitude,
+             longitude)
+
+    point_cube : Cube
+        Station cube with dimensions
+
+            (forecast_reference_time,
+             forecast_period,
+             station)
+
+    npoints : int
+        Width of neighbourhood. Must be odd.
+
+    Returns
+    -------
+    Cube | CubeList
+
+        (forecast_reference_time,
+         forecast_period,
+         station,
+         neighbourhood_y,
+         neighbourhood_x)
+    """
+    output = iris.cube.CubeList()
+
+    for cube in iter_maybe(fld):
+        output.append(
+            _interpolate_neighbourhood_to_point_cube(
+                cube,
+                point_cube,
+                npoints=npoints,
+            )
+        )
+
+    if len(output) == 1:
+        return output[0]
+
+    return output
+
+
+def _interpolate_neighbourhood_to_point_cube(
+    fld: Cube,
+    point_cube: Cube,
+    npoints: int,
+) -> Cube:
+    """
+    Extract a neighbourhood around each station.
+    """
+    if npoints % 2 == 0:
+        raise ValueError(f"npoints must be odd, got {npoints}")
+
+    half_width = npoints // 2
+
+    lat = fld.coord("grid_latitude").points
+    lon = fld.coord("grid_longitude").points
+
+    lat_dim = fld.coord_dims("grid_latitude")[0]
+    lon_dim = fld.coord_dims("grid_longitude")[0]
+
+    station_lat = point_cube.coord("latitude").points
+    station_lon = point_cube.coord("longitude").points
+
+    nstation = len(station_lat)
+
+    #
+    # Output shape:
+    #
+    # original non-spatial dimensions
+    # +
+    # station
+    # +
+    # neighbourhood_y
+    # +
+    # neighbourhood_x
+    #
+    input_shape = list(fld.shape)
+
+    output_shape = input_shape[:lat_dim] + [nstation, npoints, npoints]
+
+    data = np.empty(
+        output_shape,
+        dtype=fld.dtype,
+    )
+
+    for istation, (slat, slon) in enumerate(zip(station_lat, station_lon)):
+        iy = np.argmin(np.abs(lat - slat))
+        ix = np.argmin(np.abs(lon - slon))
+
+        y0 = iy - half_width
+        y1 = iy + half_width + 1
+
+        x0 = ix - half_width
+        x1 = ix + half_width + 1
+
+        # Shift box back into domain if needed
+        if y0 < 0:
+            y1 -= y0
+            y0 = 0
+
+        if x0 < 0:
+            x1 -= x0
+            x0 = 0
+
+        if y1 > len(lat):
+            y0 -= y1 - len(lat)
+            y1 = len(lat)
+
+        if x1 > len(lon):
+            x0 -= x1 - len(lon)
+            x1 = len(lon)
+
+        # Flexible extraction
+        src_index = [slice(None)] * fld.ndim
+        src_index[lat_dim] = slice(y0, y1)
+        src_index[lon_dim] = slice(x0, x1)
+
+        # Insert station dimension into destination
+        dst_index = [slice(None)] * len(output_shape)
+        dst_index[-3] = istation
+
+        data[tuple(dst_index)] = fld.data[tuple(src_index)]
+
+    #
+    # Build output coordinates.
+    #
+    dim_coords_and_dims = []
+
+    next_dim = 0
+
+    for coord in fld.dim_coords:
+        dims = fld.coord_dims(coord)
+
+        # Skip spatial dimensions
+        if lat_dim in dims or lon_dim in dims:
+            continue
+
+        dim_coords_and_dims.append(
+            (
+                coord.copy(),
+                next_dim,
+            )
+        )
+
+        next_dim += 1
+
+    station_dim = next_dim
+    neigh_y_dim = next_dim + 1
+    neigh_x_dim = next_dim + 2
+
+    dim_coords_and_dims.extend(
+        [
+            (
+                DimCoord(
+                    np.arange(nstation),
+                    long_name="station",
+                ),
+                station_dim,
+            ),
+            (
+                DimCoord(
+                    np.arange(npoints),
+                    long_name="neighbourhood_y",
+                ),
+                neigh_y_dim,
+            ),
+            (
+                DimCoord(
+                    np.arange(npoints),
+                    long_name="neighbourhood_x",
+                ),
+                neigh_x_dim,
+            ),
+        ]
+    )
+
+    cube_out = Cube(
+        data,
+        standard_name=fld.standard_name,
+        long_name=fld.long_name,
+        var_name=fld.var_name,
+        units=fld.units,
+        attributes=fld.attributes.copy(),
+        dim_coords_and_dims=dim_coords_and_dims,
+    )
+
+    #
+    # Preserve station metadata.
+    #
+    for coord_name in [
+        "Station_Name",
+        "latitude",
+        "longitude",
+    ]:
+        cube_out.add_aux_coord(
+            point_cube.coord(coord_name).copy(),
+            (station_dim,),
+        )
+
+    return cube_out
+
+
 def vertical_interpolation(
     cubes: iris.cube.Cube | iris.cube.CubeList,
     coordinate: str,
