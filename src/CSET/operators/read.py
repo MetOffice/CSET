@@ -231,7 +231,7 @@ def read_cubes(
     iris.util.unify_time_units(cubes)
 
     # Select sub region.
-    cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
+    cubes = cutout_cubes_function(cubes, subarea_type, subarea_extent)
 
     # Clean unwanted cube attributes
     cubes = _clean_unwanted_cube_attributes(cubes, preserve_attributes)
@@ -350,7 +350,7 @@ def _merge_cubes_check_ensemble(cubes: iris.cube.CubeList):
     return cubes
 
 
-def _cutout_cubes(
+def cutout_cubes_function(
     cubes: iris.cube.CubeList,
     subarea_type: Literal["gridcells", "realworld", "modelrelative"] | None,
     subarea_extent: list[float],
@@ -421,7 +421,7 @@ def _cutout_cubes(
             x.name() == "projection_x_coordinate"
             and y.name() == "projection_y_coordinate"
         ):
-            cutout_cubes.append(_extract_projected_latlon(cube, lats, lons))
+            cutout_cubes.append(extract_projected_latlon(cube, lats, lons))
         else:
             # Do cutout and add to cutout_cubes.
             intersection_args = {lat_name: lats, lon_name: lons}
@@ -438,9 +438,10 @@ def _cutout_cubes(
     return cutout_cubes
 
 
-def _extract_projected_latlon(
+def extract_projected_latlon(
     cube: iris.cube.Cube, lats: tuple[float, float], lons: tuple[float, float]
 ) -> iris.cube.Cube:
+    """Extract lan and lon coords for use by the cutout function."""
     cs_x = cube.coord("projection_x_coordinate").coord_system
     cs_y = cube.coord("projection_y_coordinate").coord_system
 
