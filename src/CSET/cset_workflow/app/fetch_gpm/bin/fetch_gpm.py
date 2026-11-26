@@ -10,6 +10,8 @@ from pathlib import Path
 import iris
 import isodate
 
+from CSET.operators.read import cutout_cubes_function
+
 logger = logging.getLogger(__name__)
 
 iris.FUTURE.save_split_attrs = True
@@ -53,6 +55,22 @@ def _get_gpm_dict() -> dict:
     return gpm_dict
 
 
+def _get_gpm_domain_dict() -> dict:
+    """Define the domains that can be used to cutout GPM data.
+
+    The order of the latitude and longitude coordinates for each
+    domain are:
+
+    [ lower Lat, upper Lat, lower lon, upper lon ]
+
+    This is the same format used by CSET to specify SUBAREAs.
+    """
+    gpm_domain_dict = {
+        "ukv_domain": [48.0, 62.0, -14.0, 5.0],
+    }
+    return gpm_domain_dict
+
+
 def retrieve_gpm():
     """Fetch the GPM observations corresponding to a model run.
 
@@ -77,6 +95,9 @@ def retrieve_gpm():
     # Grab the GPM handling dictionary.
     gpm_dict = _get_gpm_dict()
 
+    # Grab the GPM domain dictionary.
+    gpm_domain_dict = _get_gpm_domain_dict()
+
     # Prepare the output directory for the GPM data.
     gpm_dir = Path(v["rose_datac"]) / "data" / gpm_dict["gpm_id"]
     os.makedirs(gpm_dir, exist_ok=True)
@@ -98,7 +119,16 @@ def retrieve_gpm():
         gpm_cube_obs = _load_gpm(gpm_obs_path)
 
         # Cut out the required GPM domain.
-        # TODO do the cutout required i.e. use GPM_DOMAIN_UKV
+        gpm_cubes_list = iris.cube.CubeList()
+        gpm_cubes_list.append(gpm_cube_obs)
+        # gpm_cutout_cubes = iris.cube.CubeList()
+        subarea_type = "realworld"
+        if os.environ["GPM_DOMAIN_UKV"]:
+            subarea_extent = gpm_domain_dict["ukv_domain"]
+            gpm_cutout_cubes = cutout_cubes_function(
+                gpm_cubes_list, subarea_type, subarea_extent
+            )
+            gpm_cube_obs = gpm_cutout_cubes[0]
 
         # TODO need a small function to fettle the GPM cubes
         # i.e. construct forecast_reference_time
