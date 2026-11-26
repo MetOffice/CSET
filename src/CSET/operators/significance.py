@@ -20,9 +20,6 @@ from iris.cube import Cube
 
 from CSET.operators.scoreswrappers import _split_base_and_other
 
-# TODO: take n number of models, iter over, preserving coordinates/metadata.
-# TODO: source _split_base_and_other to utils.
-
 
 def bootstrap_significance(
     cubes,
@@ -95,7 +92,7 @@ def bootstrap_significance(
         try:
             frt_dim = test_cube.coord_dims("forecast_reference_time")[0]
         except IndexError as err:
-            raise ValueError(
+            raise iris.exceptions.CoordinateNotFoundError(
                 "Input cubes must contain a 'forecast_reference_time' coordinate."
             ) from err
 
