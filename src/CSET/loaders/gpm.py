@@ -21,7 +21,7 @@ def load(conf: Config):
     """Yield recipes from the given workflow configuration."""
     # Surface (2D) fields for GPM rainfall.
     #
-    if conf.GPM_OBS:
+    if conf.GPM_OBS and conf.GPM_DOMAIN_UKV:
         yield RawRecipe(
             recipe="generic_surface_spatial_plot_sequence_gpm_rainfall.yaml",
             model_ids=["GPM"],  # -> Becomes $INPUT_PATHS
