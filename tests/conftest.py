@@ -16,6 +16,7 @@
 
 https://docs.pytest.org/en/latest/reference/fixtures.html#conftest-py-sharing-fixtures-across-multiple-files
 """
+
 import ast
 import copy
 import datetime
@@ -38,7 +39,13 @@ from iris.cube import Cube, CubeList
 
 from CSET.operators import collapse, constraints, filters, read, regrid
 
-ROSE_SUITE_CONF = Path(__file__).parents[1] / "src" / "CSET" / "cset_workflow" / "rose-suite.conf.example"
+ROSE_SUITE_CONF = (
+    Path(__file__).parents[1]
+    / "src"
+    / "CSET"
+    / "cset_workflow"
+    / "rose-suite.conf.example"
+)
 
 
 # Special function that is run after all the tests finish.
@@ -1786,9 +1793,11 @@ def load_rose_conf(path) -> dict:
             conf[key.strip()] = value.strip()
     return conf
 
+
 @pytest.fixture(scope="session")
 def base_rose_conf():
     return load_rose_conf(ROSE_SUITE_CONF)  # read-only parse
+
 
 @pytest.fixture
 def everything_on_conf(base_rose_conf):
