@@ -23,6 +23,7 @@ import logging
 import iris
 import numpy as np
 
+from CSET._atmospheric_constants import Ra
 from CSET._common import iter_maybe
 
 logger = logging.getLogger(__name__)
@@ -30,18 +31,17 @@ logger = logging.getLogger(__name__)
 
 def _lat_lon_identifier(original_lat, original_lon, distance, bearing):
     """Find the latitude and longitude of new points based on great circle distance."""
-    R = 6371.0  # km.
     lat_rad = np.radians(original_lat)
     lon_rad = np.radians(original_lon)
     bearing_rad = np.radians(bearing)
 
     new_lat = np.arcsin(
-        np.sin(lat_rad) * np.cos(distance / R)
-        + np.cos(lat_rad) * np.sin(distance / R) * np.cos(bearing_rad)
+        np.sin(lat_rad) * np.cos(distance / Ra)
+        + np.cos(lat_rad) * np.sin(distance / Ra) * np.cos(bearing_rad)
     )
     new_lon = lon_rad + np.arctan2(
-        np.sin(bearing_rad) * np.sin(distance / R) * np.cos(lat_rad),
-        np.cos(distance / R) - np.sin(lat_rad) * np.sin(new_lat),
+        np.sin(bearing_rad) * np.sin(distance / Ra) * np.cos(lat_rad),
+        np.cos(distance / Ra) - np.sin(lat_rad) * np.sin(new_lat),
     )
 
     new_lat = np.degrees(new_lat)
