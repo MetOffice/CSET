@@ -360,10 +360,16 @@ def cutout_cubes_function(
         logger.debug("Subarea selection is disabled.")
         return cubes
 
+    if isinstance(cubes, iris.cube.Cube):
+        cubes_use = iris.cube.CubeList()
+        cubes_use.append(cubes)
+    else:
+        cubes_use = cubes
+
     # If selected, cutout according to number of grid cells to trim from each edge.
     cutout_cubes = iris.cube.CubeList()
     # Find spatial coordinates
-    for cube in cubes:
+    for cube in cubes_use:
         # Find dimension coordinates.
         lat_name, lon_name = get_cube_yxcoordname(cube)
 
@@ -435,7 +441,12 @@ def cutout_cubes_function(
                     "Also check if cutout region requested is smaller than input grid spacing."
                 ) from err
 
-    return cutout_cubes
+    # Match the output to the input i.e. if the input is a Cube
+    # then output a Cube. Otherwise output a CubeList.
+    if isinstance(cubes, iris.cube.Cube):
+        return cutout_cubes[0]
+    else:
+        return cutout_cubes
 
 
 def extract_projected_latlon(
