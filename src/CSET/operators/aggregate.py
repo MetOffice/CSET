@@ -550,10 +550,7 @@ def _add_nref(cube: iris.cube.Cube):
     otherwise be lost on subsequent calls to collapse functions.
     """
     nref = np.size(cube.coord("forecast_reference_time").points)
-    try:
-        cube.coord("time").attributes["number_reference_times"] = nref
-    except:
-        cube.attributes["number_reference_times"] = nref
+    cube.coord("time").attributes["number_reference_times"] = nref
     return cube
 
 
