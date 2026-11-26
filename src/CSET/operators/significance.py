@@ -18,7 +18,7 @@ import iris
 import numpy as np
 from iris.cube import Cube
 
-from CSET.operators.scoreswrappers import _split_base_and_other
+from CSET.operators._utils import _split_base_and_other
 
 
 def bootstrap_significance(
@@ -83,6 +83,7 @@ def bootstrap_significance(
             "Percentiles must satisfy 0 <= lower_percentile < upper_percentile <= 100."
         )
 
+    # Iterate over all test cubes
     for test_cube in other_cubes:
         # Defensive checks to ensure same shape.
         if base_cube.shape != test_cube.shape:
@@ -155,6 +156,8 @@ def bootstrap_significance(
         # cube to store significance data in.
         dim_coords_and_dims = []
 
+        # For each dim coord index, calculate where corodinate should live
+        # after removing forecast reference time.
         for coord in test_cube.dim_coords:
             dim = test_cube.coord_dims(coord)[0]
 
@@ -168,6 +171,7 @@ def bootstrap_significance(
         # Add attributes
         attributes = base_cube.attributes.copy()
 
+        # Could be useful for later plotting (legend for error bars).
         attributes.update(
             {
                 "bootstrap_n_samples": n_bootstrap,
@@ -176,6 +180,7 @@ def bootstrap_significance(
             }
         )
 
+        # Create new significance cube.
         sig_cube = Cube(
             significance,
             long_name=(
@@ -188,22 +193,22 @@ def bootstrap_significance(
 
         sig_cubes.append(sig_cube)
 
-        lower_cube = sig_cube.copy(
-            data=lower_ci,
-        )
-        lower_cube.rename("lower_confidence_limit")
-
-        upper_cube = sig_cube.copy(
-            data=upper_ci,
-        )
-        upper_cube.rename("upper_confidence_limit")
-
-        mean_cube = sig_cube.copy(
-            data=mean_diff,
-        )
-        mean_cube.rename("mean_difference")
-
         if return_intervals:
+            lower_cube = sig_cube.copy(
+                data=lower_ci,
+            )
+            lower_cube.rename("lower_confidence_limit")
+
+            upper_cube = sig_cube.copy(
+                data=upper_ci,
+            )
+            upper_cube.rename("upper_confidence_limit")
+
+            mean_cube = sig_cube.copy(
+                data=mean_diff,
+            )
+            mean_cube.rename("mean_difference")
+
             lowerint_cubes.append(lower_cube)
             upperint_cubes.append(upper_cube)
             mean_cubes.append(mean_cube)
