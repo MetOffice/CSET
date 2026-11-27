@@ -22,7 +22,7 @@ import numpy as np
 from skimage.filters import difference_of_gaussians, window
 from skimage.metrics import structural_similarity
 
-from CSET._common import is_increasing
+from CSET._common import is_increasing, iter_maybe
 from CSET.operators._utils import (
     ensure_common_time_points,
     fully_equalise_attributes,
@@ -378,12 +378,12 @@ def spatial_structural_similarity_same_model_comparisons(
     >>> plt.show()
     """
     time_coord = next(
-        map(
-            lambda coord: coord.name(),
-            filter(
+        (
+            coord.name()
+            for coord in filter(
                 lambda coord: coord.shape > (1,) and coord.name() in ["time", "hour"],
                 cube_a.coords(),
-            ),
+            )
         ),
         None,
     )
