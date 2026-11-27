@@ -1,8 +1,11 @@
 category: Cellstats
 title: "Feature max $VARNAME over all times.\n Threshold $CELLTRACK_THRESHOLD (under_threshold = $CELLTRACK_UNDER_THRESHOLD)"
 description: |
-  Uses the feature.cell_stats operator to calculate max cell values for
-  identified features.
+  Uses the cell_stats operator to calculate max intensity values for identified features.
+  Each cell is identified as a minimum contiguous region of grid points (typically at least 4) that exceeds a threshold value.
+  Max intensity is then derived for each identified cell.
+  Follows the approach of Hanley, Kirsty E., et al. ‘Mixing-Length Controls on High-Resolution Simulations of Convective Storms’. QJRMS (2015): https://doi.org/10.1002/qj.2356.
+  Saves cell stats data to output and plots histograms
 
 steps:
   - operator: read.read_cubes

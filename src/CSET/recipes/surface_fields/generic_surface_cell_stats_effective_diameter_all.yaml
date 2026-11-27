@@ -1,8 +1,13 @@
 category: Cellstats
 title: "Feature effective diameter $VARNAME over all times.\n Threshold $CELLTRACK_THRESHOLD (under_threshold = $CELLTRACK_UNDER_THRESHOLD)"
 description: |
-  Uses the feature.cell_stats operator to calculate effective diameter for
-  identified features.
+  Uses the cell_stats operator to calculate cell effective diameter for identified features.
+  Each cell is identified as a minimum contiguous region of grid points (typically at least 4) that exceeds a threshold value.
+  Cell effective diameter (km) is calculated as the diameter of a circle with the same area as the cell.
+  Conversion from grid points to physical units is performed using coordinate metadata, assuming horizontal coordinates have a regular step.
+  If horizontal coordinates are in degrees, the mean latitude is used to estimate a constant grid spacing using: dy * 111km * cos(mean_latitude).
+  Follows the approach of Hanley, Kirsty E., et al. ‘Mixing-Length Controls on High-Resolution Simulations of Convective Storms’. QJRMS (2015): https://doi.org/10.1002/qj.2356.
+  Saves cell stats data to output and plots histograms
 
 steps:
   - operator: read.read_cubes
