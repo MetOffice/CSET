@@ -21,17 +21,21 @@ def load(conf: Config):
     """Yield recipes from the given workflow configuration."""
     # Surface (2D) fields for GPM rainfall.
     #
-    if conf.GPM_OBS and conf.GPM_DOMAIN_UKV:
+    if conf.GPM_OBS:
+        if conf.PRESET_SUBAREA_DOMAIN:
+            subarea_name = conf.PRESET_SUBAREA_DOMAIN_NAME
+        else:
+            subarea_name = conf.SUBAREA_NAME or ""
+
         yield RawRecipe(
             recipe="generic_surface_spatial_plot_sequence_gpm_rainfall.yaml",
-            model_ids=["GPM"],  # -> Becomes $INPUT_PATHS
+            model_ids=["GPM"],
             variables={
-                "VARNAME": "precipition_flux",
-                "GPM_NAME": "GPM",
+                "VARNAME": "precipitation_flux",
                 "METHOD": "SEQ",
-                "SUBAREA_TYPE": "realworld",
-                "SUBAREA_EXTENT": [48.0, 62.0, -14.0, 5.0],
-                "SUBAREA_NAME": "GPM-UKV",
+                "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                "SUBAREA_EXTENT": conf.SUBAREA_EXTENT if conf.SELECT_SUBAREA else None,
+                "SUBAREA_NAME": subarea_name,
             },
             aggregation=False,
         )

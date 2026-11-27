@@ -210,7 +210,9 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
     script = rose task-run -v --app-key=fetch_gpm
         [[[environment]]]
         ROSE_APP_COMMAND_KEY = "fetchgpm"
-        GPM_DOMAIN_UKV = {{GPM_DOMAIN_UKV}}
+        PRESET_GPM_DOMAIN = {{PRESET_GPM_DOMAIN}}
+        PRESET_GPM_DOMAIN_NAME = {{PRESET_GPM_DOMAIN_NAME | default("")}}
+        SUBAREA_EXTENT = {{SUBAREA_EXTENT | default("")}}
     {% endif %}
 
     [[housekeeping]]

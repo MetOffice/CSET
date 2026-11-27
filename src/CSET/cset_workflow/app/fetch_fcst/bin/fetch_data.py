@@ -29,7 +29,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Literal, Self
 
+import iris
 import isodate
+
+from CSET.operators.read import cutout_cubes_function
 
 logging.basicConfig(
     level=os.getenv("LOGLEVEL", "INFO"),
@@ -369,3 +372,85 @@ def fetch_obs(obs_retriever: FileRetrieverABC):
             )
         except Exception as exc:
             raise ValueError("No observations available.") from exc
+
+
+class SubsettingFilesystemFileRetriever(FilesystemFileRetriever):
+    """Retrieve files from the filesystem, subsetting them before saving.
+
+    Intended for large gridded files where symlinking the whole file is
+    wasteful. Cubes are trimmed to a time window and/or cut to a subarea
+    before being written to the output directory. If neither is given, files
+    are symlinked as in FilesystemFileRetriever.
+
+    Not thread safe: netCDF/HDF5 I/O must not be run from parallel threads.
+    """
+
+    def __init__(
+        self,
+        subarea_type: Literal["gridcells", "realworld", "modelrelative"] | None = None,
+        subarea_extent: list[float] | None = None,
+        time_window: tuple[datetime, datetime] | None = None,
+    ):
+        self.subarea_type = subarea_type
+        self.subarea_extent = subarea_extent
+        self.time_window = time_window
+
+    def _has_subarea(self) -> bool:
+        return self.subarea_type is not None and self.subarea_extent is not None
+
+    def _subset(self, cubes: iris.cube.CubeList) -> iris.cube.CubeList:
+        """Trim cubes to the time window and cut out the subarea.
+
+        Returns an empty CubeList if no times fall in the window, which can
+        happen for files at the edges of a widened window. Raises if the
+        subarea cut leaves nothing, as that means the extent misses the data.
+        """
+        if self.time_window is not None:
+            start, end = self.time_window
+            cubes = cubes.extract(
+                iris.Constraint(time=lambda cell: start <= cell.point < end)
+            )
+            if not cubes:
+                return cubes
+
+        if self._has_subarea:
+            cubes = cutout_cubes_function(cubes, self.subarea_type, self.subarea_extent)
+            if not cubes:
+                raise ValueError(
+                    f"Subarea {self.subarea_extent} ({self.subarea_type}) "
+                    "contains no data."
+                )
+        return cubes
+
+    def get_file(self, file_path: str, output_dir: str) -> bool:
+        """Save a subset of each matching file to the output directory.
+
+        Parameters
+        ----------
+        file_path: str
+            Path of the file on the filesystem. It may contain globs.
+        output_dir: str
+            Path to filesystem directory into which the files are written.
+
+        Returns
+        -------
+        bool:
+            True if any files were written, otherwise False.
+        """
+        if self.time_window is None and not self._has_subarea():
+            return super().get_file(file_path, output_dir)
+
+        file_paths = glob.glob(os.path.expanduser(file_path))
+        if not file_paths:
+            logger.warning("file_path does not match any files: %s", file_path)
+        any_files_copied = False
+        for f in file_paths:
+            source = Path(f).absolute()
+            subset = self._subset(iris.load(source))
+            if not subset:
+                logger.info("No times in window for %s, skipping.", source)
+                continue
+            iris.save(subset, Path(output_dir) / source.name)
+            any_files_copied = True
+
+        return any_files_copied
