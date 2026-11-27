@@ -313,3 +313,33 @@ def round_data(
         rounded_cubes.append(rounded_cube)
 
     return rounded_cubes[0] if len(rounded_cubes) == 1 else rounded_cubes
+
+
+def normalize(
+    field: iris.cube.Cube | iris.cube.CubeList,
+) -> iris.cube.Cube | iris.cube.CubeList:
+    """Normalize field by its mean.
+
+    Parameters
+    ----------
+    field: Cube | CubeList
+        Any field to be normalised.
+
+    Returns
+    -------
+    Cube
+
+
+    Notes
+    -----
+    This is a simple operator designed to normalize a field by its mean.
+    """
+    results = iris.cube.CubeList()
+    for cube in iter_maybe(field):
+        cube.data /= cube.data.mean()
+        cube.rename(f"normalised_{cube.name}")
+        results.append(cube)
+    if len(results) == 1:
+        return results[0]
+    else:
+        return results

@@ -13,7 +13,7 @@ steps:
 
   - operator: imageprocessing.spatial_structural_similarity_same_model_comparisons
     cube_a:
-        operator: misc.normalize
+        operator: maths.normalize
         cubes:
             operator: mesoscale.spatial_perturbation_field
             original_field:
@@ -34,7 +34,7 @@ steps:
             apply_gaussian_filter: True
             filter_scale: 40
     cube_b:
-        operator: misc.normalize
+        operator: maths.normalize
         cubes:
             operator: mesoscale.spatial_perturbation_field
             original_field:
