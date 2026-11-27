@@ -231,7 +231,7 @@ def read_cubes(
     iris.util.unify_time_units(cubes)
 
     # Select sub region.
-    cubes = _cutout_cubes(cubes, subarea_type, subarea_extent)
+    cubes = cutout_cubes_function(cubes, subarea_type, subarea_extent)
 
     # Clean unwanted cube attributes
     cubes = _clean_unwanted_cube_attributes(cubes, preserve_attributes)
@@ -350,7 +350,7 @@ def _merge_cubes_check_ensemble(cubes: iris.cube.CubeList):
     return cubes
 
 
-def _cutout_cubes(
+def cutout_cubes_function(
     cubes: iris.cube.CubeList,
     subarea_type: Literal["gridcells", "realworld", "modelrelative"] | None,
     subarea_extent: list[float],
@@ -360,10 +360,16 @@ def _cutout_cubes(
         logger.debug("Subarea selection is disabled.")
         return cubes
 
+    if isinstance(cubes, iris.cube.Cube):
+        cubes_use = iris.cube.CubeList()
+        cubes_use.append(cubes)
+    else:
+        cubes_use = cubes
+
     # If selected, cutout according to number of grid cells to trim from each edge.
     cutout_cubes = iris.cube.CubeList()
     # Find spatial coordinates
-    for cube in cubes:
+    for cube in cubes_use:
         # Find dimension coordinates.
         lat_name, lon_name = get_cube_yxcoordname(cube)
 
@@ -421,7 +427,7 @@ def _cutout_cubes(
             x.name() == "projection_x_coordinate"
             and y.name() == "projection_y_coordinate"
         ):
-            cutout_cubes.append(_extract_projected_latlon(cube, lats, lons))
+            cutout_cubes.append(extract_projected_latlon(cube, lats, lons))
         else:
             # Do cutout and add to cutout_cubes.
             intersection_args = {lat_name: lats, lon_name: lons}
@@ -435,12 +441,18 @@ def _cutout_cubes(
                     "Also check if cutout region requested is smaller than input grid spacing."
                 ) from err
 
-    return cutout_cubes
+    # Match the output to the input i.e. if the input is a Cube
+    # then output a Cube. Otherwise output a CubeList.
+    if isinstance(cubes, iris.cube.Cube):
+        return cutout_cubes[0]
+    else:
+        return cutout_cubes
 
 
-def _extract_projected_latlon(
+def extract_projected_latlon(
     cube: iris.cube.Cube, lats: tuple[float, float], lons: tuple[float, float]
 ) -> iris.cube.Cube:
+    """Extract lan and lon coords for use by the cutout function."""
     cs_x = cube.coord("projection_x_coordinate").coord_system
     cs_y = cube.coord("projection_y_coordinate").coord_system
 
@@ -540,6 +552,7 @@ def _loading_callback(cube: iris.cube.Cube, field, filename: str) -> iris.cube.C
     _um_normalise_callback(cube)
     _lfric_stash_source_callback(cube)
     _nimrod_normalise_callback(cube)
+    _gpm_normalise_callback(cube)
     cube = _lfric_time_coord_fix_callback(cube)
     _normalise_var0_varname(cube)
     cube = _fix_no_spatial_coords_callback(cube)
@@ -565,6 +578,13 @@ def _nimrod_normalise_callback(cube: iris.cube.Cube):
     cube.attributes.pop("additional_radar_sites", None)
     cube.attributes.pop("recursive_filter_iterations", None)
     cube.attributes.pop("Probability methods", None)
+
+
+def _gpm_normalise_callback(cube: iris.cube.Cube):
+    """Normalise attributes that prevents GPM rainfall cubes from merging."""
+    # Remove unwanted attributes here that could prevent merging of
+    # cubes with differing attribute values.
+    cube.attributes.pop("Conventions", None)
 
 
 def _remove_cset_comparison_base_attribute_callback(cube):

@@ -203,6 +203,18 @@ final cycle point = {{CSET_TRIAL_END_DATE}}
         NIMROD_COMP_5MIN = {{NIMROD_COMP_5MIN}}
     {% endif %}
 
+    {% if GPM_OBS %}
+    [[fetch_gpm]]
+    # Fetch GPM rainfall observations.
+    inherit = FETCH_DATA
+    script = rose task-run -v --app-key=fetch_gpm
+        [[[environment]]]
+        ROSE_APP_COMMAND_KEY = "fetchgpm"
+        PRESET_GPM_DOMAIN = {{PRESET_GPM_DOMAIN}}
+        PRESET_GPM_DOMAIN_NAME = {{PRESET_GPM_DOMAIN_NAME | default("")}}
+        SUBAREA_EXTENT = {{SUBAREA_EXTENT | default("")}}
+    {% endif %}
+
     [[housekeeping]]
     # Housekeep input data files.
         [[[environment]]]
