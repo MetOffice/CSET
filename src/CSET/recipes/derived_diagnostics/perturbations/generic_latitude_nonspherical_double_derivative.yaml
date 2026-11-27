@@ -20,10 +20,10 @@ steps:
     subarea_type: $SUBAREA_TYPE
     subarea_extent: $SUBAREA_EXTENT
 
-  - operator: misc.differentiate
+  - operator: maths.differentiate
     coordinate: "grid_latitude"
 
-  - operator: misc.differentiate
+  - operator: maths.differentiate
     coordinate: "grid_latitude"
 
   - operator: collapse.collapse

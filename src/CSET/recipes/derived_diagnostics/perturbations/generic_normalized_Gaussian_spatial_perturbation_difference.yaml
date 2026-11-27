@@ -22,9 +22,9 @@ steps:
 
   - operator: misc.normalize
 
-  - operator: misc.subtraction
+  - operator: maths.subtraction
     minuend:
-        operator: misc.subtraction
+        operator: maths.subtraction
         minuend:
             operator: mesoscale.spatial_perturbation_field
             apply_gaussian_filter: True
@@ -34,7 +34,7 @@ steps:
             apply_gaussian_filter: True
             filter_scale: 2
     subtrahend:
-        operator: misc.subtraction
+        operator: maths.subtraction
         minuend:
             operator: mesoscale.spatial_perturbation_field
             apply_gaussian_filter: True
