@@ -16,6 +16,7 @@
 
 import datetime
 import logging
+import os
 
 import cf_units
 import iris
@@ -255,6 +256,54 @@ def test_check_input_files_no_file_in_directory(tmp_path):
     """Error when input directory doesn't contain any files."""
     with pytest.raises(FileNotFoundError):
         read._check_input_files(str(tmp_path))
+
+
+def test_check_ancillary_keep_highest_version_directory(tmp_path):
+    """Only the highest vN directory should be retained."""
+    (tmp_path / "v1").mkdir()
+    (tmp_path / "v2").mkdir()
+
+    old_file = tmp_path / "v1" / "qrparm.mask"
+    new_file = tmp_path / "v2" / "qrparm.mask"
+
+    old_file.touch()
+    new_file.touch()
+
+    result = read._check_ancillary_path(str(tmp_path))
+
+    assert str(new_file) in result
+    assert str(old_file) not in result
+
+
+def test_check_ancillary_keep_latest_modified_duplicate(tmp_path):
+    """Newest duplicate ancillary file should win."""
+    (tmp_path / "old").mkdir()
+    (tmp_path / "new").mkdir()
+
+    old_file = tmp_path / "old" / "qrparm.mask"
+    new_file = tmp_path / "new" / "qrparm.mask"
+
+    old_file.touch()
+    new_file.touch()
+
+    os.utime(old_file, (1, 1))
+    os.utime(new_file, (2, 2))
+
+    result = read._check_ancillary_path(str(tmp_path))
+    assert result == [str(new_file)]
+
+
+def test_check_ancillary_prefer_veg_frac_urb2t(tmp_path):
+    """urb2t should take precedence over veg.frac."""
+    veg_frac = tmp_path / "qrparm.veg.frac"
+    urb2t = tmp_path / "qrparm.veg.frac.urb2t"
+
+    veg_frac.touch()
+    urb2t.touch()
+
+    result = read._check_ancillary_path(str(tmp_path))
+    assert str(urb2t) in result
+    assert str(veg_frac) not in result
 
 
 def test_um_normalise_callback_rename_stash(cube):

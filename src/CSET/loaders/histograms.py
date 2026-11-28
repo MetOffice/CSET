@@ -167,3 +167,22 @@ def load(conf: Config):
                 model_ids=[model["id"] for model in models],
                 aggregation=True,
             )
+
+    # Ancillary fields.
+    if conf.HISTOGRAM_ANCILLARY_FIELD:
+        for field in conf.ANCILLARY_FIELDS:
+            yield RawRecipe(
+                recipe="generic_surface_histogram_series.yaml",
+                variables={
+                    "VARNAME": field,
+                    "MODEL_NAME": [model["name"] for model in models],
+                    "SEQUENCE": "realization",
+                    "SUBAREA_TYPE": conf.SUBAREA_TYPE if conf.SELECT_SUBAREA else None,
+                    "SUBAREA_EXTENT": conf.SUBAREA_EXTENT
+                    if conf.SELECT_SUBAREA
+                    else None,
+                    "SUBAREA_NAME": conf.SUBAREA_NAME if conf.SELECT_SUBAREA else "",
+                },
+                model_ids=[model["id"] for model in models],
+                aggregation=False,
+            )
