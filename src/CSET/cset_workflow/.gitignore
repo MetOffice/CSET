@@ -12,6 +12,7 @@ docs/
 !/opt/rose-suite-RAL3LFRIC.conf
 !/opt/rose-suite-nci_ral3lfric.conf
 !/opt/rose-suite-test_validate.conf
+!/opt/rose-suite-extreme-rainfall.conf
 !/site/localhost.cylc
 !/site/monsoon.cylc
 !/site/nci-gadi.cylc
